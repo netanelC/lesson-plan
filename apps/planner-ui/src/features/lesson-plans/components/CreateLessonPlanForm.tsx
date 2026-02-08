@@ -22,7 +22,7 @@ const DEFAULT_LESSON_PARTS_COUNT = 1;
 
 const emptyLessonPart = (): CreateLessonPlanDto['lessonFlow'][number] => ({
   name: '',
-  durationMinutes: 0, // Changed to 0 to match number type
+  durationMinutes: 0,
   description: '',
 });
 
@@ -60,7 +60,7 @@ export const CreateLessonPlanForm = () => {
     }
   }, [errors]);
 
-  // --- Dynamic Field Arrays ---
+  // --- Dynamic Field Arrays (Lesson Flow) ---
   const {
     fields: lessonFlowFields,
     append: appendFlow,
@@ -70,9 +70,9 @@ export const CreateLessonPlanForm = () => {
     name: 'lessonFlow',
   });
 
-  // --- Operative Goals Logic ---
-  // Note: Since operativeGoals is a simple string[], we manage it manually
-  // to avoid object wrapping complexity with the Zod schema.
+  // --- Manual Array Logic (Strings) ---
+  
+  // 1. Operative Goals
   const operativeGoalsValue = watch('operativeGoals');
   const operativeGoalsList = Array.isArray(operativeGoalsValue)
     ? operativeGoalsValue
@@ -81,21 +81,29 @@ export const CreateLessonPlanForm = () => {
   const goalsCount = Math.max(operativeGoalsList.length, MIN_OPERATIVE_GOALS);
   const goalsIndices = Array.from({ length: goalsCount }, (_, i) => i);
 
-  const appendGoal = () => {
-    setValue('operativeGoals', [...operativeGoalsList, '']);
-  };
-
-  const removeGoal = (indexToRemove: number) => {
-    const nextGoals = operativeGoalsList.filter((_, i) => i !== indexToRemove);
-    // Ensure we never drop below the minimum required goals
-    if (nextGoals.length < MIN_OPERATIVE_GOALS) {
-        // If removing would go below min, we just clear that input instead of removing it
-        const paddedGoals = [...nextGoals, '']; 
-        setValue('operativeGoals', paddedGoals);
+  const appendGoal = () => setValue('operativeGoals', [...operativeGoalsList, '']);
+  const removeGoal = (index: number) => {
+    const next = operativeGoalsList.filter((_, i) => i !== index);
+    if (next.length < MIN_OPERATIVE_GOALS) {
+        setValue('operativeGoals', [...next, '']); 
     } else {
-        setValue('operativeGoals', nextGoals);
+        setValue('operativeGoals', next);
     }
   };
+
+  // 2. Teaching Aids (אמצעי הוראה)
+  const teachingAidsValue = watch('teachingAids');
+  const teachingAidsList = Array.isArray(teachingAidsValue) ? teachingAidsValue : [];
+  
+  const appendTeachingAid = () => setValue('teachingAids', [...teachingAidsList, '']);
+  const removeTeachingAid = (index: number) => setValue('teachingAids', teachingAidsList.filter((_, i) => i !== index));
+
+  // 3. References (מקורות מידע)
+  const referencesValue = watch('references');
+  const referencesList = Array.isArray(referencesValue) ? referencesValue : [];
+
+  const appendReference = () => setValue('references', [...referencesList, '']);
+  const removeReference = (index: number) => setValue('references', referencesList.filter((_, i) => i !== index));
 
   const onSubmit = (data: CreateLessonPlanDto) => {
     mutate(data);
@@ -181,11 +189,11 @@ export const CreateLessonPlanForm = () => {
             <div key={index} className="flex gap-3 items-start">
               <div className="flex-1">
                 <TextInput
-                  label="" // Label handled by parent wrapper
+                  label=""
                   placeholder={`מטרה ${index + 1}`}
                   {...register(`operativeGoals.${index}`)}
                   error={errors.operativeGoals?.[index]}
-                  className="mb-0" // Reset margin since it's nested
+                  className="mb-0"
                 />
               </div>
               <button
@@ -214,7 +222,103 @@ export const CreateLessonPlanForm = () => {
         </div>
       </SectionCard>
 
-      {/* --- Section 3: Lesson Flow --- */}
+      {/* --- Section 3: Preparation (Prior Knowledge, Aids & References) --- */}
+      <SectionCard
+        title="הכנה לשיעור"
+        theme="indigo"
+        icon={
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+        }
+      >
+          {/* Prior Knowledge (Moved Here) */}
+          <div className="mb-6">
+            <TextInput
+                id="priorKnowledge"
+                label="ידע קודם נדרש (אופציונלי)"
+                placeholder="מה הילדים צריכים לדעת לפני השיעור?"
+                {...register('priorKnowledge')}
+                error={errors.priorKnowledge}
+            />
+          </div>
+
+          {/* Teaching Aids */}
+          <div className="space-y-3 mb-6 border-t border-gray-100 pt-4">
+            <label className="block text-sm font-semibold text-gray-800">אמצעי הוראה</label>
+            {teachingAidsList.map((_, index) => (
+                <div key={index} className="flex gap-3 items-start">
+                <div className="flex-1">
+                    <TextInput
+                    label=""
+                    placeholder="לדוגמה: כרטיסיות, טוש מחיק, בובה"
+                    {...register(`teachingAids.${index}`)}
+                    className="mb-0"
+                    />
+                </div>
+                <button
+                    type="button"
+                    onClick={() => removeTeachingAid(index)}
+                    className="mt-1 p-2 rounded-md text-red-500 hover:bg-red-50 hover:text-red-700"
+                    title="הסר"
+                >
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </button>
+                </div>
+            ))}
+            <button
+                type="button"
+                onClick={appendTeachingAid}
+                className="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+            >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                הוסף אמצעי הוראה
+            </button>
+          </div>
+
+          {/* References */}
+          <div className="space-y-3 border-t border-gray-100 pt-4">
+            <label className="block text-sm font-semibold text-gray-800">מקורות מידע</label>
+            {referencesList.map((_, index) => (
+                <div key={index} className="flex gap-3 items-start">
+                <div className="flex-1">
+                    <TextInput
+                    label=""
+                    placeholder="לדוגמה: קישור לסרטון, שם של ספר"
+                    {...register(`references.${index}`)}
+                    className="mb-0"
+                    />
+                </div>
+                <button
+                    type="button"
+                    onClick={() => removeReference(index)}
+                    className="mt-1 p-2 rounded-md text-red-500 hover:bg-red-50 hover:text-red-700"
+                    title="הסר"
+                >
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </button>
+                </div>
+            ))}
+            <button
+                type="button"
+                onClick={appendReference}
+                className="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+            >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                הוסף מקור מידע
+            </button>
+          </div>
+      </SectionCard>
+
+      {/* --- Section 4: Lesson Flow --- */}
       <SectionCard
         title="חלקי השיעור"
         theme="green"
