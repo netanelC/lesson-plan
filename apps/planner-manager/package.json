@@ -19,6 +19,7 @@
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
     "@repo/types": "workspace:^",
+    "axios": "^1.13.5",
     "config": "^4.2.0",
     "dotenv": "^17.2.3",
     "fastify": "^5.7.4",

@@ -4,9 +4,8 @@ import { z } from 'zod';
 export const AGE_GROUPS = ['3-4', '4-5'] as const;
 export const ACTIVITY_FRAMES = ['plenary', 'small-group'] as const;
 
-// 2. Derive the Types from the Constants automatically
-type AgeGroup = typeof AGE_GROUPS;
-type ActivityFrame = typeof ACTIVITY_FRAMES;
+export type AgeGroup = (typeof AGE_GROUPS)[number];
+export type ActivityFrame = (typeof ACTIVITY_FRAMES)[number];
 
 // 3. The Lesson Flow (The Table)
 export interface LessonStep {

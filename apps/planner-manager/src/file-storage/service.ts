@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, S3ClientConfig } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, S3ClientConfig, ObjectCannedACL } from '@aws-sdk/client-s3';
 import config from 'config';
 
 // 1. Initialize S3 Client (Same as before)

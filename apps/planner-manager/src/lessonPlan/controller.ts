@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { lessonPlanDal } from './DAL'; 
 import { CreateLessonPlanDto } from './schema';
@@ -38,6 +39,16 @@ export const lessonPlanController = {
     return reply.code(200).send(plan);
   },
 
+  delete: async (
+    req: FastifyRequest<{ Params: { id: string } }>,
+    reply: FastifyReply
+  ) => {
+    const { id } = req.params;
+    await lessonPlanDal.delete(id);
+    // 204 No Content is the standard for successful deletion
+    return reply.code(204).send();
+  },
+
   uploadAttachment: async (
     req: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
@@ -69,5 +80,40 @@ export const lessonPlanController = {
     });
 
     return reply.code(201).send(attachment);
+  },
+
+  downloadAttachment: async (
+    req: FastifyRequest<{ Params: { id: string } }>,
+    reply: FastifyReply
+  ) => {
+    const { id } = req.params;
+    
+    // 1. Get attachment metadata from DB
+    const attachment = await lessonPlanDal.getAttachmentById(id);
+    if (!attachment) {
+      return reply.code(404).send({ message: 'Attachment not found' });
+    }
+
+    try {
+      // 2. Fetch the file stream from MinIO (Internal Network Call)
+      const response = await axios.get(attachment.url, {
+        responseType: 'stream',
+      });
+
+      // 3. Set headers to FORCE download and hide the origin
+      reply.header('Content-Type', attachment.fileType);
+      // This header tells the browser: "Don't open this! Save it as..."
+      reply.header(
+        'Content-Disposition', 
+        `attachment; filename="${encodeURIComponent(attachment.filename)}"`
+      );
+
+      // 4. Send the stream
+      return reply.send(response.data);
+
+    } catch (error) {
+      req.log.error(error);
+      return reply.code(500).send({ message: 'Failed to download file' });
+    }
   },
 };

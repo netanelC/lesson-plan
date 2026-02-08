@@ -32,6 +32,12 @@ export const lessonPlanDal = {
     });
   },
 
+  async delete(id: string) {
+    return prisma.lessonPlan.delete({
+      where: { id },
+    });
+  },
+
   async addAttachment(lessonPlanId: string, fileInfo: { filename: string, url: string, fileType: string, sizeBytes: number }) {
     return prisma.attachment.create({
       data: {
@@ -45,6 +51,12 @@ export const lessonPlanDal = {
     return prisma.lessonPlan.findUnique({
       where: { id },
       include: { attachments: true } // This "joins" the tables automatically
+    });
+  },
+
+  async getAttachmentById(id: string) {
+    return prisma.attachment.findUnique({
+      where: { id },
     });
   },
 };
