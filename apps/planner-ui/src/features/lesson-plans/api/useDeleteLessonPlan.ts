@@ -6,11 +6,11 @@ export const useDeleteLessonPlan = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      await api.delete(`/lesson-plans/${id}`);
+      await api.delete(`/lessons/${id}`);
     },
     onSuccess: () => {
       // Refresh the list automatically after delete
-      queryClient.invalidateQueries({ queryKey: ['lesson-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['lessons'] });
     },
   });
 };

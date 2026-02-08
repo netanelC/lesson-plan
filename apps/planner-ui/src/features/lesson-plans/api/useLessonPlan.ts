@@ -15,7 +15,7 @@ export interface LessonPlanWithAttachments extends LessonPlan {
 
 export const useLessonPlan = (id: string) => {
   return useQuery({
-    queryKey: ['lesson-plan', id],
+    queryKey: ['lessons', id],
     queryFn: async () => {
       // The backend returns the plan with the "attachments" array inside it
       const { data } = await api.get<LessonPlanWithAttachments>(`/lessons/${id}`);
