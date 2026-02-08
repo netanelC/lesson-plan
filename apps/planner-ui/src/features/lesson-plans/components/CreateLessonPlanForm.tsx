@@ -8,9 +8,10 @@ import {
   ACTIVITY_FRAMES,
   MIN_OPERATIVE_GOALS,
 } from '@repo/types';
-import { clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 import { useCreateLessonPlan } from '../api/useCreateLessonPlan';
+import { TextInput } from '../../../components/ui/TextInput';
+import { SelectInput } from '../../../components/ui/SelectInput';
+import { SectionCard } from '../../../components/ui/SectionCard';
 
 const FRAME_LABELS: Record<(typeof ACTIVITY_FRAMES)[number], string> = {
   plenary: 'מליאה',
@@ -19,21 +20,23 @@ const FRAME_LABELS: Record<(typeof ACTIVITY_FRAMES)[number], string> = {
 
 const DEFAULT_LESSON_PARTS_COUNT = 1;
 
-const INPUT_CLASS =
-  'block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm';
-const LABEL_CLASS = 'block text-sm font-medium text-gray-700 mb-1';
-const ERROR_CLASS = 'mt-1 text-sm text-red-600';
-
 const emptyLessonPart = (): CreateLessonPlanDto['lessonFlow'][number] => ({
   name: '',
-  durationMinutes: undefined,
+  durationMinutes: 0, // Changed to 0 to match number type
   description: '',
 });
 
 export const CreateLessonPlanForm = () => {
   const { mutate, isPending } = useCreateLessonPlan();
 
-  const { register, control, handleSubmit, formState, watch, setValue } = useForm<CreateLessonPlanDto>({
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState: { errors },
+    watch,
+    setValue,
+  } = useForm<CreateLessonPlanDto>({
     resolver: zodResolver(CreateLessonPlanSchema) as Resolver<CreateLessonPlanDto>,
     mode: 'onTouched',
     defaultValues: {
@@ -50,32 +53,48 @@ export const CreateLessonPlanForm = () => {
     },
   });
 
-  // In development: log validation errors to help debug missing messages
+  // Debugging helper
   useEffect(() => {
-    if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
-      console.debug('CreateLessonPlanForm errors:', formState.errors);
+    if (import.meta.env.DEV && Object.keys(errors).length > 0) {
+      console.debug('Form Validation Errors:', errors);
     }
-  }, [formState.errors]);
+  }, [errors]);
 
-  const { fields: lessonFlowFields, append: appendFlow, remove: removeFlow } = useFieldArray({
+  // --- Dynamic Field Arrays ---
+  const {
+    fields: lessonFlowFields,
+    append: appendFlow,
+    remove: removeFlow,
+  } = useFieldArray({
     control,
     name: 'lessonFlow',
   });
 
+  // --- Operative Goals Logic ---
+  // Note: Since operativeGoals is a simple string[], we manage it manually
+  // to avoid object wrapping complexity with the Zod schema.
   const operativeGoalsValue = watch('operativeGoals');
-  const operativeGoalsList: string[] = Array.isArray(operativeGoalsValue)
+  const operativeGoalsList = Array.isArray(operativeGoalsValue)
     ? operativeGoalsValue
     : Array.from({ length: MIN_OPERATIVE_GOALS }, () => '');
+  
   const goalsCount = Math.max(operativeGoalsList.length, MIN_OPERATIVE_GOALS);
   const goalsIndices = Array.from({ length: goalsCount }, (_, i) => i);
 
   const appendGoal = () => {
     setValue('operativeGoals', [...operativeGoalsList, '']);
   };
-  const removeGoal = (index: number) => {
-    const next = operativeGoalsList.filter((_, i) => i !== index);
-    setValue('operativeGoals', next.length >= MIN_OPERATIVE_GOALS ? next : operativeGoalsList);
+
+  const removeGoal = (indexToRemove: number) => {
+    const nextGoals = operativeGoalsList.filter((_, i) => i !== indexToRemove);
+    // Ensure we never drop below the minimum required goals
+    if (nextGoals.length < MIN_OPERATIVE_GOALS) {
+        // If removing would go below min, we just clear that input instead of removing it
+        const paddedGoals = [...nextGoals, '']; 
+        setValue('operativeGoals', paddedGoals);
+    } else {
+        setValue('operativeGoals', nextGoals);
+    }
   };
 
   const onSubmit = (data: CreateLessonPlanDto) => {
@@ -83,266 +102,206 @@ export const CreateLessonPlanForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="max-w-2xl mx-auto space-y-8">
-      <h2 className="text-2xl font-semibold text-gray-900">צור מערך שיעור חדש</h2>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="max-w-3xl mx-auto space-y-8 bg-neutral-50 p-8 rounded-xl shadow-sm border border-neutral-100"
+      dir="rtl"
+    >
+      <header className="mb-6">
+        <h2 className="text-3xl font-extrabold text-indigo-900">צור מערך שיעור חדש</h2>
+        <p className="text-gray-500 mt-2">מלא את הפרטים הבאים כדי ליצור בסיס לשיעור שלך</p>
+      </header>
 
-      <section className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h3 className="text-lg font-medium text-gray-800">פרטים בסיסיים</h3>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="topic" className={LABEL_CLASS}>
-              נושא
-            </label>
-            <input
-              id="topic"
-              type="text"
-              className={twMerge(clsx(INPUT_CLASS, formState.errors.topic && 'border-red-500'))}
-              {...register('topic')}
-            />
-            {formState.errors.topic && (
-              <p className={ERROR_CLASS}>{formState.errors.topic.message}</p>
-            )}
-          </div>
-          <div>
-            <label htmlFor="unit" className={LABEL_CLASS}>
-              יחידה
-            </label>
-            <input
-              id="unit"
-              type="text"
-              className={twMerge(clsx(INPUT_CLASS, formState.errors.unit && 'border-red-500'))}
-              {...register('unit')}
-            />
-            {formState.errors.unit && (
-              <p className={ERROR_CLASS}>{formState.errors.unit.message}</p>
-            )}
-          </div>
-        </div>
-        <div>
-          <label htmlFor="ageGroup" className={LABEL_CLASS}>
-            קבוצת גיל
-          </label>
-          <select
-            id="ageGroup"
-            className={twMerge(clsx(INPUT_CLASS, formState.errors.ageGroup && 'border-red-500'))}
-            {...register('ageGroup')}
-          >
-            {AGE_GROUPS.map((age) => (
-              <option key={age} value={age}>
-                {age}
-              </option>
-            ))}
-          </select>
-          {formState.errors.ageGroup && (
-            <p className={ERROR_CLASS}>{formState.errors.ageGroup.message}</p>
-          )}
-        </div>
-        <div>
-          <label htmlFor="frame" className={LABEL_CLASS}>
-            מסגרת הוראה
-          </label>
-          <select
-            id="frame"
-            className={twMerge(clsx(INPUT_CLASS, formState.errors.frame && 'border-red-500'))}
-            {...register('frame')}
-          >
-            {ACTIVITY_FRAMES.map((frame) => (
-              <option key={frame} value={frame}>
-                {FRAME_LABELS[frame]}
-              </option>
-            ))}
-          </select>
-          {formState.errors.frame && (
-            <p className={ERROR_CLASS}>{formState.errors.frame.message}</p>
-          )}
-        </div>
-      </section>
-
-      <section className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h3 className="text-lg font-medium text-gray-800">מטרות</h3>
-        <div>
-          <label htmlFor="superGoal" className={LABEL_CLASS}>
-            מטרת על
-          </label>
-          <input
-            id="superGoal"
-            type="text"
-            className={twMerge(clsx(INPUT_CLASS, formState.errors.superGoal && 'border-red-500'))}
-            {...register('superGoal')}
+      {/* --- Section 1: Basic Details --- */}
+      <SectionCard
+        title="פרטים בסיסיים"
+        theme="indigo"
+        icon={
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        }
+      >
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <TextInput
+            id="topic"
+            label="נושא"
+            placeholder="לדוגמה: מחזור המים"
+            {...register('topic')}
+            error={errors.topic}
           />
-          {formState.errors.superGoal && (
-            <p className={ERROR_CLASS}>{formState.errors.superGoal.message}</p>
-          )}
+          <TextInput
+            id="unit"
+            label="יחידה"
+            placeholder="לדוגמה: טבע וסביבה"
+            {...register('unit')}
+            error={errors.unit}
+          />
         </div>
-        <div>
-          <label className={LABEL_CLASS}>מטרות אופרטיביות</label>
-          {formState.errors.operativeGoals &&
-            !Array.isArray(formState.errors.operativeGoals) &&
-            formState.errors.operativeGoals.message && (
-              <p className={ERROR_CLASS}>{formState.errors.operativeGoals.message}</p>
-            )}
-          <div className="space-y-4">
-            {goalsIndices.map((index) => (
-              <div
-                key={index}
-                className="flex gap-4 rounded border border-gray-100 bg-gray-50/50 p-4"
-              >
-                <div className="min-w-0 flex-1">
-                  <input
-                    type="text"
-                    className={twMerge(
-                      clsx(
-                        INPUT_CLASS,
-                        formState.errors.operativeGoals?.[index] && 'border-red-500'
-                      )
-                    )}
-                    {...register(`operativeGoals.${index}`)}
-                  />
-                  {formState.errors.operativeGoals?.[index] && (
-                    <p className={ERROR_CLASS}>
-                      {formState.errors.operativeGoals[index]?.message}
-                    </p>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeGoal(index)}
-                  disabled={goalsCount <= MIN_OPERATIVE_GOALS}
-                  className="shrink-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  הסר
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={() => appendGoal()}
-              className="rounded-md border border-dashed border-gray-300 bg-white px-4 py-2 text-sm text-gray-600 hover:border-indigo-500 hover:text-indigo-600"
-            >
-              הוסף מטרה
-            </button>
-          </div>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <SelectInput
+            id="ageGroup"
+            label="קבוצת גיל"
+            options={AGE_GROUPS}
+            {...register('ageGroup')}
+            error={errors.ageGroup}
+          />
+          <SelectInput
+            id="frame"
+            label="מסגרת הוראה"
+            options={ACTIVITY_FRAMES}
+            getLabel={(val) => FRAME_LABELS[val as keyof typeof FRAME_LABELS] || val}
+            {...register('frame')}
+            error={errors.frame}
+          />
         </div>
-      </section>
+      </SectionCard>
 
-      <section className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h3 className="text-lg font-medium text-gray-800">חלקי השיעור</h3>
+      {/* --- Section 2: Goals --- */}
+      <SectionCard
+        title="מטרות"
+        theme="orange"
+        icon={
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 2l3 6 6 .5-4.5 3 1.5 6L12 15l-6 3 1.5-6L3 8.5 9 8 12 2z" />
+          </svg>
+        }
+      >
+        <TextInput
+          id="superGoal"
+          label="מטרת על"
+          placeholder="מה המטרה הגדולה של השיעור?"
+          {...register('superGoal')}
+          error={errors.superGoal}
+        />
+
+        <div className="space-y-3">
+          <label className="block text-sm font-semibold text-gray-800">מטרות אופרטיביות</label>
+          {goalsIndices.map((index) => (
+            <div key={index} className="flex gap-3 items-start">
+              <div className="flex-1">
+                <TextInput
+                  label="" // Label handled by parent wrapper
+                  placeholder={`מטרה ${index + 1}`}
+                  {...register(`operativeGoals.${index}`)}
+                  error={errors.operativeGoals?.[index]}
+                  className="mb-0" // Reset margin since it's nested
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => removeGoal(index)}
+                disabled={goalsCount <= MIN_OPERATIVE_GOALS}
+                className="mt-1 p-2 rounded-md text-red-500 hover:bg-red-50 hover:text-red-700 disabled:opacity-30 disabled:hover:bg-transparent"
+                title="הסר מטרה"
+              >
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={appendGoal}
+            className="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1 mt-2"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            הוסף מטרה נוספת
+          </button>
+        </div>
+      </SectionCard>
+
+      {/* --- Section 3: Lesson Flow --- */}
+      <SectionCard
+        title="חלקי השיעור"
+        theme="green"
+        icon={
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        }
+      >
         <div className="space-y-4">
           {lessonFlowFields.map((field, index) => (
             <div
               key={field.id}
-              className="flex flex-wrap items-end gap-4 rounded border border-gray-100 bg-gray-50/50 p-4"
+              className="flex flex-col sm:flex-row gap-4 items-start bg-white p-4 rounded-md border border-gray-100 shadow-sm"
             >
-              <div className="min-w-[140px] flex-1">
-                <label className={LABEL_CLASS}>שם</label>
-                <input
-                  type="text"
-                  className={twMerge(
-                    clsx(
-                      INPUT_CLASS,
-                      formState.errors.lessonFlow?.[index]?.name && 'border-red-500'
-                    )
-                  )}
+              <div className="flex-1 w-full">
+                <TextInput
+                  label={index === 0 ? 'שם החלק' : ''}
+                  placeholder="פתיחה / גוף / סיכום"
                   {...register(`lessonFlow.${index}.name`)}
+                  error={errors.lessonFlow?.[index]?.name}
                 />
-                {formState.errors.lessonFlow?.[index]?.name && (
-                  <p className={ERROR_CLASS}>
-                    {formState.errors.lessonFlow[index]?.name?.message}
-                  </p>
-                )}
               </div>
-              <div className="w-24">
-                <label className={LABEL_CLASS}>משך (דק׳)</label>
-                <input
+              <div className="w-full sm:w-24">
+                <TextInput
+                  label={index === 0 ? 'דק׳' : ''}
                   type="number"
                   min={0}
-                  className={twMerge(
-                    clsx(
-                      INPUT_CLASS,
-                      formState.errors.lessonFlow?.[index]?.durationMinutes && 'border-red-500'
-                    )
-                  )}
-                  {...register(`lessonFlow.${index}.durationMinutes`, {
-                    valueAsNumber: true,
-                  })}
+                  {...register(`lessonFlow.${index}.durationMinutes`, { valueAsNumber: true })}
+                  error={errors.lessonFlow?.[index]?.durationMinutes}
                 />
-                {formState.errors.lessonFlow?.[index]?.durationMinutes && (
-                  <p className={ERROR_CLASS}>
-                    {formState.errors.lessonFlow[index]?.durationMinutes?.message}
-                  </p>
-                )}
               </div>
-              <div className="min-w-[160px] flex-1">
-                <label className={LABEL_CLASS}>תיאור</label>
-                <input
-                  type="text"
-                  className={twMerge(
-                    clsx(
-                      INPUT_CLASS,
-                      formState.errors.lessonFlow?.[index]?.description && 'border-red-500'
-                    )
-                  )}
+              <div className="flex-[2] w-full">
+                <TextInput
+                  label={index === 0 ? 'תיאור הפעילות' : ''}
+                  placeholder="מה עושים בחלק זה?"
                   {...register(`lessonFlow.${index}.description`)}
+                  error={errors.lessonFlow?.[index]?.description}
                 />
-                {formState.errors.lessonFlow?.[index]?.description && (
-                  <p className={ERROR_CLASS}>
-                    {formState.errors.lessonFlow[index]?.description?.message}
-                  </p>
-                )}
               </div>
               <button
                 type="button"
                 onClick={() => removeFlow(index)}
                 disabled={lessonFlowFields.length <= 1}
-                className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`mt-0 sm:mt-8 p-2 text-gray-400 hover:text-red-600 disabled:opacity-0 transition-colors`}
               >
-                הסר
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
               </button>
             </div>
           ))}
           <button
             type="button"
             onClick={() => appendFlow(emptyLessonPart())}
-            className="rounded-md border border-dashed border-gray-300 bg-white px-4 py-2 text-sm text-gray-600 hover:border-indigo-500 hover:text-indigo-600"
+            className="w-full py-2 border-2 border-dashed border-indigo-200 rounded-md text-indigo-600 font-medium hover:bg-indigo-50 hover:border-indigo-300 transition-colors flex justify-center items-center gap-2"
           >
-            הוסף חלק
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            הוסף חלק חדש
           </button>
         </div>
-      </section>
+      </SectionCard>
 
-      <footer className="flex justify-start">
+      {/* --- Footer Actions --- */}
+      <footer className="flex justify-start pt-4">
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-2 bg-indigo-600 px-8 py-3 rounded-lg text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 disabled:opacity-70 disabled:cursor-not-allowed transition-all active:scale-95"
         >
           {isPending ? (
             <>
-              <svg
-                className="ml-2 h-4 w-4 animate-spin text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
+              <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
-              שולח...
+              יוצר מערך...
             </>
           ) : (
-            'שליחה'
+            <>
+              שמור וצור מערך
+              <svg className="h-5 w-5 rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </>
           )}
         </button>
       </footer>

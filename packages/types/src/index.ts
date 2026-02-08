@@ -5,8 +5,8 @@ export const AGE_GROUPS = ['3-4', '4-5'] as const;
 export const ACTIVITY_FRAMES = ['plenary', 'small-group'] as const;
 
 // 2. Derive the Types from the Constants automatically
-export type AgeGroup = typeof AGE_GROUPS;
-export type ActivityFrame = typeof ACTIVITY_FRAMES;
+type AgeGroup = typeof AGE_GROUPS;
+type ActivityFrame = typeof ACTIVITY_FRAMES;
 
 // 3. The Lesson Flow (The Table)
 export interface LessonStep {
@@ -19,20 +19,20 @@ export interface LessonStep {
 export const MIN_OPERATIVE_GOALS = 3;
 
 const lessonStepSchema = z.object({
-  name: z.string().min(1),
+  name: z.string().min(1, 'יש למלא את שם שלב השיעור'),
   durationMinutes: z
     .number()
     .optional()
     .transform((v) => (v === undefined || Number.isNaN(v) ? undefined : v)),
-  description: z.string().min(1),
+  description: z.string().min(1, 'יש למלא את תיאור שלב השיעור'),
 });
 
 export const CreateLessonPlanSchema = z.object({
-  topic: z.string().min(2),
-  unit: z.string().min(2),
+  topic: z.string().min(2, 'יש למלא את נושא השיחה'),
+  unit: z.string().min(2, 'יש למלא את יחידת הלימוד'),
   ageGroup: z.enum(AGE_GROUPS),
   frame: z.enum(ACTIVITY_FRAMES),
-  superGoal: z.string().min(5),
+  superGoal: z.string().min(5, 'יש למלא את מטרת העל'),
   operativeGoals: z
     .array(z.string().min(1, 'יש למלא את המטרה'))
     .min(
