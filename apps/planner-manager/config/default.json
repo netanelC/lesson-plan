@@ -1,0 +1,19 @@
+{
+  "db": {
+    "host": "localhost",
+    "port": 5432,
+    "username": "postgres",
+    "password": "postgres",
+    "database": "lesson_plan",
+    "schema": "public"
+  },
+  "minio": {
+    "endpoint": "http://127.0.0.1:9000",
+    "region": "us-east-1",
+    "credentials": {
+      "accessKeyId": "minioadmin",
+      "secretAccessKey": "minioadmin"
+    },
+    "forcePathStyle": true
+  }
+}

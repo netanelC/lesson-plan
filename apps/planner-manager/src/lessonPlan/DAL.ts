@@ -1,0 +1,50 @@
+import { Prisma } from 'db/generated/prisma';
+import { prisma } from '../../db/prisma/prisma';
+import { CreateLessonPlanDto } from './schema';
+
+export const lessonPlanDal = {
+  async create(data: CreateLessonPlanDto, author: string) {
+    return prisma.lessonPlan.create({
+      data: {
+        ...data, // Spread all the simple fields (topic, unit, arrays)
+        author: author,
+        // We have to explicitly tell Prisma "Trust us, this array is JSON"
+        lessonFlow: data.lessonFlow as any, 
+      },
+    });
+  },
+
+  async getAll() {
+    return prisma.lessonPlan.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+  },
+
+  /**
+   * Fetches a single lesson plan and "Joins" all its attachments
+   */
+  async getById(id: string) {
+    return prisma.lessonPlan.findUnique({
+      where: { id },
+      include: {
+        attachments: true, // This is the magic line that fetches the child table
+      },
+    });
+  },
+
+  async addAttachment(lessonPlanId: string, fileInfo: { filename: string, url: string, fileType: string, sizeBytes: number }) {
+    return prisma.attachment.create({
+      data: {
+        ...fileInfo,
+        lessonPlanId
+      }
+    });
+  },
+
+  async getWithAttachments(id: string) {
+    return prisma.lessonPlan.findUnique({
+      where: { id },
+      include: { attachments: true } // This "joins" the tables automatically
+    });
+  },
+};

@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model LessonPlan {
+  id          String   @id @default(uuid())
+  author    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isPublished Boolean  @default(false)
+
+  // Header Info
+  topic String
+  unit  String
+
+  // Context
+  // We store these as Strings, but the App Logic (Zod) ensures they match the Enums
+  frame    String // "plenary" or "small-group"
+  ageGroup String // "3-4" or "4-5"
+
+  // Pedagogy
+  superGoal      String
+  operativeGoals String[] // Native Postgres Array
+  priorKnowledge String?
+
+  // Preparation
+  teachingAids String[]
+  references   String[]
+
+  // The Plan Content
+  // We store the array of steps as a JSON object because it's structured data
+  // that we rarely query individually.
+  lessonFlow Json
+
+  attachments Attachment[]
+}
+
+model Attachment {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  
+  filename  String   // Original name: "song.mp3"
+  url       String   // MinIO path/URL
+  fileType  String   // MimeType: "audio/mpeg", "image/png", etc.
+  sizeBytes Int
+
+  // Foreign Key linking back to the Lesson Plan
+  lessonPlan   LessonPlan @relation(fields: [lessonPlanId], references: [id], onDelete: Cascade)
+  lessonPlanId String
+}
