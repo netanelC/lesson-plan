@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { lessonPlanDal } from './DAL'; 
-import { CreateLessonPlanDto } from './schema';
+import { CreateLessonPlanDto } from '@repo/types';
 import { fileStorageService } from 'src/file-storage';
 
 export const lessonPlanController = {

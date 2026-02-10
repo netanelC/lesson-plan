@@ -1,6 +1,6 @@
 import { Prisma } from 'db/generated/prisma';
 import { prisma } from '../../db/prisma/prisma';
-import { CreateLessonPlanDto } from './schema';
+import { CreateLessonPlanDto } from '@repo/types';
 
 export const lessonPlanDal = {
   async create(data: CreateLessonPlanDto, author: string) {

@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { createLessonPlanSchema } from './schema';
+import { CreateLessonPlanSchema } from '@repo/types';
 import { lessonPlanController } from './controller';
 
 // This function is a "Fastify Plugin"
@@ -9,7 +9,7 @@ export async function lessonPlanRoutes(fastify: FastifyInstance) {
   // POST / (Create)
   fastify.post('/', {
     schema: {
-      body: createLessonPlanSchema, // <--- The Gatekeeper!
+      body: CreateLessonPlanSchema, // <--- The Gatekeeper!
     },
   }, lessonPlanController.create);
 

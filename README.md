@@ -1,135 +1,151 @@
-# Turborepo starter
+# 📚 Lesson Planner App
 
-This Turborepo starter is maintained by the Turborepo core team.
+A modern, full-stack application designed for teachers to create, manage, and organize lesson plans. This project is built as a **Monorepo** to ensure type safety across the frontend and backend.
 
-## Using this example
+## 🚀 Features
 
-Run the following command:
+* **Create Lesson Plans:** A detailed form with validation for pedagogy, operative goals, and lesson flow.
+* **File Attachments:** Upload and attach files (Images, Audio, Docs) to specific lesson plans.
+* **Dashboard:** View all lesson plans in a card-based layout.
+* **Export to Word:** Generate a `.doc` file with specific Hebrew formatting and tables.
+* **Export to PDF:** Clean, printer-friendly layout with automatic header/footer removal.
+* **Manage:** Delete old lesson plans.
+* **Hebrew Support:** Fully RTL (Right-to-Left) interface.
 
-```sh
-npx create-turbo@latest
-```
+## 🛠️ Tech Stack
 
-## What's inside?
+### Monorepo Structure
 
-This Turborepo includes the following packages/apps:
+* **Turborepo**: High-performance build system.
+* **pnpm**: Fast, disk space-efficient package manager.
 
-### Apps and Packages
+### Frontend (`apps/planner-ui`)
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+* **React** (Vite): Fast UI development.
+* **Tailwind CSS**: Utility-first styling.
+* **React Hook Form + Zod**: Robust form validation.
+* **TanStack Query**: Server state management.
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+### Backend (`apps/planner-manager`)
 
-### Utilities
+* **Fastify**: High-performance Node.js web framework.
+* **Prisma ORM**: Type-safe database access.
+* **MinIO**: S3-compatible object storage for file uploads.
 
-This Turborepo has some additional tools already setup for you:
+### Shared (`packages/types`)
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+* **Shared Zod Schemas**: A single source of truth for validation rules used by both Frontend and Backend.
 
-### Build
+---
 
-To build all apps and packages, run the following command:
+## 📂 Project Structure
 
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
-
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+```bash
+├── apps
+│   ├── planner-ui       # React Frontend
+│   └── planner-manager  # Fastify Backend API
+├── packages
+│   ├── types            # Shared TypeScript interfaces & Zod schemas
+│   └── config           # Shared TSConfig / ESLint configs
 
 ```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+---
 
-### Develop
+## ⚡ Getting Started
 
-To develop all apps and packages, run the following command:
+### 1. Prerequisites
 
-```
-cd my-turborepo
+* **Node.js** (v18+)
+* **pnpm** (Install via `npm i -g pnpm`)
+* **Docker** (For the Database and MinIO)
 
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+### 2. Installation
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+Clone the repo and install dependencies:
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+```bash
+git clone <your-repo-url>
+cd planner-app
+pnpm install
 
 ```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+### 3. Environment Setup
 
-### Remote Caching
+Create a `.env` file in `apps/planner-manager` (you can copy `.env.example` if it exists):
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+```env
+# apps/planner-manager/.env
+DATABASE_URL="postgresql://user:password@localhost:5432/planner_db"
+PORT=3000
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+# MinIO / S3 Configuration
+MINIO_ENDPOINT="localhost"
+MINIO_PORT=9000
+MINIO_ACCESS_KEY="minioadmin"
+MINIO_SECRET_KEY="minioadmin"
+MINIO_BUCKET_NAME="planner-files"
 
 ```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
+### 4. Run Infrastructure
+
+Start PostgreSQL and MinIO using Docker Compose (assuming you have a `docker-compose.yml` in the root or `packages/db`):
+
+```bash
+docker compose up -d
+
 ```
 
-## Useful Links
+### 5. Database Setup
 
-Learn more about the power of Turborepo:
+Push the Prisma schema to your local database:
 
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+```bash
+# Run from root
+pnpm db:push
+
+```
+
+### 6. Run Development Server
+
+Start both the Frontend and Backend simultaneously:
+
+```bash
+pnpm dev
+
+```
+
+* **Frontend:** http://localhost:5173
+* **Backend:** http://localhost:3000
+
+---
+
+## 🖼️ Usage Guide
+
+1. **Create:** Click "צור חדש" to open the form. Fill in the topic, goals, and add the lesson flow stages. You can drag and drop files to attach them.
+2. **View:** Click on any card in the dashboard to see the full details.
+3. **Export:** * Click **Word** to download an editable document.
+* Click **Print** to open the browser's print dialog (optimized for PDF saving).
+
+
+
+---
+
+## 🔜 Roadmap
+
+* [ ] User Authentication (Login/Register).
+* [ ] Edit existing lesson plans.
+* [ ] Search and Filter functionality.
+* [ ] Share plans with other teachers.
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository.
+2. Create a feature branch (`git checkout -b feature/amazing-feature`).
+3. Commit your changes.
+4. Push to the branch.
+5. Open a Pull Request.
