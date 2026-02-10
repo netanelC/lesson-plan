@@ -17,6 +17,16 @@ export interface LessonStep {
 // 4. Create Lesson Plan (Zod schema and DTO)
 export const MIN_OPERATIVE_GOALS = 3;
 
+// Add the Attachment interface
+export interface Attachment {
+  id: string;
+  filename: string;
+  url: string;
+  fileType: string;
+  sizeBytes: number;
+  lessonPlanId?: string;
+}
+
 const lessonStepSchema = z.object({
   name: z.string().min(1, 'יש למלא את שם שלב השיעור'),
   durationMinutes: z
@@ -72,4 +82,5 @@ export interface LessonPlan {
 
   // The Plan
   lessonFlow: LessonStep[];
+  attachments?: Attachment[];
 }

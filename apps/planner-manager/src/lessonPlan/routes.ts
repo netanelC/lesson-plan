@@ -18,9 +18,13 @@ export async function lessonPlanRoutes(fastify: FastifyInstance) {
 
   fastify.get('/:id', lessonPlanController.getOne);
 
+  fastify.put('/:id', lessonPlanController.update);
+
   fastify.delete('/:id', lessonPlanController.delete);
 
   fastify.post('/:id/attachments', lessonPlanController.uploadAttachment);
 
   fastify.get('/attachments/:id/download', lessonPlanController.downloadAttachment);
+
+  fastify.delete('/attachments/:fileId', lessonPlanController.removeAttachment);
 }

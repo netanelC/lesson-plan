@@ -39,6 +39,29 @@ export const lessonPlanController = {
     return reply.code(200).send(plan);
   },
 
+  update: async (
+    req: FastifyRequest<{ Params: { id: string }; Body: CreateLessonPlanDto }>,
+    reply: FastifyReply
+  ) => {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    try {
+      // 1. Check if it exists
+      const existing = await lessonPlanDal.getById(id);
+      if (!existing) {
+        return reply.code(404).send({ message: 'המערך לא נמצא' });
+      }
+
+      // 2. Perform update
+      const updatedPlan = await lessonPlanDal.update(id, updateData);
+      return reply.code(200).send(updatedPlan);
+    } catch (error) {
+      req.log.error(error);
+      return reply.code(500).send({ message: 'שגיאה בעדכון המערך' });
+    }
+  },
+
   delete: async (
     req: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
@@ -114,6 +137,38 @@ export const lessonPlanController = {
     } catch (error) {
       req.log.error(error);
       return reply.code(500).send({ message: 'Failed to download file' });
+    }
+  },
+
+  removeAttachment: async (
+    req: FastifyRequest<{ Params: { fileId: string } }>,
+    reply: FastifyReply
+  ) => {
+    const { fileId } = req.params;
+
+    try {
+      // 1. Get the attachment metadata from the DB
+      const attachment = await lessonPlanDal.getAttachmentById(fileId);
+      if (!attachment) {
+        return reply.code(404).send({ message: 'הקובץ לא נמצא' });
+      }
+
+      // 2. Extract the MinIO key from the URL 
+      // Example URL: .../lesson-attachments/PLAN_ID/filename.pdf
+      const key = attachment.url.split('lesson-attachments/')[1];
+
+      if (key) {
+        // 3. Delete from MinIO
+        await fileStorageService.deleteFile(key);
+      }
+
+      // 4. Delete the record from Postgres
+      await lessonPlanDal.deleteAttachment(fileId);
+
+      return reply.code(204).send();
+    } catch (error) {
+      req.log.error(error);
+      return reply.code(500).send({ message: 'שגיאה במחיקת הקובץ' });
     }
   },
 };

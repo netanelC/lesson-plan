@@ -32,6 +32,17 @@ export const lessonPlanDal = {
     });
   },
 
+  async update(id: string, data: CreateLessonPlanDto) {
+    return prisma.lessonPlan.update({
+      where: { id },
+      data: {
+        ...data,
+        // Ensure the JSON array is updated correctly
+        lessonFlow: data.lessonFlow as any, 
+      },
+    });
+  },
+
   async delete(id: string) {
     return prisma.lessonPlan.delete({
       where: { id },
@@ -56,6 +67,12 @@ export const lessonPlanDal = {
 
   async getAttachmentById(id: string) {
     return prisma.attachment.findUnique({
+      where: { id },
+    });
+  },
+
+  async deleteAttachment(id: string) {
+    return prisma.attachment.delete({
       where: { id },
     });
   },

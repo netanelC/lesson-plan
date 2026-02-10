@@ -1,5 +1,6 @@
-import { S3Client, PutObjectCommand, S3ClientConfig, ObjectCannedACL } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, S3ClientConfig, ObjectCannedACL, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import config from 'config';
+import { lessonPlanDal } from 'src/lessonPlan/DAL';
 
 // 1. Initialize S3 Client (Same as before)
 const s3Config = config.get<S3ClientConfig>('minio');
@@ -21,9 +22,9 @@ export const fileStorageService = {
     // 2. Sanitize the filename to be URL-safe
     // "My Cool Song!.mp3" -> "my-cool-song.mp3"
     const safeName = originalName
-      .toLowerCase()
-      .replace(/\s+/g, '-')     // Replace spaces with -
-      .replace(/[^a-z0-9.-]/g, ''); // Remove weird chars
+    .toLowerCase()
+    .replace(/\s+/g, '-') // Replace spaces with -
+    .replace(/[^\u0590-\u05FFa-z0-9.-]/g, ''); // Remove weird chars
 
     // 3. Create the "Folder" path
     // S3 doesn't have real folders, just keys with slashes.
@@ -44,5 +45,17 @@ export const fileStorageService = {
       url: `${s3Config.endpoint}/${BUCKET_NAME}/${key}`,
       filename: safeName
     };
+  },
+
+  /**
+   * Deletes a file from MinIO based on its stored key.
+   */
+  async deleteFile(key: string) {
+    const command = new DeleteObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: key,
+    });
+
+    return await s3Client.send(command);
   }
 };

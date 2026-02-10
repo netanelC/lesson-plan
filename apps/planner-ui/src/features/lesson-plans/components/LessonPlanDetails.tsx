@@ -54,6 +54,17 @@ export const LessonPlanDetails = () => {
               </svg>
               ייצא ל- PDF
             </button>
+
+            {/* Add this Edit Button */}
+            <Link
+              to={`/plan/${plan.id}/edit`}
+              className="flex items-center gap-2 text-amber-700 bg-amber-50 border border-amber-100 px-4 py-2 rounded-lg hover:bg-amber-100 transition-colors font-medium text-sm"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              ערוך מערך
+            </Link>
           </div>
       </div>
 
@@ -188,7 +199,7 @@ export const LessonPlanDetails = () => {
                           )}
                         </div>
                         <a 
-                          href={`/api/lesson-plans/attachments/${file.id}/download`} 
+                          href={`/api/lessons/attachments/${file.id}/download`} 
                           className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors shrink-0"
                           title="הורד קובץ"
                         >
