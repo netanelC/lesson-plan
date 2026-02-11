@@ -1,55 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
+// 1. User Roles for Permissions
+enum UserRole {
+  OWNER    // Full system access
+  ADMIN    // Can create/edit/delete THEIR OWN plans
+  KINDERGARTEN  // Read-only access to public plans
+}
+
+// 2. The User Model (Hybrid Auth)
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  fullName      String
+  
+  // Auth: Supports both Email/Password AND Google Login
+  passwordHash  String?   // Nullable: Empty if using Google-only
+  googleId      String?   @unique // Nullable: Empty if using Password-only
+  avatarUrl     String?
+
+  role          UserRole  @default(ADMIN) // Default to ADMIN so new users can create content immediately
+  isActive      Boolean   @default(true)  // For banning users without deleting data
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relation: One User has many Lesson Plans
+  lessonPlans   LessonPlan[]
+}
+
+// 3. The Lesson Plan Model
 model LessonPlan {
   id          String   @id @default(uuid())
-  author    String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  isPublished Boolean  @default(false)
+  
+  // Link to the User (Foreign Key)
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId    String
 
   // Header Info
-  topic String
-  unit  String
-
+  topic       String
+  unit        String
+  
   // Context
-  // We store these as Strings, but the App Logic (Zod) ensures they match the Enums
-  frame    String // "plenary" or "small-group"
-  ageGroup String // "3-4" or "4-5"
-
+  frame       String    // "plenary" or "small-group"
+  ageGroup    String    // "3-4" or "4-5"
+  
   // Pedagogy
-  superGoal      String
-  operativeGoals String[] // Native Postgres Array
-  priorKnowledge String?
-
+  superGoal       String
+  operativeGoals  String[]
+  priorKnowledge  String?
+  
   // Preparation
   teachingAids String[]
   references   String[]
+  
+  // Content
+  lessonFlow  Json      // Array of lesson steps
+  
+  // Metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isPublished Boolean  @default(true)
 
-  // The Plan Content
-  // We store the array of steps as a JSON object because it's structured data
-  // that we rarely query individually.
-  lessonFlow Json
-
+  // Relations
   attachments Attachment[]
 }
 
+// 4. File Attachments
 model Attachment {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
   
-  filename  String   // Original name: "song.mp3"
-  url       String   // MinIO path/URL
-  fileType  String   // MimeType: "audio/mpeg", "image/png", etc.
+  filename  String    // Original filename
+  url       String    // MinIO URL
+  fileType  String    // MIME type
   sizeBytes Int
-
-  // Foreign Key linking back to the Lesson Plan
+  
+  // Foreign Key
   lessonPlan   LessonPlan @relation(fields: [lessonPlanId], references: [id], onDelete: Cascade)
   lessonPlanId String
 }

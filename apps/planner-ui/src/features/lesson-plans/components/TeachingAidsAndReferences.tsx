@@ -57,7 +57,7 @@ export const TeachingAidsAndReferences = ({
           onClick={handleAddAid}
           className="text-indigo-600 text-sm font-bold flex items-center gap-1 hover:text-indigo-800 transition-colors"
         >
-          + הוסף אמצעי הוראה
+          + הוסיפי אמצעי הוראה
         </button>
       </div>
 
@@ -84,7 +84,7 @@ export const TeachingAidsAndReferences = ({
           onClick={handleAddReference}
           className="text-indigo-600 text-sm font-bold flex items-center gap-1 hover:text-indigo-800 transition-colors"
         >
-          + הוסף מקור מידע
+          + הוסיפי מקור מידע
         </button>
       </div>
     </div>

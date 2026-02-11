@@ -82,7 +82,7 @@ export const LessonFlowSection = ({
         onClick={handleAddStep}
         className="w-full py-2 border-2 border-dashed border-indigo-200 rounded-md text-indigo-600 font-medium hover:bg-indigo-50 transition-all flex justify-center items-center gap-2"
       >
-        + הוסף חלק חדש
+        + הוסיפי חלק חדש
       </button>
     </div>
   );

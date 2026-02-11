@@ -1,6 +1,6 @@
 # 📚 Lesson Planner App
 
-A modern, professional full-stack application designed for teachers to create, manage, and organize lesson plans. Built as a **Turborepo monorepo** to ensure type safety, code reusability, and scalability across frontend and backend.
+A modern, professional full-stack application designed for kindergartens to create, manage, and organize lesson plans. Built as a **Turborepo monorepo** to ensure type safety, code reusability, and scalability across frontend and backend.
 
 ## 🎯 Project Overview
 
@@ -207,7 +207,7 @@ See individual README files in:
 ## 🚀 Roadmap
 
 - [ ] User authentication and authorization
-- [ ] Collaborative lesson planning (share with other teachers)
+- [ ] Collaborative lesson planning (share with other kindergartens)
 - [ ] Search and advanced filtering
 - [ ] Lesson plan templates
 - [ ] Analytics dashboard
@@ -217,7 +217,7 @@ See individual README files in:
 
 ## �️ Usage Guide
 
-1. **Create:** Click "צור חדש" to open the form. Fill in the topic, goals, and add the lesson flow stages. You can drag and drop files to attach them.
+1. **Create:** Click "צרי חדש" to open the form. Fill in the topic, goals, and add the lesson flow stages. You can drag and drop files to attach them.
 2. **View:** Click on any card in the dashboard to see the full details.
 3. **Export:** * Click **Word** to download an editable document.
 * Click **Print** to open the browser's print dialog (optimized for PDF saving).
@@ -231,7 +231,7 @@ See individual README files in:
 * [ ] User Authentication (Login/Register).
 * [ ] Edit existing lesson plans.
 * [ ] Search and Filter functionality.
-* [ ] Share plans with other teachers.
+* [ ] Share plans with other kindergartens.
 
 ---
 

@@ -38,8 +38,8 @@ export const CreateLessonPlanForm = () => {
     <LessonPlanForm 
       onSubmit={handleCreate}
       isSubmitting={createPlanMutation.isPending || uploadAttachmentMutation.isPending}
-      title="צור מערך שיעור חדש"
-      submitLabel="שמור וצור מערך"
+      title="צרי מערך שיעור חדש"
+      submitLabel="שמרי וצרי מערך"
     />
   );
 };

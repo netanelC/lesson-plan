@@ -3,13 +3,13 @@ import { useParams, Link } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
 import { useLessonPlan } from '../api/useLessonPlan';
 import { SectionCard } from '../../../components/ui/SectionCard';
-import { exportLessonPlanToWord } from '../../../utils/exportToWord'; // <--- Import helper
+import { exportLessonPlanToWord } from '../../../utils/exportToWord';
+import { Can } from '../../../components/auth/Can'; // <--- Import the new Can component
 
 export const LessonPlanDetails = () => {
   const { id } = useParams<{ id: string }>();
   const { data: plan, isLoading, isError } = useLessonPlan(id || '');
   
-  // Ref for PDF Printing
   const componentRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = useReactToPrint({
@@ -33,7 +33,6 @@ export const LessonPlanDetails = () => {
           </Link>
 
           <div className="flex gap-3 self-end sm:self-auto">
-            {/* Word Export Button */}
             <button 
               onClick={() => exportLessonPlanToWord(plan)}
               className="flex items-center gap-2 text-blue-700 bg-blue-50 border border-blue-100 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors font-medium text-sm"
@@ -41,10 +40,9 @@ export const LessonPlanDetails = () => {
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              ייצא ל- Word
+              ייצאי ל- Word
             </button>
 
-            {/* Print/PDF Button */}
             <button 
               onClick={() => handlePrint()}
               className="flex items-center gap-2 text-indigo-700 bg-indigo-50 border border-indigo-100 px-4 py-2 rounded-lg hover:bg-indigo-100 transition-colors font-medium text-sm"
@@ -52,19 +50,21 @@ export const LessonPlanDetails = () => {
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
               </svg>
-              ייצא ל- PDF
+              ייצאי ל- PDF
             </button>
 
-            {/* Add this Edit Button */}
-            <Link
-              to={`/plan/${plan.id}/edit`}
-              className="flex items-center gap-2 text-amber-700 bg-amber-50 border border-amber-100 px-4 py-2 rounded-lg hover:bg-amber-100 transition-colors font-medium text-sm"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              ערוך מערך
-            </Link>
+            {/* --- Conditional Edit Button using Can Component --- */}
+            <Can perform="edit" data={{ authorId: plan.authorId }}>
+              <Link
+                to={`/plan/${plan.id}/edit`}
+                className="flex items-center gap-2 text-amber-700 bg-amber-50 border border-amber-100 px-4 py-2 rounded-lg hover:bg-amber-100 transition-colors font-medium text-sm"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                ערכי מערך
+              </Link>
+            </Can>
           </div>
       </div>
 
@@ -77,26 +77,32 @@ export const LessonPlanDetails = () => {
             <h1 className="text-3xl font-extrabold text-gray-900">{plan.topic}</h1>
             <p className="text-lg text-indigo-600 font-medium mt-1">{plan.superGoal}</p>
           </div>
-          <div className="flex gap-2 print:hidden">
-            <span className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm font-bold border border-indigo-100">
-              גיל {plan.ageGroup}
-            </span>
-            <span className="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-sm font-bold border border-purple-100">
-              {plan.unit}
+          
+          <div className="flex flex-col items-end gap-2 text-left">
+            <div className="flex gap-2 print:hidden">
+              <span className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm font-bold border border-indigo-100">
+                גיל {plan.ageGroup}
+              </span>
+              <span className="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-sm font-bold border border-purple-100">
+                {plan.unit}
+              </span>
+            </div>
+            {/* Author Name Display - Relies on Backend include: { author: true } */}
+            <span className="text-sm text-gray-400">
+              נוצר ע״י: {plan.author?.fullName || 'משתמש לא ידוע'}
             </span>
           </div>
-          {/* Print-only metadata display */}
+
           <div className="hidden print:block text-sm text-gray-500">
              גיל: {plan.ageGroup} | יחידה: {plan.unit} | תאריך: {new Date(plan.createdAt).toLocaleDateString('he-IL')}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print:block print:space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8 print:block print:space-y-6">
           
           {/* --- Right Column: Main Content (Wide) --- */}
           <div className="lg:col-span-2 space-y-8 print:space-y-6">
             
-            {/* 1. Operative Goals */}
             <SectionCard 
               title="מטרות אופרטיביות" 
               theme="orange" 
@@ -112,7 +118,6 @@ export const LessonPlanDetails = () => {
                </ul>
             </SectionCard>
 
-            {/* 2. Timeline (Lesson Flow) */}
             <SectionCard 
               title="מהלך השיעור" 
               theme="green" 
@@ -121,7 +126,6 @@ export const LessonPlanDetails = () => {
               <div className="relative border-r-2 border-green-100 mr-3 space-y-8 pr-6 print:border-none print:mr-0 print:pr-0 print:space-y-4">
                 {plan.lessonFlow.map((step, idx) => (
                   <div key={idx} className="relative print:border-b print:border-gray-100 print:pb-4">
-                    {/* Dot hidden in print usually, or styled differently */}
                     <div className="absolute -right-[33px] top-1 h-4 w-4 rounded-full bg-green-500 ring-4 ring-green-100 print:hidden"></div>
                     
                     <div className="flex justify-between items-start mb-2">
@@ -143,7 +147,6 @@ export const LessonPlanDetails = () => {
 
           {/* --- Left Column: Sidebar (Narrow) --- */}
           <div className="space-y-6 print:space-y-6 print:mt-6">
-             {/* 1. Metadata Card */}
              <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm print:border print:border-gray-300 print:p-4 print:shadow-none">
                 <h3 className="font-bold text-gray-900 mb-4 border-b pb-2">פרטים נוספים</h3>
                 <dl className="space-y-4">
@@ -164,7 +167,6 @@ export const LessonPlanDetails = () => {
                 </dl>
              </div>
 
-             {/* 2. Teaching Aids */}
              {plan.teachingAids.length > 0 && (
                <div className="bg-indigo-50 p-6 rounded-xl border border-indigo-100 print:bg-white print:border print:border-gray-300 print:p-4">
                  <h3 className="font-bold text-indigo-900 mb-3 flex items-center gap-2 print:text-gray-900">
@@ -177,7 +179,6 @@ export const LessonPlanDetails = () => {
                </div>
              )}
 
-             {/* 3. Attachments - HIDDEN IN PRINT */}
              {plan.attachments && plan.attachments.length > 0 && (
               <div className="print:hidden">
                 <SectionCard 
@@ -198,8 +199,11 @@ export const LessonPlanDetails = () => {
                             <p className="text-[10px] text-gray-500 uppercase">{file.fileType.split('/')[1]} FILE</p>
                           )}
                         </div>
+                        
                         <a 
-                          href={`/api/lessons/attachments/${file.id}/download`} 
+                          href={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/api/lessons/attachments/${file.id}/download`} 
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors shrink-0"
                           title="הורד קובץ"
                         >
@@ -214,7 +218,6 @@ export const LessonPlanDetails = () => {
               </div>
             )}
 
-             {/* 4. References */}
              {plan.references.length > 0 && (
                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm print:border print:border-gray-300 print:shadow-none print:p-4">
                  <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">

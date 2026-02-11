@@ -4,7 +4,7 @@ Modern React web application for creating and managing lesson plans. Built with 
 
 ## 📋 Overview
 
-Comprehensive SPA (Single Page Application) providing teachers with an intuitive interface to:
+Comprehensive SPA (Single Page Application) providing kindergartens with an intuitive interface to:
 - Create and edit structured lesson plans
 - Upload and manage teaching materials
 - Export lesson plans to Word format

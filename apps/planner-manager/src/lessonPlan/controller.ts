@@ -13,9 +13,9 @@ export const lessonPlanController = {
   ) => {
 
     const planData = req.body;
-    // Call the DAL
-    // We are hardcoding the author for now until we add Login later.
-    const newPlan = await lessonPlanDal.create(planData, 'nati');
+    const userId = req.user.id;
+
+    const newPlan = await lessonPlanDal.create(planData, userId);
 
     // Send back 201 (Created) and the data
     return reply.code(201).send(newPlan);

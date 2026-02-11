@@ -2,6 +2,8 @@ import Fastify, { FastifyInstance } from 'fastify';
 import fastifyMultipart from '@fastify/multipart';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { lessonPlanRoutes } from './lessonPlan';
+import { authRoutes } from './auth/routes';
+import fastifyJwt from '@fastify/jwt';
 
 export function buildApp(): FastifyInstance {
   const app = Fastify({ logger: true });
@@ -22,6 +24,14 @@ export function buildApp(): FastifyInstance {
     }
   });
   app.register(lessonPlanRoutes, { prefix: '/api/lessons' });
+
+  // 1. Register JWT (TODO: Move secret to .env later)
+  app.register(fastifyJwt, {
+    secret: process.env.JWT_SECRET || 'supersecret' 
+  });
+
+  // 2. Register Routes
+  app.register(authRoutes, { prefix: '/api/auth' });
 
   return app;
 }

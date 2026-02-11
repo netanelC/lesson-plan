@@ -1,6 +1,5 @@
 import { S3Client, PutObjectCommand, S3ClientConfig, ObjectCannedACL, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import config from 'config';
-import { lessonPlanDal } from 'src/lessonPlan/DAL';
 
 // 1. Initialize S3 Client (Same as before)
 const s3Config = config.get<S3ClientConfig>('minio');

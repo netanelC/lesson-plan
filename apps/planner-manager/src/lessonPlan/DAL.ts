@@ -2,11 +2,13 @@ import { prisma } from '../../db/prisma/prisma';
 import type { CreateLessonPlanDto } from '@repo/types';
 
 export const lessonPlanDal = {
-  async create(data: CreateLessonPlanDto, author: string) {
+  async create(data: CreateLessonPlanDto, userId: string) {
     return prisma.lessonPlan.create({
       data: {
         ...data, // Spread all the simple fields (topic, unit, arrays)
-        author: author,
+        author: {
+          connect: { id: userId } 
+        },
         // JSON.parse/stringify ensures proper Prisma JSON serialization
         lessonFlow: JSON.parse(JSON.stringify(data.lessonFlow)),
       },
@@ -15,6 +17,11 @@ export const lessonPlanDal = {
 
   async getAll() {
     return prisma.lessonPlan.findMany({
+      include: {
+        author: {
+          select: { fullName: true }
+        }
+      },
       orderBy: { createdAt: 'desc' }
     });
   },
@@ -26,8 +33,17 @@ export const lessonPlanDal = {
     return prisma.lessonPlan.findUnique({
       where: { id },
       include: {
-        attachments: true, // This is the magic line that fetches the child table
-      },
+        author: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            role: true,
+            avatarUrl: true
+          }
+        },
+        attachments: true
+      }
     });
   },
 

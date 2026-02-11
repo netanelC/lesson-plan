@@ -1,23 +1,56 @@
 import { z } from 'zod';
 
-// 1. Define the Constants (The Source of Truth)
+// =========================================
+// 1. User & Authentication (NEW)
+// =========================================
+
+export const USER_ROLES = ['OWNER', 'ADMIN', 'KINDERGARTEN'] as const;
+export type UserRole = (typeof USER_ROLES)[number];
+
+// The "Safe" User object sent to the frontend (no password/googleId)
+export interface User {
+  id: string;
+  email: string;
+  fullName: string;
+  role: UserRole;
+  avatarUrl?: string | null;
+}
+
+// Zod Schemas for Auth Forms
+export const LoginSchema = z.object({
+  email: z.email('כתובת אימייל לא תקינה'),
+  password: z.string().min(1, 'חובה להזין סיסמה'),
+});
+export type LoginDto = z.infer<typeof LoginSchema>;
+
+export const RegisterSchema = LoginSchema.extend({
+  fullName: z.string().min(2, 'שם מלא חייב להכיל לפחות 2 תווים'),
+});
+export type RegisterDto = z.infer<typeof RegisterSchema>;
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+}
+
+// =========================================
+// 2. Lesson Plan Constants
+// =========================================
 export const AGE_GROUPS = ['3-4', '4-5'] as const;
 export const ACTIVITY_FRAMES = ['plenary', 'small-group'] as const;
 
 export type AgeGroup = (typeof AGE_GROUPS)[number];
 export type ActivityFrame = (typeof ACTIVITY_FRAMES)[number];
 
-// 3. The Lesson Flow (The Table)
+// =========================================
+// 3. Sub-Entities (Steps, Attachments)
+// =========================================
 export interface LessonStep {
   name: string;             // e.g., "פתיחה", "גוף", "סיכום"
   durationMinutes?: number; 
-  description: string;      // The actual instructions
+  description: string;
 }
 
-// 4. Create Lesson Plan (Zod schema and DTO)
-export const MIN_OPERATIVE_GOALS = 3;
-
-// Add the Attachment interface
 export interface Attachment {
   id: string;
   filename: string;
@@ -26,6 +59,11 @@ export interface Attachment {
   sizeBytes: number;
   lessonPlanId?: string;
 }
+
+// =========================================
+// 4. Create Lesson Plan (Zod schema and DTO)
+// =========================================
+export const MIN_OPERATIVE_GOALS = 3; // Ensure this matches UI validation logic
 
 const lessonStepSchema = z.object({
   name: z.string().min(1, 'יש למלא את שם שלב השיעור'),
@@ -56,11 +94,17 @@ export const CreateLessonPlanSchema = z.object({
 
 export type CreateLessonPlanDto = z.infer<typeof CreateLessonPlanSchema>;
 
+// =========================================
 // 5. The Main Lesson Plan Interface
+// =========================================
 export interface LessonPlan {
   id: string;
-  author: string;
-  createdAt: Date;
+  
+  authorId: string;
+  author?: User;
+
+  createdAt: Date | string;
+  updatedAt?: Date | string;
   isPublished: boolean;
 
   // Header Info
@@ -73,12 +117,12 @@ export interface LessonPlan {
 
   // Pedagogy
   superGoal: string;        // מטרת על
-  operativeGoals: string[]; // מטרות אופרטיביות (Array of strings)
+  operativeGoals: string[]; // מטרות אופרטיביות
   priorKnowledge?: string;  // ידע קודם
 
   // Preparation
-  teachingAids: string[];   // אמצעי הוראה (List of items)
-  references: string[];     // מקורות מידע (Links or titles)
+  teachingAids: string[];   // אמצעי הוראה
+  references: string[];     // מקורות מידע
 
   // The Plan
   lessonFlow: LessonStep[];
