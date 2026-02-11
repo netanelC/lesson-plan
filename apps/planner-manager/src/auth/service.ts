@@ -2,6 +2,9 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '../../db/prisma/prisma'; // Make sure this path points to your prisma instance
 import { UserRole } from '@prisma/client';
 import { LoginResult } from './types';
+import { OAuth2Client } from 'google-auth-library';
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const authService = {
   async register(email: string, password: string, fullName: string) {
@@ -51,5 +54,31 @@ export const authService = {
       fullName: user.fullName,
       role: user.role,
     };
+  },
+
+  async verifyGoogleToken(token: string) {
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email) throw new Error('Invalid Google Token');
+
+    // Upsert: Find user by email, or create them if they don't exist
+    return prisma.user.upsert({
+      where: { email: payload.email },
+      update: { 
+        googleId: payload.sub,
+        avatarUrl: payload.picture 
+      },
+      create: {
+        email: payload.email,
+        fullName: payload.name || 'Google User',
+        googleId: payload.sub,
+        avatarUrl: payload.picture,
+        role: 'KINDERGARTEN'
+      },
+    });
   }
 };

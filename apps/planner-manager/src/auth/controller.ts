@@ -62,5 +62,35 @@ export const authController = {
       req.log.error(error);
       return reply.code(400).send({ message: 'Login failed', error });
     }
+  },
+
+  googleLogin: async (req: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const { token } = req.body as { token: string };
+      
+      // 1. Verify token and get/create user in DB
+      const user = await authService.verifyGoogleToken(token);
+
+      // 2. Sign JWT for our app
+      const appToken = await reply.jwtSign({
+        id: user.id,
+        email: user.email,
+        role: user.role
+      }, { expiresIn: '7d' });
+
+      return reply.send({
+        token: appToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          fullName: user.fullName,
+          role: user.role,
+          avatarUrl: user.avatarUrl
+        }
+      });
+    } catch (error) {
+      req.log.error(error);
+      return reply.code(401).send({ message: 'Google authentication failed' });
+    }
   }
 };

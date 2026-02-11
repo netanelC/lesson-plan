@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
+import { GoogleLogin, type CredentialResponse } from '@react-oauth/google'; // <--- Add this
 import { api } from '../../../lib/axios';
 import { useAuth } from '../context/AuthContext';
 import { TextInput } from '../../../components/ui/TextInput';
@@ -15,13 +16,12 @@ export const LoginPage = () => {
     handleSubmit, 
     setError, 
     formState: { errors, isSubmitting } 
-  } = useForm<LoginDto>({ // Use the shared DTO type
-    resolver: zodResolver(LoginSchema), // Use the shared Zod schema
+  } = useForm<LoginDto>({
+    resolver: zodResolver(LoginSchema),
   });
 
   const onSubmit = async (data: LoginDto) => {
     try {
-      // Return type is also typed now
       const res = await api.post<{ token: string; user: User }>('/auth/login', data);
       login(res.data.token, res.data.user);
       navigate('/');
@@ -30,6 +30,25 @@ export const LoginPage = () => {
       setError('root', { 
         message: 'האימייל או הסיסמה שגויים. נסה שנית.' 
       });
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    try {
+      // credentialResponse.credential is the JWT string from Google
+      if (!credentialResponse.credential) {
+        throw new Error('No credential received from Google');
+      }
+
+      const res = await api.post<{ token: string; user: User }>('/auth/google', { 
+        token: credentialResponse.credential 
+      });
+      
+      login(res.data.token, res.data.user);
+      navigate('/');
+    } catch (error) {
+      console.error('Google login failed', error);
+      setError('root', { message: 'ההתחברות עם גוגל נכשלה' });
     }
   };
 
@@ -74,6 +93,26 @@ export const LoginPage = () => {
             {isSubmitting ? 'מתחבר...' : 'היכנס'}
           </button>
         </form>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">או התחבר באמצעות</span>
+          </div>
+        </div>
+
+        <div className="flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError('root', { message: 'שגיאה בהתחברות עם גוגל' })}
+            useOneTap
+            shape="rectangular"
+            theme="outline"
+            width="100%"
+          />
+        </div>
       </div>
     </div>
   );
