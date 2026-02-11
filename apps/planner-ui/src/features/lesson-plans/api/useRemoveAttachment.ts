@@ -1,12 +1,10 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation } from '@tanstack/react-query';
+import { api } from '../../../lib/axios';
 
 export const useRemoveAttachment = () => {
   return useMutation({
     mutationFn: async (fileId: string) => {
-      const response = await fetch(`/api/lessons/attachments/${fileId}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) throw new Error('Failed to delete file');
+      await api.delete(`/lessons/attachments/${fileId}`);
     },
   });
 };

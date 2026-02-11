@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { lessonPlanDal } from './DAL'; 
-import { CreateLessonPlanDto } from '@repo/types';
-import { fileStorageService } from 'src/file-storage';
+import { lessonPlanDal } from './DAL';
+import { lessonPlanService } from './service';
+import type { CreateLessonPlanDto } from '@repo/types';
+import { fileStorageService } from '../file-storage';
 
 export const lessonPlanController = {
 
@@ -147,24 +148,8 @@ export const lessonPlanController = {
     const { fileId } = req.params;
 
     try {
-      // 1. Get the attachment metadata from the DB
-      const attachment = await lessonPlanDal.getAttachmentById(fileId);
-      if (!attachment) {
-        return reply.code(404).send({ message: 'הקובץ לא נמצא' });
-      }
-
-      // 2. Extract the MinIO key from the URL 
-      // Example URL: .../lesson-attachments/PLAN_ID/filename.pdf
-      const key = attachment.url.split('lesson-attachments/')[1];
-
-      if (key) {
-        // 3. Delete from MinIO
-        await fileStorageService.deleteFile(key);
-      }
-
-      // 4. Delete the record from Postgres
-      await lessonPlanDal.deleteAttachment(fileId);
-
+      // Delegate to service to handle orchestration
+      await lessonPlanService.removeAttachment(fileId);
       return reply.code(204).send();
     } catch (error) {
       req.log.error(error);

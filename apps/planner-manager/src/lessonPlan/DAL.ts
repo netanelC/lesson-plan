@@ -1,6 +1,5 @@
-import { Prisma } from 'db/generated/prisma';
 import { prisma } from '../../db/prisma/prisma';
-import { CreateLessonPlanDto } from '@repo/types';
+import type { CreateLessonPlanDto } from '@repo/types';
 
 export const lessonPlanDal = {
   async create(data: CreateLessonPlanDto, author: string) {
@@ -8,8 +7,8 @@ export const lessonPlanDal = {
       data: {
         ...data, // Spread all the simple fields (topic, unit, arrays)
         author: author,
-        // We have to explicitly tell Prisma "Trust us, this array is JSON"
-        lessonFlow: data.lessonFlow as any, 
+        // JSON.parse/stringify ensures proper Prisma JSON serialization
+        lessonFlow: JSON.parse(JSON.stringify(data.lessonFlow)),
       },
     });
   },
@@ -37,8 +36,8 @@ export const lessonPlanDal = {
       where: { id },
       data: {
         ...data,
-        // Ensure the JSON array is updated correctly
-        lessonFlow: data.lessonFlow as any, 
+        // JSON.parse/stringify ensures proper Prisma JSON serialization
+        lessonFlow: JSON.parse(JSON.stringify(data.lessonFlow)),
       },
     });
   },

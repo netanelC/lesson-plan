@@ -20,6 +20,11 @@ import { SelectInput } from '../../../components/ui/SelectInput';
 import { SectionCard } from '../../../components/ui/SectionCard';
 import { FileUploader } from '../../../components/ui/FileUploader';
 
+// Sub-components
+import { OperativeGoalsSection } from './OperativeGoalsSection';
+import { TeachingAidsAndReferences } from './TeachingAidsAndReferences';
+import { LessonFlowSection } from './LessonFlowSection';
+
 const FRAME_LABELS: Record<string, string> = {
   plenary: 'מליאה',
   'small-group': 'קבוצה קטנה',
@@ -89,8 +94,6 @@ export const LessonPlanForm = ({ initialData, onSubmit, isSubmitting, title, sub
   
   // Watchers for dynamic lists
   const operativeGoals = watch('operativeGoals') || [];
-  const teachingAids = watch('teachingAids') || [];
-  const references = watch('references') || [];
 
   const handleDeleteExistingFile = async (fileId: string) => {
     if (window.confirm('האם אתה בטוח שברצונך למחוק קובץ זה לצמיתות?')) {
@@ -142,35 +145,16 @@ export const LessonPlanForm = ({ initialData, onSubmit, isSubmitting, title, sub
         theme="orange"
         icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2l3 6 6 .5-4.5 3 1.5 6L12 15l-6 3 1.5-6L3 8.5 9 8 12 2z" /></svg>}
       >
-        <TextInput id="superGoal" label="מטרת על" {...register('superGoal')} error={errors.superGoal} />
-        <div className="space-y-3">
-          <label className="block text-sm font-semibold text-gray-800">מטרות אופרטיביות</label>
-          {operativeGoals.map((_, index) => (
-            <div key={index} className="flex gap-3">
-              <div className="flex-1">
-                <TextInput label="" {...register(`operativeGoals.${index}`)} error={errors.operativeGoals?.[index]} />
-              </div>
-              <button 
-                type="button" 
-                onClick={() => setValue('operativeGoals', operativeGoals.filter((_, i) => i !== index))}
-                disabled={operativeGoals.length <= MIN_OPERATIVE_GOALS}
-                className={`mt-1 p-2 rounded transition-colors ${
-                  operativeGoals.length <= MIN_OPERATIVE_GOALS 
-                    ? 'text-gray-300 cursor-not-allowed' 
-                    : 'text-red-500 hover:bg-red-50'
-                }`}
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
-            </div>
-          ))}
-          <button type="button" onClick={() => setValue('operativeGoals', [...operativeGoals, ''])} className="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1 mt-2">
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-            הוסף מטרה נוספת
-          </button>
-        </div>
+        <OperativeGoalsSection
+          operativeGoals={operativeGoals}
+          register={register}
+          watch={watch}
+          setValue={setValue}
+          errors={{
+            superGoal: errors.superGoal,
+            operativeGoals: Array.isArray(errors.operativeGoals) ? errors.operativeGoals : undefined,
+          }}
+        />
       </SectionCard>
 
       {/* --- Section 3: Preparation --- */}
@@ -181,28 +165,12 @@ export const LessonPlanForm = ({ initialData, onSubmit, isSubmitting, title, sub
       >
         <TextInput id="priorKnowledge" label="ידע קודם נדרש (אופציונלי)" {...register('priorKnowledge')} />
         
-        {/* Teaching Aids */}
-        <div className="mt-6 space-y-3 border-t border-gray-100 pt-4">
-          <label className="block text-sm font-semibold text-gray-800">אמצעי הוראה</label>
-          {teachingAids.map((_, i) => (
-            <div key={i} className="flex gap-2">
-              <div className="flex-1"><TextInput label="" {...register(`teachingAids.${i}`)} /></div>
-              <button type="button" onClick={() => setValue('teachingAids', teachingAids.filter((_, idx) => idx !== i))} className="p-2 text-red-500 hover:bg-red-50 rounded">✕</button>
-            </div>
-          ))}
-          <button type="button" onClick={() => setValue('teachingAids', [...teachingAids, ''])} className="text-indigo-600 text-sm font-bold flex items-center gap-1">+ הוסף אמצעי הוראה</button>
-        </div>
-
-        {/* References */}
-        <div className="mt-6 space-y-3 border-t border-gray-100 pt-4">
-          <label className="block text-sm font-semibold text-gray-800">מקורות מידע</label>
-          {references.map((_, i) => (
-            <div key={i} className="flex gap-2">
-              <div className="flex-1"><TextInput label="" {...register(`references.${i}`)} /></div>
-              <button type="button" onClick={() => setValue('references', references.filter((_, idx) => idx !== i))} className="p-2 text-red-500 hover:bg-red-50 rounded">✕</button>
-            </div>
-          ))}
-          <button type="button" onClick={() => setValue('references', [...references, ''])} className="text-indigo-600 text-sm font-bold flex items-center gap-1">+ הוסף מקור מידע</button>
+        <div className="mt-6">
+          <TeachingAidsAndReferences
+            register={register}
+            watch={watch}
+            setValue={setValue}
+          />
         </div>
       </SectionCard>
 
@@ -248,19 +216,16 @@ export const LessonPlanForm = ({ initialData, onSubmit, isSubmitting, title, sub
         theme="green"
         icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
       >
-        <div className="space-y-4">
-          {lessonFlowFields.map((field, index) => (
-            <div key={field.id} className="flex flex-col sm:flex-row gap-4 items-start bg-white p-4 rounded-md border border-gray-100 shadow-sm">
-              <div className="flex-1 w-full"><TextInput label={index === 0 ? 'שם החלק' : ''} {...register(`lessonFlow.${index}.name`)} error={errors.lessonFlow?.[index]?.name} /></div>
-              <div className="w-full sm:w-24"><TextInput label={index === 0 ? 'דק׳' : ''} type="number" {...register(`lessonFlow.${index}.durationMinutes`, { valueAsNumber: true })} error={errors.lessonFlow?.[index]?.durationMinutes} /></div>
-              <div className="flex-[2] w-full"><TextInput label={index === 0 ? 'תיאור הפעילות' : ''} {...register(`lessonFlow.${index}.description`)} error={errors.lessonFlow?.[index]?.description} /></div>
-              <button type="button" onClick={() => removeFlow(index)} disabled={lessonFlowFields.length <= 1} className="mt-0 sm:mt-8 p-2 text-gray-400 hover:text-red-600 transition-colors">✕</button>
-            </div>
-          ))}
-          <button type="button" onClick={() => appendFlow({ name: '', durationMinutes: 0, description: '' })} className="w-full py-2 border-2 border-dashed border-indigo-200 rounded-md text-indigo-600 font-medium hover:bg-indigo-50 transition-all flex justify-center items-center gap-2">
-            + הוסף חלק חדש
-          </button>
-        </div>
+        <LessonFlowSection
+          lessonFlowFields={lessonFlowFields}
+          append={appendFlow}
+          remove={removeFlow}
+          register={register}
+          watch={watch}
+          errors={{
+            lessonFlow: Array.isArray(errors.lessonFlow) ? errors.lessonFlow : undefined,
+          }}
+        />
       </SectionCard>
 
       <footer className="flex justify-start pt-4">
