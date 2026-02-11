@@ -42,7 +42,7 @@ export const OperativeGoalsSection = ({
       </div>
 
       <div>
-        <TextInput id="superGoal" label="מטרת על" {...register('superGoal')} error={errors.superGoal} />
+        <TextInput id="superGoal" label="מטרת על" placeholder="לדוגמה: התלמידים יבינו את חשיבות ההגנה על הטבע" {...register('superGoal')} error={errors.superGoal} />
       </div>
 
       <div className="space-y-3">
@@ -51,6 +51,7 @@ export const OperativeGoalsSection = ({
             <div className="flex-1">
               <TextInput
                 label=""
+                placeholder="לדוגמה: התלמיד יוכל לזהות סוגי צמחים"
                 {...register(`operativeGoals.${index}`)}
                 error={errors.operativeGoals?.[index]}
               />

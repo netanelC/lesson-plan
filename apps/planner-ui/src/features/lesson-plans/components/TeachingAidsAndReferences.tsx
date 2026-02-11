@@ -40,7 +40,7 @@ export const TeachingAidsAndReferences = ({
         {teachingAids.map((_, i) => (
           <div key={i} className="flex gap-2">
             <div className="flex-1">
-              <TextInput label="" {...register(`teachingAids.${i}`)} />
+              <TextInput label="" placeholder="לדוגמה: מיקרוסקופ, תמונות, וידאו" {...register(`teachingAids.${i}`)} />
             </div>
             <button
               type="button"
@@ -67,7 +67,7 @@ export const TeachingAidsAndReferences = ({
         {references.map((_, i) => (
           <div key={i} className="flex gap-2">
             <div className="flex-1">
-              <TextInput label="" {...register(`references.${i}`)} />
+              <TextInput label="" placeholder="לדוגמה: ספר - 'החי והצומח' בעמ׳ 45-50" {...register(`references.${i}`)} />
             </div>
             <button
               type="button"

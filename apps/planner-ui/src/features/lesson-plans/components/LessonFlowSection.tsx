@@ -40,6 +40,7 @@ export const LessonFlowSection = ({
           <div className="flex-1 w-full">
             <TextInput
               label={index === 0 ? 'שם החלק' : ''}
+              placeholder="לדוגמה: פתיחה"
               {...register(`lessonFlow.${index}.name`)}
               error={errors.lessonFlow?.[index]?.name}
             />
@@ -48,6 +49,7 @@ export const LessonFlowSection = ({
             <TextInput
               label={index === 0 ? 'דק׳' : ''}
               type="number"
+              placeholder="לדוגמה: 5"
               {...register(`lessonFlow.${index}.durationMinutes`, { valueAsNumber: true })}
               error={errors.lessonFlow?.[index]?.durationMinutes}
             />
@@ -55,6 +57,7 @@ export const LessonFlowSection = ({
           <div className="flex-[2] w-full">
             <TextInput
               label={index === 0 ? 'תיאור הפעילות' : ''}
+              placeholder="לדוגמה: שיחה עם התלמידים על הנושא"
               {...register(`lessonFlow.${index}.description`)}
               error={errors.lessonFlow?.[index]?.description}
             />
