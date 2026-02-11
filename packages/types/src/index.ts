@@ -1,5 +1,25 @@
 import { z } from 'zod';
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    totalItems: number;
+    itemCount: number;
+    itemsPerPage: number;
+    totalPages: number;
+    currentPage: number;
+  };
+}
+
+export interface LessonFilters {
+  search?: string;
+  ageGroup?: AgeGroup | '';
+  frame?: ActivityFrame | '';
+  page?: number;
+  limit?: number;
+}
+
+
 // =========================================
 // 1. User & Authentication (NEW)
 // =========================================

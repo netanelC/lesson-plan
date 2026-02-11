@@ -1,3 +1,4 @@
+import { LessonFilters } from '@repo/types';
 import { fileStorageService } from '../file-storage';
 import { lessonPlanDal } from './DAL';
 
@@ -6,6 +7,10 @@ import { lessonPlanDal } from './DAL';
  * Coordinates operations that span multiple systems (e.g., MinIO + Database).
  */
 export const lessonPlanService = {
+  async getLessonPlans(filters: LessonFilters) {
+    return lessonPlanDal.getAll(filters);
+  },
+
   /**
    * Removes an attachment from both MinIO storage and the database.
    * Ensures data consistency across systems.

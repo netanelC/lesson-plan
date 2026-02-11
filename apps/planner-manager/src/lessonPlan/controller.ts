@@ -4,9 +4,9 @@ import { lessonPlanDal } from './DAL';
 import { lessonPlanService } from './service';
 import type { CreateLessonPlanDto } from '@repo/types';
 import { fileStorageService } from '../file-storage';
+import { LessonFilters } from '@repo/types';
 
 export const lessonPlanController = {
-
   create: async (
     req: FastifyRequest<{ Body: CreateLessonPlanDto }>, 
     reply: FastifyReply
@@ -21,9 +21,21 @@ export const lessonPlanController = {
     return reply.code(201).send(newPlan);
   },
 
-  getAll: async (req: FastifyRequest, reply: FastifyReply) => {
-    const plans = await lessonPlanDal.getAll();
-    return reply.code(200).send(plans);
+  getAll: async (req: FastifyRequest<{ Querystring: any }>, reply: FastifyReply) => {
+    try {
+      const query = req.query as Partial<LessonFilters>;
+      const filters: LessonFilters = {
+        ...query,
+        page: query.page ? parseInt(query.page as unknown as string) : 1,
+        limit: query.limit ? parseInt(query.limit as unknown as string) : 12, // 12 works well for 3-column grids
+      };
+
+      const result = await lessonPlanService.getLessonPlans(filters);
+      return result;
+    } catch (error) {
+      req.log.error(error);
+      return reply.code(500).send({ message: 'Error fetching lesson plans' });
+    }
   },
 
   getOne: async (

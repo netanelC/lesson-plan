@@ -1,5 +1,7 @@
 import { prisma } from '../../db/prisma/prisma';
 import type { CreateLessonPlanDto } from '@repo/types';
+import { LessonFilters } from '@repo/types';
+import { Prisma } from 'db/generated/prisma';
 
 export const lessonPlanDal = {
   async create(data: CreateLessonPlanDto, userId: string) {
@@ -15,15 +17,44 @@ export const lessonPlanDal = {
     });
   },
 
-  async getAll() {
-    return prisma.lessonPlan.findMany({
-      include: {
-        author: {
-          select: { fullName: true }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
+  async getAll(filters: LessonFilters = {}) {
+    const { search, ageGroup, frame, page = 1, limit = 10 } = filters;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.LessonPlanWhereInput = { isPublished: true };
+
+    if (ageGroup) where.ageGroup = ageGroup;
+    if (frame) where.frame = frame;
+    if (search) {
+      where.OR = [
+        { topic: { contains: search, mode: 'insensitive' } },
+        { superGoal: { contains: search, mode: 'insensitive' } },
+        { unit: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // Execute count and data fetch in parallel for performance
+    const [totalItems, data] = await Promise.all([
+      prisma.lessonPlan.count({ where }),
+      prisma.lessonPlan.findMany({
+        where,
+        skip,
+        take: limit,
+        include: { author: { select: { fullName: true } } },
+        orderBy: { createdAt: 'desc' }
+      })
+    ]);
+
+    return {
+      data,
+      meta: {
+        totalItems,
+        itemCount: data.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page
+      }
+    };
   },
 
   /**
