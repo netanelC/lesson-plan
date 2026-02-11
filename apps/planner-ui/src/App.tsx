@@ -36,6 +36,7 @@ function App() {
                 <Route path="/create" element={<Layout><CreateLessonPlanForm /></Layout>} />
                 <Route path="/plan/:id" element={<Layout><LessonPlanDetails /></Layout>} />
                 <Route path="/plan/:id/edit" element={<Layout><EditLessonPlan /></Layout>} />
+                <Route path="/users" element={<Layout><UserManagement /></Layout>} />
               </Route>
             </Routes>
           </BrowserRouter>

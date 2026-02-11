@@ -14,6 +14,7 @@ export interface User {
   fullName: string;
   role: UserRole;
   avatarUrl?: string | null;
+  createdAt: string;
 }
 
 // Zod Schemas for Auth Forms
