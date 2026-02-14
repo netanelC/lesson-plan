@@ -9,7 +9,6 @@
     "test": "turbo run test",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "prepare": "husky",
     "check-types": "turbo run check-types"
   },
   "devDependencies": {

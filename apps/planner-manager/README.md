@@ -1,10 +1,16 @@
 # 🛠️ Planner Manager - Backend API
 
-Backend API server for the Lesson Planner application. Built with **Fastify**, **Prisma ORM**, and **TypeScript**.
+Fastify-based REST API server for the Lesson Planner application. Provides endpoints for lesson plan management, file storage, user authentication, and role-based access control.
 
-## 📋 Overview
+## 📋 Project Overview
 
-The backend provides RESTful API endpoints for managing lesson plans and file attachments. It follows clean architecture principles with clear separation between controllers, services, and data access layers.
+**Backend Type:** REST API (Stateless)  
+**Framework:** Fastify 5.x  
+**Language:** TypeScript 5.9+  
+**Database:** PostgreSQL 15+ with Prisma ORM  
+**Authentication:** JWT + Google OAuth  
+**File Storage:** MinIO (S3-compatible)  
+**Validation:** Zod schemas (shared with frontend)
 
 ## 🚀 Features
 
@@ -88,7 +94,7 @@ config/
 4. **Run database migrations:**
 
    ```bash
-   pnpm db:push
+   pnpm prisma migrate dev --name NAME
    ```
 
 5. **Start development server:**
@@ -263,10 +269,6 @@ pnpm build            # Build TypeScript to JavaScript
 pnpm start            # Run built server
 pnpm lint             # Run ESLint
 
-# Database
-pnpm db:push          # Apply Prisma migrations
-pnpm db:studio        # Open Prisma Studio GUI
-
 # Type checking
 pnpm type-check       # Run TypeScript type checker
 ```
@@ -316,7 +318,7 @@ Common status codes:
 When modifying the backend:
 
 1. Update the Prisma schema if database changes are needed
-2. Run `pnpm db:push` to generate migrations
+2. Run `pnpm prisma migrate dev --name NAME` to generate migrations
 3. Ensure all endpoints are validated with Zod schemas
 4. Follow the DAL → Service → Controller pattern
 5. Add TypeScript types from `@repo/types`
