@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { prisma } from "../../db/prisma/prisma";
+import { prisma } from "../db/prisma/prisma";
 import { UserRole } from "@repo/types";
 
 export const userController = {

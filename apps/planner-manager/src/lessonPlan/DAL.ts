@@ -1,7 +1,7 @@
-import { prisma } from "../../db/prisma/prisma";
+import { Prisma } from "../db/prisma/generated/client";
 import type { CreateLessonPlanDto } from "@repo/types";
 import { LessonFilters } from "@repo/types";
-import { Prisma } from "db/generated/prisma";
+import { prisma } from "../db/prisma/prisma";
 
 export const lessonPlanDal = {
   async create(data: CreateLessonPlanDto, userId: string) {

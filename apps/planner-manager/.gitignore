@@ -3,4 +3,4 @@ node_modules
 .env
 
 # generated files
-/db/generated
+src/db/prisma/generated

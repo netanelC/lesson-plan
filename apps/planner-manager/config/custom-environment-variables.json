@@ -1,0 +1,26 @@
+{
+  "db": {
+    "host": "DB_HOST",
+    "port": "DB_PORT",
+    "username": "DB_USERNAME",
+    "password": "DB_PASSWORD",
+    "database": "DB_NAME",
+    "schema": "DB_SCHEMA"
+  },
+  "minio": {
+    "endpoint": "MINIO_ENDPOINT",
+    "region": "MINIO_REGION",
+    "credentials": {
+      "accessKeyId": "MINIO_ACCESS_KEY_ID",
+      "secretAccessKey": "MINIO_SECRET_ACCESS_KEY"
+    },
+    "forcePathStyle": {
+      "__name": "MINIO_FORCE_PATH_STYLE",
+      "__format": "boolean"
+    }
+  },
+  "google": {
+    "clientId": "GOOGLE_CLIENT_ID",
+    "clientSecret": "GOOGLE_CLIENT_SECRET"
+  }
+}

@@ -1,10 +1,12 @@
 import bcrypt from "bcryptjs";
-import { prisma } from "../../db/prisma/prisma"; // Make sure this path points to your prisma instance
-import { UserRole } from "@prisma/client";
-import { LoginResult } from "./types";
+import { prisma } from "../db/prisma/prisma";
+import { LoginResult } from "./types.js";
 import { OAuth2Client } from "google-auth-library";
+import { UserRole } from "../db/prisma/generated/client";
+import config from 'config'
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const clientId = config.get<string>("google.clientId");
+const client = new OAuth2Client(clientId);
 
 export const authService = {
   async register(email: string, password: string, fullName: string) {
@@ -57,9 +59,10 @@ export const authService = {
   },
 
   async verifyGoogleToken(token: string) {
+    
     const ticket = await client.verifyIdToken({
       idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: clientId,
     });
 
     const payload = ticket.getPayload();

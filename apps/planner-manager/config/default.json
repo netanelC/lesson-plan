@@ -15,5 +15,8 @@
       "secretAccessKey": "minioadmin"
     },
     "forcePathStyle": true
+  },
+  "google": {
+    "clientId": "client-id.google.com"
   }
 }
