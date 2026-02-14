@@ -18,12 +18,13 @@ export const lessonPlanDal = {
   },
 
   async getAll(filters: LessonFilters = {}) {
-    const { search, ageGroup, frame, page = 1, limit = 10 } = filters;
+    const { search, ageGroup, frame, authorId, page = 1, limit = 10 } = filters;
     const skip = (page - 1) * limit;
 
     const where: Prisma.LessonPlanWhereInput = { isPublished: true };
 
     if (ageGroup) where.ageGroup = ageGroup;
+    if (authorId) where.authorId = authorId;
     if (frame) where.frame = frame;
     if (search) {
       where.OR = [

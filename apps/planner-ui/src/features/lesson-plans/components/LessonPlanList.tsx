@@ -20,7 +20,6 @@ const HighlightText = ({ text, highlight }: { text?: string; highlight?: string 
     <span>
       {parts.map((part, i) => 
         regex.test(part) ? (
-          // FIX: Removed 'px-0.5' and 'mx-0.5' so letters don't jump apart
           <mark key={i} className="bg-yellow-200 text-gray-900 rounded-[2px] font-inherit">
             {part}
           </mark>
@@ -35,7 +34,16 @@ const HighlightText = ({ text, highlight }: { text?: string; highlight?: string 
 export const LessonPlanList = () => {
   const { user } = useAuth();
   const listTopRef = useRef<HTMLDivElement>(null);
-  const [filters, setFilters] = useState<LessonFilters>({ page: 1, limit: 12, search: '', ageGroup: '', frame: '' });
+  
+  // Initialize state including authorId for "My Plans" logic
+  const [filters, setFilters] = useState<LessonFilters>({ 
+    page: 1, 
+    limit: 12, 
+    search: '', 
+    ageGroup: '', 
+    frame: '',
+    authorId: '' 
+  });
   
   const { data: response, isLoading, isError, isFetching } = useLessonPlans(filters);
   const deleteMutation = useDeleteLessonPlan();
@@ -52,7 +60,7 @@ export const LessonPlanList = () => {
   }, []);
 
   const resetFilters = useCallback(() => {
-    setFilters({ page: 1, limit: 12, search: '', ageGroup: '', frame: '' });
+    setFilters({ page: 1, limit: 12, search: '', ageGroup: '', frame: '', authorId: '' });
   }, []);
 
   const handlePageChange = (newPage: number) => {
@@ -282,7 +290,9 @@ export const LessonPlanList = () => {
       <FilterBar 
         filters={filters} 
         onFilterChange={handleFilterChange} 
-        onReset={resetFilters} 
+        onReset={resetFilters}
+        userRole={user?.role}
+        userId={user?.id}
       />
 
       {renderContent()}

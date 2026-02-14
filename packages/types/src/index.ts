@@ -15,6 +15,7 @@ export interface LessonFilters {
   search?: string;
   ageGroup?: AgeGroup | '';
   frame?: ActivityFrame | '';
+  authorId?: string;
   page?: number;
   limit?: number;
 }

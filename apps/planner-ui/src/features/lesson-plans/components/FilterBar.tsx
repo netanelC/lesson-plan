@@ -6,14 +6,15 @@ interface FilterBarProps {
   filters: LessonFilters;
   onFilterChange: (newFilters: Partial<LessonFilters>) => void;
   onReset: () => void;
+  userRole?: string;
+  userId?: string;
 }
 
-export const FilterBar = ({ filters, onFilterChange, onReset }: FilterBarProps) => {
+export const FilterBar = ({ filters, onFilterChange, onReset, userRole, userId }: FilterBarProps) => {
   const [searchTerm, setSearchTerm] = useState(filters.search || '');
   const [debouncedSearch] = useDebounce(searchTerm, 400);
 
-  // Sync local state when parent resets filters (e.g., Clear All)
-  // Check ensures we don't overwrite if it's already the same (prevents cursor jumps)
+  // Sync local state when parent resets filters
   useEffect(() => {
     if (filters.search !== searchTerm) {
       setSearchTerm(filters.search || '');
@@ -35,6 +36,11 @@ export const FilterBar = ({ filters, onFilterChange, onReset }: FilterBarProps) 
 
   const handleFrameChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onFilterChange({ frame: e.target.value as ActivityFrame | '' });
+  };
+
+  const handleMyPlansChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // If checked, filter by current userId. If unchecked, clear the authorId filter.
+    onFilterChange({ authorId: e.target.checked ? userId : '' });
   };
 
   return (
@@ -84,6 +90,22 @@ export const FilterBar = ({ filters, onFilterChange, onReset }: FilterBarProps) 
           <option value="small-group">קבוצה קטנה</option>
         </select>
       </div>
+
+      {/* My Plans Checkbox (Only for Admins/Owners) */}
+      {(userRole === 'OWNER' || userRole === 'ADMIN') && (
+        <div className="flex items-center gap-2 h-[42px] px-2 bg-gray-50 rounded-lg border border-gray-200">
+           <input
+             type="checkbox"
+             id="my-plans"
+             checked={filters.authorId === userId}
+             onChange={handleMyPlansChange}
+             className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer"
+           />
+           <label htmlFor="my-plans" className="text-xs font-bold text-gray-700 cursor-pointer select-none whitespace-nowrap">
+             המערכים שלי
+           </label>
+        </div>
+      )}
 
       {/* Reset Button */}
       <button
