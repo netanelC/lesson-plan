@@ -59,7 +59,7 @@ This is a Turborepo monorepo containing multiple apps and packages:
 ## 📂 Monorepo Structure
 
 ```bash
-lessons-plan/
+lessonPlan/
 ├── apps/
 │   ├── planner-manager/          # Backend API (Fastify + Prisma)
 │   │   ├── src/
@@ -82,7 +82,7 @@ lessons-plan/
 │       │   ├── components/       # Reusable UI components
 │       │   │   └── ui/          # Base UI components
 │       │   ├── features/        # Feature modules
-│       │   │   └── lesson-plans/ # Lesson plans feature
+│       │   │   └── lessonPlan/ # Lesson plans feature
 │       │   │       ├── api/     # React Query hooks
 │       │   │       └── components/ # Feature components
 │       │   ├── lib/             # Utility libraries
@@ -118,7 +118,7 @@ lessons-plan/
 1. **Clone and install dependencies:**
    ```bash
    git clone <repository-url>
-   cd lessons-plan
+   cd lesson-plan
    pnpm install
    ```
 

@@ -131,9 +131,9 @@ You specialize in:
 
 ### 1. Structure (Feature-Based)
 - Don't dump everything in `/components`. Use a feature-based structure:
-  - `src/features/lesson-plans/components`
-  - `src/features/lesson-plans/api` (TanStack Query hooks)
-  - `src/features/lesson-plans/types`
+  - `src/features/lessonPlan/components`
+  - `src/features/lessonPlan/api` (TanStack Query hooks)
+  - `src/features/lessonPlan/types`
 - Shared UI components (Buttons, Inputs) go in `src/components/ui`.
 
 ### 2. Data Fetching (TanStack Query)

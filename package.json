@@ -1,11 +1,15 @@
 {
-  "name": "lessons-plan",
+  "name": "lesson-plan",
   "private": true,
   "scripts": {
-    "build": "turbo run build",
+    "build": "turbo run build --summarize",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "test": "turbo run test",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "prepare": "husky",
     "check-types": "turbo run check-types"
   },
   "devDependencies": {

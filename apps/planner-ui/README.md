@@ -48,7 +48,7 @@ src/
 │       ├── SectionCard.tsx          # Card wrapper
 │       └── FileUploader.tsx         # File upload component
 ├── features/
-│   └── lesson-plans/
+│   └── lessonPlan/
 │       ├── api/                     # API hooks (React Query)
 │       │   ├── useCreateLessonPlan.ts
 │       │   ├── useUpdateLessonPlan.ts

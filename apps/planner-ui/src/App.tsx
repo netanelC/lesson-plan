@@ -5,10 +5,10 @@ import { AuthProvider } from './features/auth/context/AuthProvider';
 import { LoginPage } from './features/auth/components/LoginPage';
 import { RequireAuth } from './features/auth/components/RequireAuth';
 import { Layout } from './components/Layout';
-import { LessonPlanList } from './features/lesson-plans/components/LessonPlanList';
-import { CreateLessonPlanForm } from './features/lesson-plans/components/CreateLessonPlanForm';
-import { LessonPlanDetails } from './features/lesson-plans/components/LessonPlanDetails';
-import { EditLessonPlan } from './features/lesson-plans/components/EditLessonPlan';
+import { LessonPlanList } from './features/lessonPlan/components/LessonPlanList';
+import { CreateLessonPlanForm } from './features/lessonPlan/components/CreateLessonPlanForm';
+import { LessonPlanDetails } from './features/lessonPlan/components/LessonPlanDetails';
+import { EditLessonPlan } from './features/lessonPlan/components/EditLessonPlan';
 import { UserManagement } from './features/users/components/UserManagement';
 
 const queryClient = new QueryClient();

@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../../features/auth/context/AuthContext';
+import { useAuth } from '../../auth/context/AuthContext';
 import { useLessonPlans } from '../api/useLessonPlans';
 import { useDeleteLessonPlan } from '../api/useDeleteLessonPlan';
 import { FilterBar } from './FilterBar';

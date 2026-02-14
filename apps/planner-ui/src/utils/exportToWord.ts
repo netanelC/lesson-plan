@@ -1,5 +1,5 @@
 import { saveAs } from 'file-saver';
-import type { LessonPlanWithAttachments } from '../features/lesson-plans/api/useLessonPlan';
+import type { LessonPlanWithAttachments } from '../features/lessonPlan/api/useLessonPlan';
 
 export const exportLessonPlanToWord = (plan: LessonPlanWithAttachments) => {
   // עיבוד נתונים לפורמט התצוגה
