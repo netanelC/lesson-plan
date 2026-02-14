@@ -1,4 +1,4 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyRequest, FastifyReply } from "fastify";
 
 export async function authenticate(req: FastifyRequest, reply: FastifyReply) {
   try {

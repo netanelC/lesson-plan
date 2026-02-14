@@ -1,6 +1,6 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { CreateLessonPlanDto } from '@repo/types';
-import { api } from '../../../lib/axios';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { CreateLessonPlanDto } from "@repo/types";
+import { api } from "../../../lib/axios";
 
 export const useUpdateLessonPlan = (id: string) => {
   const queryClient = useQueryClient();
@@ -11,8 +11,8 @@ export const useUpdateLessonPlan = (id: string) => {
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['lessons'] });
-      queryClient.invalidateQueries({ queryKey: ['lessons', id] });
+      queryClient.invalidateQueries({ queryKey: ["lessons"] });
+      queryClient.invalidateQueries({ queryKey: ["lessons", id] });
     },
   });
 };

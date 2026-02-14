@@ -1,7 +1,7 @@
-import { forwardRef, type SelectHTMLAttributes } from 'react';
-import { clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-import { type FieldError } from 'react-hook-form';
+import { forwardRef, type SelectHTMLAttributes } from "react";
+import { clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+import { type FieldError } from "react-hook-form";
 
 interface SelectInputProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label: string;
@@ -11,19 +11,28 @@ interface SelectInputProps extends SelectHTMLAttributes<HTMLSelectElement> {
 }
 
 const SELECT_CLASS =
-  'block w-full bg-white border border-indigo-200 rounded-md px-3 py-2 pr-8 sm:text-sm text-gray-800 transition-shadow appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 shadow-sm';
+  "block w-full bg-white border border-indigo-200 rounded-md px-3 py-2 pr-8 sm:text-sm text-gray-800 transition-shadow appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 shadow-sm";
 
 export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
   ({ label, error, options, getLabel, className, ...props }, ref) => {
     return (
       <div className={className}>
-        <label htmlFor={props.id} className="block text-sm font-semibold text-gray-800 mb-1">
+        <label
+          htmlFor={props.id}
+          className="block text-sm font-semibold text-gray-800 mb-1"
+        >
           {label}
         </label>
         <div className="relative">
           <select
             ref={ref}
-            className={twMerge(clsx(SELECT_CLASS, error && 'border-red-400 focus:border-red-400 focus:ring-red-200'))}
+            className={twMerge(
+              clsx(
+                SELECT_CLASS,
+                error &&
+                  "border-red-400 focus:border-red-400 focus:ring-red-200",
+              ),
+            )}
             {...props}
           >
             {options.map((opt) => (
@@ -44,7 +53,7 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
         {error && <p className="mt-1 text-sm text-red-600">{error.message}</p>}
       </div>
     );
-  }
+  },
 );
 
-SelectInput.displayName = 'SelectInput';
+SelectInput.displayName = "SelectInput";

@@ -26,10 +26,12 @@ This is a Turborepo monorepo containing multiple apps and packages:
 ## 🛠️ Tech Stack
 
 ### Monorepo Management
+
 - **Turborepo** - High-performance build system and task orchestration
 - **pnpm** - Fast, disk space-efficient package manager with strict dependency management
 
 ### Frontend (`apps/planner-ui`)
+
 - **React 19** - UI library with Hooks
 - **Vite** - Lightning-fast build tool with HMR
 - **TypeScript** - Type-safe development
@@ -41,6 +43,7 @@ This is a Turborepo monorepo containing multiple apps and packages:
 - **Axios** - HTTP client with interceptors
 
 ### Backend (`apps/planner-manager`)
+
 - **Fastify** - High-performance Node.js web framework
 - **TypeScript** - Type-safe backend development
 - **Prisma ORM** - Type-safe database access with migrations
@@ -50,6 +53,7 @@ This is a Turborepo monorepo containing multiple apps and packages:
 - **Zod** - Server-side request validation
 
 ### Shared Packages
+
 - **`@repo/types`** - Shared TypeScript interfaces and Zod schemas
 - **`@repo/typescript-config`** - Shared TypeScript compiler options
 - **`@repo/eslint-config`** - Shared ESLint rules and presets
@@ -116,6 +120,7 @@ lessonPlan/
 ### Installation & Setup
 
 1. **Clone and install dependencies:**
+
    ```bash
    git clone <repository-url>
    cd lesson-plan
@@ -123,20 +128,23 @@ lessonPlan/
    ```
 
 2. **Start infrastructure (PostgreSQL + MinIO):**
+
    ```bash
    docker-compose up -d
    ```
 
 3. **Setup database:**
+
    ```bash
    pnpm db:push
    ```
 
 4. **Run development servers:**
+
    ```bash
    pnpm dev
    ```
-   
+
    - Frontend: http://localhost:5173
    - Backend: http://localhost:3000
    - MinIO Console: http://localhost:9001
@@ -163,6 +171,7 @@ The project follows **clean architecture** and **SOLID principles**:
 ### Single Source of Truth
 
 All validation rules and type definitions are defined in `packages/types` and used by:
+
 - **Backend** - Server-side request validation and type safety
 - **Frontend** - Form validation and type hints
 
@@ -171,7 +180,8 @@ This ensures consistency across the entire application.
 ### RTL Support
 
 The entire UI is built with RTL-first development:
-- All components use `dir="rtl"` 
+
+- All components use `dir="rtl"`
 - Tailwind classes leverage RTL variant support
 - Hebrew localizations throughout the interface
 
@@ -199,6 +209,7 @@ pnpm clean            # Remove all build artifacts
 ### App-Specific Commands
 
 See individual README files in:
+
 - `apps/planner-manager/` - Backend commands
 - `apps/planner-ui/` - Frontend commands
 
@@ -219,19 +230,18 @@ See individual README files in:
 
 1. **Create:** Click "צרי חדש" to open the form. Fill in the topic, goals, and add the lesson flow stages. You can drag and drop files to attach them.
 2. **View:** Click on any card in the dashboard to see the full details.
-3. **Export:** * Click **Word** to download an editable document.
-* Click **Print** to open the browser's print dialog (optimized for PDF saving).
+3. **Export:** \* Click **Word** to download an editable document.
 
-
+- Click **Print** to open the browser's print dialog (optimized for PDF saving).
 
 ---
 
 ## � Roadmap
 
-* [ ] User Authentication (Login/Register).
-* [ ] Edit existing lesson plans.
-* [ ] Search and Filter functionality.
-* [ ] Share plans with other kindergartens.
+- [ ] User Authentication (Login/Register).
+- [ ] Edit existing lesson plans.
+- [ ] Search and Filter functionality.
+- [ ] Share plans with other kindergartens.
 
 ---
 

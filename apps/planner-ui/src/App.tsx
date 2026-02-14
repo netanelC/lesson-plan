@@ -1,15 +1,15 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { GoogleOAuthProvider } from '@react-oauth/google';
-import { AuthProvider } from './features/auth/context/AuthProvider';
-import { LoginPage } from './features/auth/components/LoginPage';
-import { RequireAuth } from './features/auth/components/RequireAuth';
-import { Layout } from './components/Layout';
-import { LessonPlanList } from './features/lessonPlan/components/LessonPlanList';
-import { CreateLessonPlanForm } from './features/lessonPlan/components/CreateLessonPlanForm';
-import { LessonPlanDetails } from './features/lessonPlan/components/LessonPlanDetails';
-import { EditLessonPlan } from './features/lessonPlan/components/EditLessonPlan';
-import { UserManagement } from './features/users/components/UserManagement';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import { AuthProvider } from "./features/auth/context/AuthProvider";
+import { LoginPage } from "./features/auth/components/LoginPage";
+import { RequireAuth } from "./features/auth/components/RequireAuth";
+import { Layout } from "./components/Layout";
+import { LessonPlanList } from "./features/lessonPlan/components/LessonPlanList";
+import { CreateLessonPlanForm } from "./features/lessonPlan/components/CreateLessonPlanForm";
+import { LessonPlanDetails } from "./features/lessonPlan/components/LessonPlanDetails";
+import { EditLessonPlan } from "./features/lessonPlan/components/EditLessonPlan";
+import { UserManagement } from "./features/users/components/UserManagement";
 
 const queryClient = new QueryClient();
 
@@ -18,11 +18,13 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 function App() {
   if (!GOOGLE_CLIENT_ID) {
-    console.error("VITE_GOOGLE_CLIENT_ID is not defined in the environment variables.");
+    console.error(
+      "VITE_GOOGLE_CLIENT_ID is not defined in the environment variables.",
+    );
   }
 
   return (
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID || ''}>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID || ""}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <BrowserRouter>
@@ -32,11 +34,46 @@ function App() {
 
               {/* --- Protected Routes (With Layout) --- */}
               <Route element={<RequireAuth />}>
-                <Route path="/" element={<Layout><LessonPlanList /></Layout>} />
-                <Route path="/create" element={<Layout><CreateLessonPlanForm /></Layout>} />
-                <Route path="/plan/:id" element={<Layout><LessonPlanDetails /></Layout>} />
-                <Route path="/plan/:id/edit" element={<Layout><EditLessonPlan /></Layout>} />
-                <Route path="/users" element={<Layout><UserManagement /></Layout>} />
+                <Route
+                  path="/"
+                  element={
+                    <Layout>
+                      <LessonPlanList />
+                    </Layout>
+                  }
+                />
+                <Route
+                  path="/create"
+                  element={
+                    <Layout>
+                      <CreateLessonPlanForm />
+                    </Layout>
+                  }
+                />
+                <Route
+                  path="/plan/:id"
+                  element={
+                    <Layout>
+                      <LessonPlanDetails />
+                    </Layout>
+                  }
+                />
+                <Route
+                  path="/plan/:id/edit"
+                  element={
+                    <Layout>
+                      <EditLessonPlan />
+                    </Layout>
+                  }
+                />
+                <Route
+                  path="/users"
+                  element={
+                    <Layout>
+                      <UserManagement />
+                    </Layout>
+                  }
+                />
               </Route>
             </Routes>
           </BrowserRouter>

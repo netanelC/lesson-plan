@@ -1,8 +1,8 @@
-import bcrypt from 'bcryptjs';
-import { prisma } from '../../db/prisma/prisma'; // Make sure this path points to your prisma instance
-import { UserRole } from '@prisma/client';
-import { LoginResult } from './types';
-import { OAuth2Client } from 'google-auth-library';
+import bcrypt from "bcryptjs";
+import { prisma } from "../../db/prisma/prisma"; // Make sure this path points to your prisma instance
+import { UserRole } from "@prisma/client";
+import { LoginResult } from "./types";
+import { OAuth2Client } from "google-auth-library";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -11,7 +11,7 @@ export const authService = {
     // 1. Check if user exists
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
-      throw new Error('User already exists');
+      throw new Error("User already exists");
     }
 
     // 2. Hash the password (10 rounds is standard)
@@ -30,17 +30,17 @@ export const authService = {
         email: true,
         fullName: true,
         role: true,
-      }
+      },
     });
   },
 
   async validateUser(email: string, password: string): Promise<LoginResult> {
     // 1. Find user
     const user = await prisma.user.findUnique({ where: { email } });
-    
+
     // 2. Hybrid Check: If user exists but has no password (Google-only account)
     if (!user || !user.passwordHash) {
-      return null; 
+      return null;
     }
 
     // 3. Verify Password
@@ -61,24 +61,24 @@ export const authService = {
       idToken: token,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
-    
+
     const payload = ticket.getPayload();
-    if (!payload || !payload.email) throw new Error('Invalid Google Token');
+    if (!payload || !payload.email) throw new Error("Invalid Google Token");
 
     // Upsert: Find user by email, or create them if they don't exist
     return prisma.user.upsert({
       where: { email: payload.email },
-      update: { 
+      update: {
         googleId: payload.sub,
-        avatarUrl: payload.picture 
+        avatarUrl: payload.picture,
       },
       create: {
         email: payload.email,
-        fullName: payload.name || 'Google User',
+        fullName: payload.name || "Google User",
         googleId: payload.sub,
         avatarUrl: payload.picture,
-        role: 'KINDERGARTEN'
+        role: "KINDERGARTEN",
       },
     });
-  }
+  },
 };

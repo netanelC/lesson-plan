@@ -65,12 +65,14 @@ config/
 ### Installation
 
 1. **Install dependencies:**
+
    ```bash
    pnpm install
    ```
 
 2. **Setup environment variables:**
    Create a `.env` file:
+
    ```env
    DATABASE_URL="postgresql://user:password@localhost:5432/planner_db"
    PORT=3000
@@ -78,16 +80,19 @@ config/
    ```
 
 3. **Start infrastructure:**
+
    ```bash
    docker-compose up -d
    ```
 
 4. **Run database migrations:**
+
    ```bash
    pnpm db:push
    ```
 
 5. **Start development server:**
+
    ```bash
    pnpm dev
    ```
@@ -98,27 +103,28 @@ config/
 
 ### Lesson Plans
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/lessons` | Create a new lesson plan |
-| `GET` | `/api/lessons` | Get all lesson plans |
-| `GET` | `/api/lessons/:id` | Get a specific lesson plan |
-| `PUT` | `/api/lessons/:id` | Update a lesson plan |
-| `DELETE` | `/api/lessons/:id` | Delete a lesson plan |
+| Method   | Endpoint           | Description                |
+| -------- | ------------------ | -------------------------- |
+| `POST`   | `/api/lessons`     | Create a new lesson plan   |
+| `GET`    | `/api/lessons`     | Get all lesson plans       |
+| `GET`    | `/api/lessons/:id` | Get a specific lesson plan |
+| `PUT`    | `/api/lessons/:id` | Update a lesson plan       |
+| `DELETE` | `/api/lessons/:id` | Delete a lesson plan       |
 
 ### Attachments
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/lessons/:id/attachments` | Upload file attachment |
-| `GET` | `/api/lessons/attachments/:id/download` | Download attachment |
-| `DELETE` | `/api/lessons/attachments/:fileId` | Delete attachment |
+| Method   | Endpoint                                | Description            |
+| -------- | --------------------------------------- | ---------------------- |
+| `POST`   | `/api/lessons/:id/attachments`          | Upload file attachment |
+| `GET`    | `/api/lessons/attachments/:id/download` | Download attachment    |
+| `DELETE` | `/api/lessons/attachments/:fileId`      | Delete attachment      |
 
 ## 📝 Request/Response Examples
 
 ### Create Lesson Plan
 
 **Request:**
+
 ```bash
 POST /api/lessons
 Content-Type: application/json
@@ -153,6 +159,7 @@ Content-Type: application/json
 ```
 
 **Response (201 Created):**
+
 ```json
 {
   "id": "uuid",
@@ -184,27 +191,27 @@ model LessonPlan {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   isPublished Boolean  @default(false)
-  
+
   // Header Info
   topic       String
   unit        String
-  
+
   // Context
   frame       String    // "plenary" or "small-group"
   ageGroup    String    // "3-4" or "4-5"
-  
+
   // Pedagogy
   superGoal       String
   operativeGoals  String[]
   priorKnowledge  String?
-  
+
   // Preparation
   teachingAids String[]
   references   String[]
-  
+
   // Content
   lessonFlow  Json      // Array of lesson steps
-  
+
   // Relations
   attachments Attachment[]
 }
@@ -212,12 +219,12 @@ model LessonPlan {
 model Attachment {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
-  
+
   filename  String    // Original filename
   url       String    // MinIO URL
   fileType  String    // MIME type
   sizeBytes Int
-  
+
   // Foreign Key
   lessonPlan   LessonPlan @relation(fields: [lessonPlanId], references: [id], onDelete: Cascade)
   lessonPlanId String
@@ -266,15 +273,15 @@ pnpm type-check       # Run TypeScript type checker
 
 ## 🔐 Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `3000` | Server port |
-| `NODE_ENV` | `development` | Environment |
-| `DATABASE_URL` | Required | PostgreSQL connection string |
-| `MINIO_ENDPOINT` | `localhost` | MinIO host |
-| `MINIO_PORT` | `9000` | MinIO port |
-| `MINIO_ACCESS_KEY` | `minioadmin` | MinIO access key |
-| `MINIO_SECRET_KEY` | `minioadmin` | MinIO secret key |
+| Variable           | Default       | Description                  |
+| ------------------ | ------------- | ---------------------------- |
+| `PORT`             | `3000`        | Server port                  |
+| `NODE_ENV`         | `development` | Environment                  |
+| `DATABASE_URL`     | Required      | PostgreSQL connection string |
+| `MINIO_ENDPOINT`   | `localhost`   | MinIO host                   |
+| `MINIO_PORT`       | `9000`        | MinIO port                   |
+| `MINIO_ACCESS_KEY` | `minioadmin`  | MinIO access key             |
+| `MINIO_SECRET_KEY` | `minioadmin`  | MinIO secret key             |
 
 ## 🐛 Error Handling
 
@@ -290,6 +297,7 @@ All errors follow a consistent format:
 ```
 
 Common status codes:
+
 - `201` - Created
 - `200` - OK
 - `204` - No Content

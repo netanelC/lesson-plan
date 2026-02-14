@@ -5,6 +5,7 @@ Centralized package for TypeScript types and Zod validation schemas used across 
 ## 📋 Overview
 
 This package ensures that:
+
 - ✅ Frontend forms validate using the same schemas as the backend
 - ✅ TypeScript interfaces are consistent across apps
 - ✅ Validation rules are maintained in one place
@@ -37,24 +38,26 @@ const CreateLessonPlanSchema = z.object({
   priorKnowledge: z.string().optional(),
   teachingAids: z.array(z.string()),
   references: z.array(z.string()),
-  lessonFlow: z.array(z.object({
-    name: z.string(),
-    durationMinutes: z.number().positive(),
-    description: z.string()
-  }))
+  lessonFlow: z.array(
+    z.object({
+      name: z.string(),
+      durationMinutes: z.number().positive(),
+      description: z.string(),
+    }),
+  ),
 });
 ```
 
 ### Types
 
-| Type | Description |
-|------|-------------|
-| `LessonPlan` | Complete lesson plan with metadata |
-| `CreateLessonPlanDto` | Request DTO for creating/updating |
-| `Attachment` | File attachment metadata |
-| `LessonStep` | Single lesson flow step |
-| `AgeGroup` | "3-4" \| "4-5" |
-| `ActivityFrame` | "plenary" \| "small-group" |
+| Type                  | Description                        |
+| --------------------- | ---------------------------------- |
+| `LessonPlan`          | Complete lesson plan with metadata |
+| `CreateLessonPlanDto` | Request DTO for creating/updating  |
+| `Attachment`          | File attachment metadata           |
+| `LessonStep`          | Single lesson flow step            |
+| `AgeGroup`            | "3-4" \| "4-5"                     |
+| `ActivityFrame`       | "plenary" \| "small-group"         |
 
 ### Constants
 
@@ -101,15 +104,18 @@ function LessonPlanForm() {
 ```typescript
 import { CreateLessonPlanSchema, type CreateLessonPlanDto } from "@repo/types";
 
-app.post<{ Body: CreateLessonPlanDto }>("/api/lessons", async (request, reply) => {
-  // Validate request body
-  const validatedData = CreateLessonPlanSchema.parse(request.body);
-  
-  // Use validated data
-  const lessonPlan = await lessonPlanService.create(validatedData);
-  
-  return reply.code(201).send(lessonPlan);
-});
+app.post<{ Body: CreateLessonPlanDto }>(
+  "/api/lessons",
+  async (request, reply) => {
+    // Validate request body
+    const validatedData = CreateLessonPlanSchema.parse(request.body);
+
+    // Use validated data
+    const lessonPlan = await lessonPlanService.create(validatedData);
+
+    return reply.code(201).send(lessonPlan);
+  },
+);
 ```
 
 ### Runtime Validation
@@ -199,7 +205,7 @@ In your `tsconfig.json`:
 const MyEntitySchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1),
-  createdAt: z.date()
+  createdAt: z.date(),
 });
 
 // 2. Extract TypeScript type
@@ -220,11 +226,11 @@ When changing validation:
 
 ## 🎯 Current Schema Coverage
 
-| Entity | Type | Schema | Status |
-|--------|------|--------|--------|
-| Lesson Plan | ✅ | `CreateLessonPlanSchema` | ✅ Complete |
-| Attachment | ✅ | Included in LessonPlan | ✅ Complete |
-| Lesson Step | ✅ | Inline in LessonFlow | ✅ Complete |
+| Entity      | Type | Schema                   | Status      |
+| ----------- | ---- | ------------------------ | ----------- |
+| Lesson Plan | ✅   | `CreateLessonPlanSchema` | ✅ Complete |
+| Attachment  | ✅   | Included in LessonPlan   | ✅ Complete |
+| Lesson Step | ✅   | Inline in LessonFlow     | ✅ Complete |
 
 ## 📚 Available Scripts
 
@@ -237,6 +243,7 @@ pnpm -F @repo/types lint          # Linting
 ## 🔐 Type Safety Guarantees
 
 All exported types are:
+
 - ✅ **100% TypeScript** - No `any` types
 - ✅ **Zod-backed** - Runtime validation available
 - ✅ **Consistent** - Single definition across monorepo

@@ -5,6 +5,7 @@ Modern React web application for creating and managing lesson plans. Built with 
 ## 📋 Overview
 
 Comprehensive SPA (Single Page Application) providing kindergartens with an intuitive interface to:
+
 - Create and edit structured lesson plans
 - Upload and manage teaching materials
 - Export lesson plans to Word format
@@ -81,17 +82,20 @@ src/
 ### Installation
 
 1. **Install dependencies:**
+
    ```bash
    pnpm install
    ```
 
 2. **Configure API endpoint:**
    Create `.env.local`:
+
    ```env
    VITE_API_BASE_URL=http://localhost:3000
    ```
 
 3. **Start development server:**
+
    ```bash
    pnpm dev
    ```
@@ -103,6 +107,7 @@ src/
 ### Page Components
 
 **LessonPlanForm** - Main lesson plan creation/editing page
+
 - Manages form state via React Hook Form
 - Orchestrates sub-component rendering
 - Handles form submission and API calls
@@ -110,20 +115,20 @@ src/
 
 ### Feature Components
 
-| Component | Purpose | Lines |
-|-----------|---------|-------|
-| `OperativeGoalsSection` | Goals list management | ~90 |
-| `TeachingAidsAndReferences` | Combined aids/references | ~90 |
-| `LessonFlowSection` | Dynamic lesson step management | ~70 |
+| Component                   | Purpose                        | Lines |
+| --------------------------- | ------------------------------ | ----- |
+| `OperativeGoalsSection`     | Goals list management          | ~90   |
+| `TeachingAidsAndReferences` | Combined aids/references       | ~90   |
+| `LessonFlowSection`         | Dynamic lesson step management | ~70   |
 
 ### UI Components (Reusable)
 
-| Component | Purpose |
-|-----------|---------|
-| `TextInput` | Text field with label & validation error |
-| `SelectInput` | Dropdown with label & validation error |
-| `SectionCard` | Card wrapper for form sections |
-| `FileUploader` | Drag-drop file upload with preview |
+| Component      | Purpose                                  |
+| -------------- | ---------------------------------------- |
+| `TextInput`    | Text field with label & validation error |
+| `SelectInput`  | Dropdown with label & validation error   |
+| `SectionCard`  | Card wrapper for form sections           |
+| `FileUploader` | Drag-drop file upload with preview       |
 
 ## 📝 Form Implementation
 
@@ -176,6 +181,7 @@ const { mutate: deletePlan } = useDeleteLessonPlan(id);
 ```
 
 All hooks use `api.axios` for consistent HTTP client with:
+
 - Base URL configuration
 - Request/response interceptors
 - Error handling
@@ -192,8 +198,8 @@ uploadFile(
   {
     onSuccess: (attachment) => {
       console.log(`File uploaded: ${attachment.filename}`);
-    }
-  }
+    },
+  },
 );
 ```
 
@@ -202,11 +208,14 @@ uploadFile(
 ```typescript
 const { mutate: removeFile } = useRemoveAttachment(lessonPlanId);
 
-removeFile({ fileId }, {
-  onSuccess: () => {
-    console.log("File removed");
-  }
-});
+removeFile(
+  { fileId },
+  {
+    onSuccess: () => {
+      console.log("File removed");
+    },
+  },
+);
 ```
 
 ## 💾 Export to Word
@@ -227,12 +236,14 @@ const handleExport = async (lessonPlan: LessonPlan) => {
 ### Hebrew RTL Support
 
 Full right-to-left layout with:
+
 - `dir="rtl"` on root element
 - Tailwind RTL modifier support
 - All form labels and placeholders in Hebrew
 - Hebrew hints on form inputs
 
 **Example:**
+
 ```typescript
 <input
   placeholder="לדוגמה: צמחים בעונת האביב"
@@ -255,6 +266,7 @@ Responsive design using Tailwind CSS with RTL support:
 ### Custom Colors
 
 Defined in `tailwind.config.js`:
+
 - Primary colors for buttons and links
 - Neutral colors for text and backgrounds
 - Semantic colors (success, error, warning)
@@ -272,9 +284,9 @@ pnpm type-check       # TypeScript type checking
 
 ## 🔐 Environment Variables
 
-| Variable | Required | Default |
-|----------|----------|---------|
-| `VITE_API_BASE_URL` | Yes | `http://localhost:3000` |
+| Variable            | Required | Default                 |
+| ------------------- | -------- | ----------------------- |
+| `VITE_API_BASE_URL` | Yes      | `http://localhost:3000` |
 
 ## 🧪 Testing
 
@@ -286,6 +298,7 @@ pnpm -F planner-ui test
 ```
 
 Tests cover:
+
 - Form validation with Zod schemas
 - API integration with React Query
 - Component rendering with RTL
@@ -308,26 +321,29 @@ When developing features:
 5. Test forms with Zod validation
 6. Ensure RTL support with Tailwind RTL modifiers
 7. Add Hebrew hints/placeholders to form inputs
-import reactDom from 'eslint-plugin-react-dom'
+   import reactDom from 'eslint-plugin-react-dom'
 
 export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
+globalIgnores(['dist']),
+{
+files: ['**/*.{ts,tsx}'],
+extends: [
+// Other configs...
+// Enable lint rules for React
+reactX.configs['recommended-typescript'],
+// Enable lint rules for React DOM
+reactDom.configs.recommended,
+],
+languageOptions: {
+parserOptions: {
+project: ['./tsconfig.node.json', './tsconfig.app.json'],
+tsconfigRootDir: import.meta.dirname,
+},
+// other options...
+},
+},
 ])
+
+```
+
 ```

@@ -1,8 +1,13 @@
-import type { ReactNode } from 'react';
-import { TextInput } from '../../../components/ui/TextInput';
-import { MIN_OPERATIVE_GOALS } from '@repo/types';
-import type { FieldError, UseFormSetValue, UseFormWatch, UseFormRegister } from 'react-hook-form';
-import type { CreateLessonPlanDto } from '@repo/types';
+import type { ReactNode } from "react";
+import { TextInput } from "../../../components/ui/TextInput";
+import { MIN_OPERATIVE_GOALS } from "@repo/types";
+import type {
+  FieldError,
+  UseFormSetValue,
+  UseFormWatch,
+  UseFormRegister,
+} from "react-hook-form";
+import type { CreateLessonPlanDto } from "@repo/types";
 
 interface OperativeGoalsSectionProps {
   operativeGoals: string[];
@@ -24,25 +29,36 @@ export const OperativeGoalsSection = ({
   errors,
   icon,
 }: OperativeGoalsSectionProps) => {
-  const goals = watch('operativeGoals') || operativeGoals;
+  const goals = watch("operativeGoals") || operativeGoals;
 
   const handleRemoveGoal = (index: number) => {
-    setValue('operativeGoals', goals.filter((_, i) => i !== index));
+    setValue(
+      "operativeGoals",
+      goals.filter((_, i) => i !== index),
+    );
   };
 
   const handleAddGoal = () => {
-    setValue('operativeGoals', [...goals, '']);
+    setValue("operativeGoals", [...goals, ""]);
   };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         {icon && <div className="text-orange-600">{icon}</div>}
-        <label className="block text-sm font-semibold text-gray-800">מטרות אופרטיביות</label>
+        <label className="block text-sm font-semibold text-gray-800">
+          מטרות אופרטיביות
+        </label>
       </div>
 
       <div>
-        <TextInput id="superGoal" label="מטרת על" placeholder="לדוגמה: התלמידים יבינו את חשיבות ההגנה על הטבע" {...register('superGoal')} error={errors.superGoal} />
+        <TextInput
+          id="superGoal"
+          label="מטרת על"
+          placeholder="לדוגמה: התלמידים יבינו את חשיבות ההגנה על הטבע"
+          {...register("superGoal")}
+          error={errors.superGoal}
+        />
       </div>
 
       <div className="space-y-3">
@@ -62,12 +78,21 @@ export const OperativeGoalsSection = ({
               disabled={goals.length <= MIN_OPERATIVE_GOALS}
               className={`mt-1 p-2 rounded transition-colors ${
                 goals.length <= MIN_OPERATIVE_GOALS
-                  ? 'text-gray-300 cursor-not-allowed'
-                  : 'text-red-500 hover:bg-red-50'
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-red-500 hover:bg-red-50"
               }`}
-              title={goals.length <= MIN_OPERATIVE_GOALS ? `Minimum ${MIN_OPERATIVE_GOALS} goals required` : 'Remove goal'}
+              title={
+                goals.length <= MIN_OPERATIVE_GOALS
+                  ? `Minimum ${MIN_OPERATIVE_GOALS} goals required`
+                  : "Remove goal"
+              }
             >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -84,8 +109,18 @@ export const OperativeGoalsSection = ({
           onClick={handleAddGoal}
           className="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1 mt-2"
         >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
           </svg>
           הוסיפי מטרה נוספת
         </button>

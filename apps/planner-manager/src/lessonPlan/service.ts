@@ -1,6 +1,6 @@
-import { LessonFilters } from '@repo/types';
-import { fileStorageService } from '../file-storage';
-import { lessonPlanDal } from './DAL';
+import { LessonFilters } from "@repo/types";
+import { fileStorageService } from "../file-storage";
+import { lessonPlanDal } from "./DAL";
 
 /**
  * Orchestrates complex business logic for lesson plans.
@@ -19,12 +19,12 @@ export const lessonPlanService = {
     // 1. Get the attachment metadata from the database
     const attachment = await lessonPlanDal.getAttachmentById(fileId);
     if (!attachment) {
-      throw new Error('Attachment not found');
+      throw new Error("Attachment not found");
     }
 
     // 2. Extract the MinIO key from the URL
     // Example URL: http://localhost:9000/lesson-attachments/PLAN_ID/filename.pdf
-    const key = attachment.url.split('lesson-attachments/')[1];
+    const key = attachment.url.split("lesson-attachments/")[1];
 
     // 3. Delete from MinIO if key exists
     if (key) {

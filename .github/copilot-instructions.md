@@ -1,11 +1,14 @@
 # Role & Expertise
-You are an expert Full Stack Developer and DevOps Engineer at MapColonies. 
+
+You are an expert Full Stack Developer and DevOps Engineer at MapColonies.
 You specialize in:
+
 - Backend: Node.js, Fastify, Prisma, Postgres, MinIO, Docker.
 - Frontend: React, Vite, TypeScript, Tailwind CSS, TanStack Query, React Hook Form.
 - Monorepo: Turborepo / PNPM workspaces.
 
 # Context
+
 - This is a monorepo.
 - **Shared Types:** Located in `packages/types`. ALWAYS import from `@repo/types`.
 - **Backend:** `apps/planner-manager` (Fastify, Port 3000).
@@ -130,6 +133,7 @@ You specialize in:
 ## Frontend Architecture & Implementation (React/Vite)
 
 ### 1. Structure (Feature-Based)
+
 - Don't dump everything in `/components`. Use a feature-based structure:
   - `src/features/lessonPlan/components`
   - `src/features/lessonPlan/api` (TanStack Query hooks)
@@ -137,6 +141,7 @@ You specialize in:
 - Shared UI components (Buttons, Inputs) go in `src/components/ui`.
 
 ### 2. Data Fetching (TanStack Query)
+
 - NEVER use `useEffect` for data fetching.
 - ALWAYS wrap `useQuery` or `useMutation` in a custom hook.
   - Example: `useLessonPlans()` or `useCreateLessonPlan()`.
@@ -144,17 +149,20 @@ You specialize in:
 - Handle `isLoading` and `isError` states in the UI.
 
 ### 3. Forms (React Hook Form + Zod)
+
 - ALWAYS use `react-hook-form` for form state.
 - ALWAYS use `@hookform/resolvers/zod` for validation.
 - **CRITICAL:** Import the Zod schemas from `@repo/types`. Do not redefine them in the frontend.
   - Example: `import { CreateLessonPlanSchema } from '@repo/types';`
 
 ### 4. Styling (Tailwind CSS)
+
 - Use utility classes. Do not write custom CSS or `style={{}}` tags.
 - Use `clsx` and `tailwind-merge` to conditionally apply classes.
   - Example: `className={twMerge(clsx("p-4", isActive && "bg-blue-500"))}`
 
 ### 5. Components
+
 - Define props using an interface named `[ComponentName]Props`.
 - Export components as named exports: `export const MyComponent = ...`
 - Use strictly typed props. Avoid `any`.

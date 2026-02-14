@@ -1,28 +1,32 @@
-import { saveAs } from 'file-saver';
-import type { LessonPlanWithAttachments } from '../features/lessonPlan/api/useLessonPlan';
+import { saveAs } from "file-saver";
+import type { LessonPlanWithAttachments } from "../features/lessonPlan/api/useLessonPlan";
 
 export const exportLessonPlanToWord = (plan: LessonPlanWithAttachments) => {
   // עיבוד נתונים לפורמט התצוגה
-  const dateStr = new Date(plan.createdAt).toLocaleDateString('he-IL');
-  const frameStr = plan.frame === 'plenary' ? 'מליאה' : 'קבוצה קטנה';
+  const dateStr = new Date(plan.createdAt).toLocaleDateString("he-IL");
+  const frameStr = plan.frame === "plenary" ? "מליאה" : "קבוצה קטנה";
 
   // יצירת שורות הטבלה (מהלך השיחה)
-  const lessonRows = plan.lessonFlow.map(step => `
+  const lessonRows = plan.lessonFlow
+    .map(
+      (step) => `
     <tr>
       <td style="width: 15%; padding: 5px 10px; border: 1px solid #000; vertical-align: top; font-weight: bold;">
         ${step.name}
       </td>
       <td style="width: 10%; padding: 5px 10px; border: 1px solid #000; vertical-align: top; text-align: center;">
-        ${step.durationMinutes ? `${step.durationMinutes} דק'` : '-'}
+        ${step.durationMinutes ? `${step.durationMinutes} דק'` : "-"}
       </td>
       <td style="width: 75%; padding: 5px 10px; border: 1px solid #000; vertical-align: top;">
-        ${step.description.replace(/\n/g, '<br>')}
+        ${step.description.replace(/\n/g, "<br>")}
       </td>
     </tr>
-  `).join('');
+  `,
+    )
+    .join("");
 
   // יצירת רשימת מטרות אופרטיביות
-  const goalsList = plan.operativeGoals.map(g => `<li>${g}</li>`).join('');
+  const goalsList = plan.operativeGoals.map((g) => `<li>${g}</li>`).join("");
 
   // בניית ה-HTML המותאם ל-Word
   const content = `
@@ -110,20 +114,32 @@ export const exportLessonPlanToWord = (plan: LessonPlanWithAttachments) => {
         ${goalsList}
       </ol>
 
-      ${plan.priorKnowledge ? `
+      ${
+        plan.priorKnowledge
+          ? `
         <p><span class="label">ידע קודם:</span> ${plan.priorKnowledge}</p>
-      ` : ''}
+      `
+          : ""
+      }
 
-      ${plan.teachingAids.length > 0 ? `
-        <p><span class="label">אמצעי הוראה:</span> ${plan.teachingAids.join(', ')}</p>
-      ` : ''}
+      ${
+        plan.teachingAids.length > 0
+          ? `
+        <p><span class="label">אמצעי הוראה:</span> ${plan.teachingAids.join(", ")}</p>
+      `
+          : ""
+      }
 
-      ${plan.references.length > 0 ? `
+      ${
+        plan.references.length > 0
+          ? `
         <p><span class="label">מקורות מידע:</span></p>
         <ul>
-          ${plan.references.map(ref => `<li><a href="${ref}">${ref}</a></li>`).join('')}
+          ${plan.references.map((ref) => `<li><a href="${ref}">${ref}</a></li>`).join("")}
         </ul>
-      ` : ''}
+      `
+          : ""
+      }
 
       <br>
 
@@ -146,8 +162,8 @@ export const exportLessonPlanToWord = (plan: LessonPlanWithAttachments) => {
     </html>
   `;
 
-  const blob = new Blob(['\ufeff', content], {
-    type: 'application/msword'
+  const blob = new Blob(["\ufeff", content], {
+    type: "application/msword",
   });
 
   saveAs(blob, `מערך שיעור - ${plan.topic}.doc`);

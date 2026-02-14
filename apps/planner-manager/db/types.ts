@@ -5,4 +5,4 @@ export type DBConfig = {
   password: string;
   database: string;
   schema: string;
-}
+};

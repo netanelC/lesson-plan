@@ -1,7 +1,7 @@
-import { prisma } from '../../db/prisma/prisma';
-import type { CreateLessonPlanDto } from '@repo/types';
-import { LessonFilters } from '@repo/types';
-import { Prisma } from 'db/generated/prisma';
+import { prisma } from "../../db/prisma/prisma";
+import type { CreateLessonPlanDto } from "@repo/types";
+import { LessonFilters } from "@repo/types";
+import { Prisma } from "db/generated/prisma";
 
 export const lessonPlanDal = {
   async create(data: CreateLessonPlanDto, userId: string) {
@@ -9,7 +9,7 @@ export const lessonPlanDal = {
       data: {
         ...data, // Spread all the simple fields (topic, unit, arrays)
         author: {
-          connect: { id: userId } 
+          connect: { id: userId },
         },
         // JSON.parse/stringify ensures proper Prisma JSON serialization
         lessonFlow: JSON.parse(JSON.stringify(data.lessonFlow)),
@@ -28,9 +28,9 @@ export const lessonPlanDal = {
     if (frame) where.frame = frame;
     if (search) {
       where.OR = [
-        { topic: { contains: search, mode: 'insensitive' } },
-        { superGoal: { contains: search, mode: 'insensitive' } },
-        { unit: { contains: search, mode: 'insensitive' } },
+        { topic: { contains: search, mode: "insensitive" } },
+        { superGoal: { contains: search, mode: "insensitive" } },
+        { unit: { contains: search, mode: "insensitive" } },
       ];
     }
 
@@ -42,8 +42,8 @@ export const lessonPlanDal = {
         skip,
         take: limit,
         include: { author: { select: { fullName: true } } },
-        orderBy: { createdAt: 'desc' }
-      })
+        orderBy: { createdAt: "desc" },
+      }),
     ]);
 
     return {
@@ -53,8 +53,8 @@ export const lessonPlanDal = {
         itemCount: data.length,
         itemsPerPage: limit,
         totalPages: Math.ceil(totalItems / limit),
-        currentPage: page
-      }
+        currentPage: page,
+      },
     };
   },
 
@@ -71,11 +71,11 @@ export const lessonPlanDal = {
             fullName: true,
             email: true,
             role: true,
-            avatarUrl: true
-          }
+            avatarUrl: true,
+          },
         },
-        attachments: true
-      }
+        attachments: true,
+      },
     });
   },
 
@@ -96,19 +96,27 @@ export const lessonPlanDal = {
     });
   },
 
-  async addAttachment(lessonPlanId: string, fileInfo: { filename: string, url: string, fileType: string, sizeBytes: number }) {
+  async addAttachment(
+    lessonPlanId: string,
+    fileInfo: {
+      filename: string;
+      url: string;
+      fileType: string;
+      sizeBytes: number;
+    },
+  ) {
     return prisma.attachment.create({
       data: {
         ...fileInfo,
-        lessonPlanId
-      }
+        lessonPlanId,
+      },
     });
   },
 
   async getWithAttachments(id: string) {
     return prisma.lessonPlan.findUnique({
       where: { id },
-      include: { attachments: true } // This "joins" the tables automatically
+      include: { attachments: true }, // This "joins" the tables automatically
     });
   },
 

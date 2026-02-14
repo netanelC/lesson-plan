@@ -1,5 +1,5 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../../../lib/axios';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "../../../lib/axios";
 
 export const useDeleteLessonPlan = () => {
   const queryClient = useQueryClient();
@@ -10,7 +10,7 @@ export const useDeleteLessonPlan = () => {
     },
     onSuccess: () => {
       // Refresh the list automatically after delete
-      queryClient.invalidateQueries({ queryKey: ['lessons'] });
+      queryClient.invalidateQueries({ queryKey: ["lessons"] });
     },
   });
 };

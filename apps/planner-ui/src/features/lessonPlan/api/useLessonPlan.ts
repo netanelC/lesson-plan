@@ -1,13 +1,13 @@
-import { useQuery } from '@tanstack/react-query';
-import { api } from '../../../lib/axios';
-import type { LessonPlan } from '@repo/types';
+import { useQuery } from "@tanstack/react-query";
+import { api } from "../../../lib/axios";
+import type { LessonPlan } from "@repo/types";
 
 // Update this interface to match your Backend & Prisma Schema exactly
 export interface LessonPlanWithAttachments extends LessonPlan {
   attachments: Array<{
     id: string;
     filename: string; // Changed from fileName
-    url: string;      // Changed from fileUrl
+    url: string; // Changed from fileUrl
     fileType: string; // Changed from mimeType
     sizeBytes: number;
   }>;
@@ -15,10 +15,12 @@ export interface LessonPlanWithAttachments extends LessonPlan {
 
 export const useLessonPlan = (id: string) => {
   return useQuery({
-    queryKey: ['lessons', id],
+    queryKey: ["lessons", id],
     queryFn: async () => {
       // The backend returns the plan with the "attachments" array inside it
-      const { data } = await api.get<LessonPlanWithAttachments>(`/lessons/${id}`);
+      const { data } = await api.get<LessonPlanWithAttachments>(
+        `/lessons/${id}`,
+      );
       return data;
     },
     enabled: !!id,

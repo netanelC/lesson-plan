@@ -1,8 +1,8 @@
-import * as dotenv from 'dotenv';
-import { buildApp } from './app.js'; // Note the .js extension! Required in ESM
+import * as dotenv from "dotenv";
+import { buildApp } from "./app.js"; // Note the .js extension! Required in ESM
 
 // 1. Load environment variables (.env file)
-dotenv.config(); 
+dotenv.config();
 
 const start = async () => {
   const app = buildApp();

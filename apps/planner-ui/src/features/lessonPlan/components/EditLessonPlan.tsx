@@ -1,19 +1,19 @@
-import { useParams, useNavigate } from 'react-router-dom';
-import type { CreateLessonPlanDto } from '@repo/types';
-import { useLessonPlan } from '../api/useLessonPlan';
-import { useUpdateLessonPlan } from '../api/useUpdateLessonPlan';
-import { useUploadAttachment } from '../api/useUploadAttachment';
-import { LessonPlanForm } from './LessonPlanForm';
+import { useParams, useNavigate } from "react-router-dom";
+import type { CreateLessonPlanDto } from "@repo/types";
+import { useLessonPlan } from "../api/useLessonPlan";
+import { useUpdateLessonPlan } from "../api/useUpdateLessonPlan";
+import { useUploadAttachment } from "../api/useUploadAttachment";
+import { LessonPlanForm } from "./LessonPlanForm";
 
 export const EditLessonPlan = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   // 1. Fetch existing data (Ensure ID exists)
-  const { data: plan, isLoading, isError } = useLessonPlan(id || '');
-  
+  const { data: plan, isLoading, isError } = useLessonPlan(id || "");
+
   // 2. Mutations for Updating
-  const updateMutation = useUpdateLessonPlan(id || '');
+  const updateMutation = useUpdateLessonPlan(id || "");
   const uploadMutation = useUploadAttachment();
 
   const handleUpdate = async (data: CreateLessonPlanDto, newFiles: File[]) => {
@@ -28,16 +28,16 @@ export const EditLessonPlan = () => {
             uploadMutation.mutateAsync({
               lessonPlanId: id,
               file,
-            })
-          )
+            }),
+          ),
         );
       }
 
-      alert('המערך עודכן בהצלחה!');
+      alert("המערך עודכן בהצלחה!");
       navigate(`/plan/${id}`); // Navigate back to the details view
     } catch (error) {
-      console.error('Update failed:', error);
-      alert('אירעה שגיאה בעדכון המערך. נסה שנית.');
+      console.error("Update failed:", error);
+      alert("אירעה שגיאה בעדכון המערך. נסה שנית.");
     }
   };
 
@@ -53,7 +53,10 @@ export const EditLessonPlan = () => {
   // Error state
   if (isError || !plan) {
     return (
-      <div className="text-center p-10 bg-red-50 text-red-600 rounded-lg" dir="rtl">
+      <div
+        className="text-center p-10 bg-red-50 text-red-600 rounded-lg"
+        dir="rtl"
+      >
         שגיאה בטעינת המערך לעריכה. וודא שהשרת רץ.
       </div>
     );

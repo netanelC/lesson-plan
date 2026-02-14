@@ -1,29 +1,37 @@
-import { S3Client, PutObjectCommand, S3ClientConfig, ObjectCannedACL, DeleteObjectCommand } from '@aws-sdk/client-s3';
-import config from 'config';
+import {
+  S3Client,
+  PutObjectCommand,
+  S3ClientConfig,
+  ObjectCannedACL,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
+import config from "config";
 
 // 1. Initialize S3 Client (Same as before)
-const s3Config = config.get<S3ClientConfig>('minio');
-const s3Client = new S3Client({ ...s3Config, customUserAgent: "PlannerApp/1.0" });
+const s3Config = config.get<S3ClientConfig>("minio");
+const s3Client = new S3Client({
+  ...s3Config,
+  customUserAgent: "PlannerApp/1.0",
+});
 
-const BUCKET_NAME = 'lesson-attachments';
+const BUCKET_NAME = "lesson-attachments";
 
 export const fileStorageService = {
-  
   /**
    * Uploads a file to a specific "folder" (Lesson Plan ID)
    */
   async uploadFile(
-    lessonPlanId: string, 
-    fileBuffer: Buffer, 
-    originalName: string, 
-    mimeType: string
+    lessonPlanId: string,
+    fileBuffer: Buffer,
+    originalName: string,
+    mimeType: string,
   ) {
     // 2. Sanitize the filename to be URL-safe
     // "My Cool Song!.mp3" -> "my-cool-song.mp3"
     const safeName = originalName
-    .toLowerCase()
-    .replace(/\s+/g, '-') // Replace spaces with -
-    .replace(/[^\u0590-\u05FFa-z0-9.-]/g, ''); // Remove weird chars
+      .toLowerCase()
+      .replace(/\s+/g, "-") // Replace spaces with -
+      .replace(/[^\u0590-\u05FFa-z0-9.-]/g, ""); // Remove weird chars
 
     // 3. Create the "Folder" path
     // S3 doesn't have real folders, just keys with slashes.
@@ -42,7 +50,7 @@ export const fileStorageService = {
       key: key,
       // The URL will look like: http://localhost:9000/lesson-attachments/123-abc/song.mp3
       url: `${s3Config.endpoint}/${BUCKET_NAME}/${key}`,
-      filename: safeName
+      filename: safeName,
     };
   },
 
@@ -56,5 +64,5 @@ export const fileStorageService = {
     });
 
     return await s3Client.send(command);
-  }
+  },
 };

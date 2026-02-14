@@ -1,15 +1,28 @@
-import { TextInput } from '../../../components/ui/TextInput';
-import type { FieldError, UseFieldArrayAppend, UseFieldArrayRemove, UseFormRegister, UseFormWatch } from 'react-hook-form';
-import type { CreateLessonPlanDto } from '@repo/types';
+import { TextInput } from "../../../components/ui/TextInput";
+import type {
+  FieldError,
+  UseFieldArrayAppend,
+  UseFieldArrayRemove,
+  UseFormRegister,
+  UseFormWatch,
+} from "react-hook-form";
+import type { CreateLessonPlanDto } from "@repo/types";
 
 interface LessonFlowSectionProps {
   lessonFlowFields: Array<{ id: string }>;
-  append: UseFieldArrayAppend<CreateLessonPlanDto, 'lessonFlow'>;
+  append: UseFieldArrayAppend<CreateLessonPlanDto, "lessonFlow">;
   remove: UseFieldArrayRemove;
   register: UseFormRegister<CreateLessonPlanDto>;
   watch: UseFormWatch<CreateLessonPlanDto>;
   errors: {
-    lessonFlow?: (FieldError & { name?: FieldError; durationMinutes?: FieldError; description?: FieldError } | undefined)[];
+    lessonFlow?: (
+      | (FieldError & {
+          name?: FieldError;
+          durationMinutes?: FieldError;
+          description?: FieldError;
+        })
+      | undefined
+    )[];
   };
 }
 
@@ -27,7 +40,7 @@ export const LessonFlowSection = ({
   };
 
   const handleAddStep = () => {
-    append({ name: '', durationMinutes: 0, description: '' });
+    append({ name: "", durationMinutes: 0, description: "" });
   };
 
   return (
@@ -39,7 +52,7 @@ export const LessonFlowSection = ({
         >
           <div className="flex-1 w-full">
             <TextInput
-              label={index === 0 ? 'שם החלק' : ''}
+              label={index === 0 ? "שם החלק" : ""}
               placeholder="לדוגמה: פתיחה"
               {...register(`lessonFlow.${index}.name`)}
               error={errors.lessonFlow?.[index]?.name}
@@ -47,16 +60,18 @@ export const LessonFlowSection = ({
           </div>
           <div className="w-full sm:w-24">
             <TextInput
-              label={index === 0 ? 'דק׳' : ''}
+              label={index === 0 ? "דק׳" : ""}
               type="number"
               placeholder="לדוגמה: 5"
-              {...register(`lessonFlow.${index}.durationMinutes`, { valueAsNumber: true })}
+              {...register(`lessonFlow.${index}.durationMinutes`, {
+                valueAsNumber: true,
+              })}
               error={errors.lessonFlow?.[index]?.durationMinutes}
             />
           </div>
           <div className="flex-[2] w-full">
             <TextInput
-              label={index === 0 ? 'תיאור הפעילות' : ''}
+              label={index === 0 ? "תיאור הפעילות" : ""}
               placeholder="לדוגמה: שיחה עם התלמידים על הנושא"
               {...register(`lessonFlow.${index}.description`)}
               error={errors.lessonFlow?.[index]?.description}
@@ -68,10 +83,14 @@ export const LessonFlowSection = ({
             disabled={lessonFlowFields.length <= 1}
             className={`mt-0 sm:mt-8 p-2 transition-colors ${
               lessonFlowFields.length <= 1
-                ? 'text-gray-200 cursor-not-allowed'
-                : 'text-gray-400 hover:text-red-600'
+                ? "text-gray-200 cursor-not-allowed"
+                : "text-gray-400 hover:text-red-600"
             }`}
-            title={lessonFlowFields.length <= 1 ? 'At least one step required' : 'Remove step'}
+            title={
+              lessonFlowFields.length <= 1
+                ? "At least one step required"
+                : "Remove step"
+            }
           >
             ✕
           </button>

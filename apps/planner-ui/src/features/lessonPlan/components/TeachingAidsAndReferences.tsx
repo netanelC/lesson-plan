@@ -1,6 +1,10 @@
-import { TextInput } from '../../../components/ui/TextInput';
-import type { UseFormSetValue, UseFormWatch, UseFormRegister } from 'react-hook-form';
-import type { CreateLessonPlanDto } from '@repo/types';
+import { TextInput } from "../../../components/ui/TextInput";
+import type {
+  UseFormSetValue,
+  UseFormWatch,
+  UseFormRegister,
+} from "react-hook-form";
+import type { CreateLessonPlanDto } from "@repo/types";
 
 interface TeachingAidsAndReferencesProps {
   register: UseFormRegister<CreateLessonPlanDto>;
@@ -13,34 +17,46 @@ export const TeachingAidsAndReferences = ({
   watch,
   setValue,
 }: TeachingAidsAndReferencesProps) => {
-  const teachingAids = watch('teachingAids') || [];
-  const references = watch('references') || [];
+  const teachingAids = watch("teachingAids") || [];
+  const references = watch("references") || [];
 
   const handleRemoveAid = (index: number) => {
-    setValue('teachingAids', teachingAids.filter((_, i) => i !== index));
+    setValue(
+      "teachingAids",
+      teachingAids.filter((_, i) => i !== index),
+    );
   };
 
   const handleAddAid = () => {
-    setValue('teachingAids', [...teachingAids, '']);
+    setValue("teachingAids", [...teachingAids, ""]);
   };
 
   const handleRemoveReference = (index: number) => {
-    setValue('references', references.filter((_, i) => i !== index));
+    setValue(
+      "references",
+      references.filter((_, i) => i !== index),
+    );
   };
 
   const handleAddReference = () => {
-    setValue('references', [...references, '']);
+    setValue("references", [...references, ""]);
   };
 
   return (
     <div className="space-y-6">
       {/* Teaching Aids */}
       <div className="space-y-3 border-b border-gray-100 pb-4">
-        <label className="block text-sm font-semibold text-gray-800">אמצעי הוראה</label>
+        <label className="block text-sm font-semibold text-gray-800">
+          אמצעי הוראה
+        </label>
         {teachingAids.map((_, i) => (
           <div key={i} className="flex gap-2">
             <div className="flex-1">
-              <TextInput label="" placeholder="לדוגמה: מיקרוסקופ, תמונות, וידאו" {...register(`teachingAids.${i}`)} />
+              <TextInput
+                label=""
+                placeholder="לדוגמה: מיקרוסקופ, תמונות, וידאו"
+                {...register(`teachingAids.${i}`)}
+              />
             </div>
             <button
               type="button"
@@ -63,11 +79,17 @@ export const TeachingAidsAndReferences = ({
 
       {/* References */}
       <div className="space-y-3">
-        <label className="block text-sm font-semibold text-gray-800">מקורות מידע</label>
+        <label className="block text-sm font-semibold text-gray-800">
+          מקורות מידע
+        </label>
         {references.map((_, i) => (
           <div key={i} className="flex gap-2">
             <div className="flex-1">
-              <TextInput label="" placeholder="לדוגמה: ספר - 'החי והצומח' בעמ׳ 45-50" {...register(`references.${i}`)} />
+              <TextInput
+                label=""
+                placeholder="לדוגמה: ספר - 'החי והצומח' בעמ׳ 45-50"
+                {...register(`references.${i}`)}
+              />
             </div>
             <button
               type="button"
