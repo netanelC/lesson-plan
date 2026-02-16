@@ -7,9 +7,10 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc --project tsconfig.build.json && pnpm run prisma:copy && tsc-alias -p tsconfig.build.json && pnpm run assets:copy",
     "start": "pnpm run build && cd dist && node ./server.js",
-    "migration:validate": "pnpm prisma validate --schema ./src/db/prisma/schema.prisma  ",
-    "migration:format": "pnpm prisma format --check --schema ./src/db/prisma/schema.prisma  ",
-    "migration:format-fix": "pnpm prisma format --schema ./src/db/prisma/schema.prisma  ",
+    "lint": "eslint .",
+    "migration:validate": "pnpm prisma validate --schema ./src/db/prisma/schema.prisma",
+    "migration:format": "pnpm prisma format --check --schema ./src/db/prisma/schema.prisma",
+    "migration:format-fix": "pnpm prisma format --schema ./src/db/prisma/schema.prisma",
     "migration:dev": "pnpm prisma migrate dev --schema ./src/db/prisma/schema.prisma",
     "migration:generate": "pnpm prisma migrate dev --schema ./src/db/prisma/schema.prisma --name ",
     "migration:generate-types": "pnpm prisma generate --schema ./src/db/prisma/schema.prisma",
@@ -45,18 +46,20 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/bcryptjs": "^3.0.0",
     "@types/config": "^3.3.5",
-    "@types/node": "^25.2.0",
+    "@types/node": "catalog:",
     "@types/pg": "^8.16.0",
     "copyfiles": "^2.4.1",
+    "eslint": "catalog:",
     "prisma": "^7.3.0",
-    "rimraf": "^6.1.2",
+    "rimraf": "catalog:",
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.16",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
+    "typescript": "catalog:",
     "zx": "^8.8.5"
   }
 }

@@ -5,7 +5,7 @@ import { GoogleLogin, type CredentialResponse } from "@react-oauth/google"; // <
 import { api } from "../../../lib/axios";
 import { useAuth } from "../context/AuthContext";
 import { TextInput } from "../../../components/ui/TextInput";
-import { LoginSchema, type LoginDto, type User } from "@repo/types";
+import { loginSchema, type LoginDto, type User } from "@repo/types";
 
 export const LoginPage = () => {
   const { login } = useAuth();
@@ -17,7 +17,7 @@ export const LoginPage = () => {
     setError,
     formState: { errors, isSubmitting },
   } = useForm<LoginDto>({
-    resolver: zodResolver(LoginSchema),
+    resolver: zodResolver(loginSchema),
   });
 
   const onSubmit = async (data: LoginDto) => {

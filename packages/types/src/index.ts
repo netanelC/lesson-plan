@@ -1,5 +1,16 @@
 import { z } from "zod";
 
+const MIN_STRING_LENGTH = 2; // Minimum length for string fields
+
+const lessonStepSchema = z.object({
+  name: z.string().min(1, "יש למלא את שם שלב השיעור"),
+  durationMinutes: z
+    .number()
+    .optional()
+    .transform((v) => (v === undefined || Number.isNaN(v) ? undefined : v)),
+  description: z.string().min(1, "יש למלא את תיאור שלב השיעור"),
+});
+
 export interface PaginatedResponse<T> {
   data: T[];
   meta: {
@@ -38,16 +49,16 @@ export interface User {
 }
 
 // Zod Schemas for Auth Forms
-export const LoginSchema = z.object({
+export const loginSchema = z.object({
   email: z.email("כתובת אימייל לא תקינה"),
   password: z.string().min(1, "חובה להזין סיסמה"),
 });
-export type LoginDto = z.infer<typeof LoginSchema>;
+export type LoginDto = z.infer<typeof loginSchema>;
 
-export const RegisterSchema = LoginSchema.extend({
-  fullName: z.string().min(2, "שם מלא חייב להכיל לפחות 2 תווים"),
+export const registerSchema = loginSchema.extend({
+  fullName: z.string().min(MIN_STRING_LENGTH, "שם מלא חייב להכיל לפחות 2 תווים"),
 });
-export type RegisterDto = z.infer<typeof RegisterSchema>;
+export type RegisterDto = z.infer<typeof registerSchema>;
 
 export interface AuthResponse {
   token: string;
@@ -86,21 +97,12 @@ export interface Attachment {
 // =========================================
 export const MIN_OPERATIVE_GOALS = 3; // Ensure this matches UI validation logic
 
-const lessonStepSchema = z.object({
-  name: z.string().min(1, "יש למלא את שם שלב השיעור"),
-  durationMinutes: z
-    .number()
-    .optional()
-    .transform((v) => (v === undefined || Number.isNaN(v) ? undefined : v)),
-  description: z.string().min(1, "יש למלא את תיאור שלב השיעור"),
-});
-
-export const CreateLessonPlanSchema = z.object({
-  topic: z.string().min(2, "יש למלא את נושא השיחה"),
-  unit: z.string().min(2, "יש למלא את יחידת הלימוד"),
+export const createLessonPlanSchema = z.object({
+  topic: z.string().min(MIN_STRING_LENGTH, "יש למלא את נושא השיחה"),
+  unit: z.string().min(MIN_STRING_LENGTH, "יש למלא את יחידת הלימוד"),
   ageGroup: z.enum(AGE_GROUPS),
   frame: z.enum(ACTIVITY_FRAMES),
-  superGoal: z.string().min(5, "יש למלא את מטרת העל"),
+  superGoal: z.string().min(MIN_STRING_LENGTH, "יש למלא את מטרת העל"),
   operativeGoals: z
     .array(z.string().min(1, "יש למלא את המטרה"))
     .min(
@@ -113,7 +115,7 @@ export const CreateLessonPlanSchema = z.object({
   lessonFlow: z.array(lessonStepSchema).min(1),
 });
 
-export type CreateLessonPlanDto = z.infer<typeof CreateLessonPlanSchema>;
+export type CreateLessonPlanDto = z.infer<typeof createLessonPlanSchema>;
 
 // =========================================
 // 5. The Main Lesson Plan Interface

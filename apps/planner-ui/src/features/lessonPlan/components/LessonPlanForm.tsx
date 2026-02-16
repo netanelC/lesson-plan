@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm, useFieldArray, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  CreateLessonPlanSchema,
+  createLessonPlanSchema,
   type CreateLessonPlanDto,
   AGE_GROUPS,
   ACTIVITY_FRAMES,
@@ -63,7 +63,7 @@ export const LessonPlanForm = ({
     reset,
   } = useForm<CreateLessonPlanDto>({
     resolver: zodResolver(
-      CreateLessonPlanSchema,
+      createLessonPlanSchema,
     ) as Resolver<CreateLessonPlanDto>,
     mode: "onTouched",
     defaultValues: {
