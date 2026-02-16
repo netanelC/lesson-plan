@@ -1,0 +1,40 @@
+# =========================
+# Dependencies
+# =========================
+node_modules
+**/node_modules
+
+# =========================
+# Turborepo & Build Outputs
+# =========================
+.turbo
+**/dist
+**/build
+out/
+
+# =========================
+# Environment Variables
+# =========================
+# Never bake actual secrets into the image! Docker compose will inject them.
+.env
+.env.*
+!.env.example
+
+# =========================
+# Git & OS Files
+# =========================
+.git
+.github
+.DS_Store
+Thumbs.db
+
+# =========================
+# IDEs & Logs
+# =========================
+.vscode
+.idea
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

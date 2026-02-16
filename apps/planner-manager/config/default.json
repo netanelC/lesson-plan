@@ -1,4 +1,7 @@
 {
+  "server": {
+    "port": 8080
+  },
   "db": {
     "host": "localhost",
     "port": 5432,
@@ -17,6 +20,7 @@
     "forcePathStyle": true
   },
   "google": {
-    "clientId": "client-id.google.com"
+    "clientId": "client-id.google.com",
+    "clientSecret": "google-client-secret"
   }
 }

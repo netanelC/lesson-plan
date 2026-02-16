@@ -1,19 +1,24 @@
-# This is a Docker Compose configuration file for setting up a PostgreSQL database and MinIO for testing.
-# Do not use this configuration in production environments.
-
 services:
   postgresql:
     image: postgres:15
-    ports:
-      - "5432:5432"
-    container_name: 'postgres-for-testing'
+    hostname: postgres
+    container_name: postgres
+    restart: always
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=lesson_plan
-    # command: postgres -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c random_page_cost=1.0
-    # # Disable persistence to improve performance in tests (RAM disk)
-    # tmpfs: /var/lib/postgresql/data
+      POSTGRES_DB: lesson_plan
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5432:5432'
+    networks:
+      - local-network
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
 
   minio:
     container_name: 'minio'
@@ -30,6 +35,8 @@ services:
     volumes:
       # Named volume to store files (persists between restarts unlike tmpfs)
       - minio_data:/data
+    networks:
+      - local-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
@@ -47,8 +54,12 @@ services:
       sleep 5;
       mc alias set minio http://minio:9000 minioadmin minioadmin;
       mc mb --region us-east-1 minio/lesson-attachments;
-      mc policy set public minio/lesson-attachments;
+      mc anonymous set public minio/lesson-attachments;
       "
 
 volumes:
   minio_data:
+  pg_data:
+
+networks:
+  local-network:

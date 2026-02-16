@@ -86,6 +86,7 @@ export const Layout = ({ children }: LayoutProps) => {
                     <img
                       src={user.avatarUrl}
                       alt=""
+                      referrerPolicy="no-referrer"
                       className="h-full w-full rounded-full border border-indigo-200"
                     />
                   ) : (

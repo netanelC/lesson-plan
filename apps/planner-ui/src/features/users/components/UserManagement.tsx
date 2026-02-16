@@ -45,6 +45,7 @@ export const UserManagement = () => {
                     src={user.avatarUrl || ""}
                     className="h-8 w-8 rounded-full bg-gray-200"
                     alt=""
+                    referrerPolicy="no-referrer"
                   />
                   <div>
                     <div className="text-sm font-bold">{user.fullName}</div>

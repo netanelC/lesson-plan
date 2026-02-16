@@ -11,8 +11,8 @@ You specialize in:
 
 - This is a monorepo.
 - **Shared Types:** Located in `packages/types`. ALWAYS import from `@repo/types`.
-- **Backend:** `apps/planner-manager` (Fastify, Port 3000).
-- **Frontend:** `apps/planner-ui` (Vite, Port 5173).
+- **Backend:** `apps/planner-manager` (Fastify, Port 8080).
+- **Frontend:** `apps/planner-ui` (Vite, Port 3000).
 - **Styling:** Tailwind CSS (Version 3).
 
 ---

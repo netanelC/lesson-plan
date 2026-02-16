@@ -1,0 +1,36 @@
+services:
+  planner-manager:
+    build:
+      context: .
+      dockerfile: apps/planner-manager/Dockerfile
+    container_name: planner-manager
+    hostname: planner-manager
+    ports:
+      - "8080:8080"
+    environment:
+      - ALLOW_CONFIG_MUTATIONS=true
+      - DB_HOST=postgres
+      - MINIO_ENDPOINT=http://minio:9000
+      # - MINIO_ACCESS_KEY=minioadmin
+      # - MINIO_SECRET_KEY=minioadmin
+    restart: unless-stopped
+    networks:
+      - local-network
+  
+  planner-ui:
+    build:
+      context: .
+      dockerfile: apps/planner-ui/Dockerfile
+      args:
+        - VITE_API_BASE_URL=http://localhost:8080/api
+        - VITE_GOOGLE_CLIENT_ID=1089181038857-ce85m9e9d5g82td7i5burmpt8oracr1n.apps.googleusercontent.com
+    hostname: planner-ui
+    container_name: planner-ui
+    ports:
+      - "3000:3000"
+    networks:
+      - local-network
+networks:
+  local-network:
+    external: true
+    name: data_local-network

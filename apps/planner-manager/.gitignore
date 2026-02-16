@@ -1,6 +1,29 @@
-node_modules
-# Keep environment variables out of version control
+# Compiled output
+dist/
+build/
+*.js
+*.js.map
+
+# Dependencies
+node_modules/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Environment variables
 .env
+.env.local
+
+# IDE/OS files (consider using a global gitignore for these)
+.idea/
+.vscode/
+.DS_Store
+npm-debug.log*
+yarn-debug.log*
+
+# Config files
+local-*.json
+local.json
 
 # generated files
 src/db/prisma/generated

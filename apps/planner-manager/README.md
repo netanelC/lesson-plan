@@ -24,13 +24,14 @@ Fastify-based REST API server for the Lesson Planner application. Provides endpo
 
 ## 🛠️ Tech Stack
 
-- **Runtime**: Node.js 18+
-- **Framework**: Fastify 5.x
-- **Language**: TypeScript
-- **Database**: PostgreSQL + Prisma ORM
+- **Runtime**: Node.js 22+
+- **Framework**: Fastify 5.7.4
+- **Language**: TypeScript 5.9+
+- **Database**: PostgreSQL 15+ with Prisma ORM 7.3+
 - **File Storage**: MinIO (S3-compatible)
-- **Validation**: Zod
-- **Package Manager**: pnpm
+- **Authentication**: JWT + Google OAuth (google-auth-library 10.5.0)
+- **Validation**: Zod 4.3+
+- **Package Manager**: pnpm 10.0.0
 
 ## 📂 Project Structure
 
@@ -38,15 +39,27 @@ Fastify-based REST API server for the Lesson Planner application. Provides endpo
 src/
 ├── app.ts                    # Fastify app configuration
 ├── server.ts                 # Server startup entry point
+├── auth/                     # Authentication & JWT
+│   ├── controller.ts         # Auth request handlers
+│   ├── service.ts            # Auth business logic
+│   ├── routes.ts             # Auth endpoints
+│   └── types.ts              # Auth type definitions
+├── users/                    # User management
+│   ├── controller.ts         # User request handlers
+│   └── routes.ts             # User endpoints
 ├── lessonPlan/               # Lesson Plan feature
 │   ├── controller.ts         # Request handlers
 │   ├── service.ts            # Business logic & orchestration
 │   ├── DAL.ts                # Data access layer
 │   ├── routes.ts             # Route definitions
 │   └── index.ts              # Exports
-└── file-storage/             # File storage service
-    ├── service.ts            # MinIO operations
-    └── index.ts              # Exports
+├── file-storage/             # File storage service
+│   ├── service.ts            # MinIO operations
+│   └── index.ts              # Exports
+├── middleware/               # Express-like middleware
+│   └── auth.ts               # JWT validation middleware
+└── types/                    # Type definitions
+    └── fastify-jwt.d.ts      # Fastify JWT plugin types
 
 db/
 ├── prisma/
@@ -56,17 +69,19 @@ db/
 └── helpers.ts                # Database utilities
 
 config/
-└── default.json              # Environment configuration
+├── default.json              # Default configuration
+├── custom-environment-variables.json  # Environment variable mapping
+└── production.json           # Production configuration
 ```
 
 ## ⚡ Quick Start
 
 ### Prerequisites
 
-- Node.js v18+
-- pnpm v8+
-- PostgreSQL (via Docker)
-- MinIO (via Docker)
+- Node.js v22+
+- pnpm v10.0.0+
+- PostgreSQL 15+ (via Docker Compose)
+- MinIO (via Docker Compose)
 
 ### Installation
 
@@ -81,7 +96,7 @@ config/
 
    ```env
    DATABASE_URL="postgresql://user:password@localhost:5432/planner_db"
-   PORT=3000
+   PORT=8080
    NODE_ENV=development
    ```
 
@@ -103,7 +118,7 @@ config/
    pnpm dev
    ```
 
-   Server will be available at `http://localhost:3000`
+   Server will be available at `http://localhost:8080`
 
 ## 🔌 API Endpoints
 
@@ -264,10 +279,14 @@ model Attachment {
 
 ```bash
 # Development
-pnpm dev              # Start server with hot reload
+pnpm dev              # Start server with hot reload (tsx watch)
 pnpm build            # Build TypeScript to JavaScript
-pnpm start            # Run built server
+pnpm start            # Build and run server in production mode
 pnpm lint             # Run ESLint
+
+# Database
+pnpm migration:dev    # Run Prisma migrations in dev mode
+pnpm migration:deploy # Apply migrations to production database
 
 # Type checking
 pnpm type-check       # Run TypeScript type checker
@@ -275,15 +294,83 @@ pnpm type-check       # Run TypeScript type checker
 
 ## 🔐 Environment Variables
 
-| Variable           | Default       | Description                  |
-| ------------------ | ------------- | ---------------------------- |
-| `PORT`             | `3000`        | Server port                  |
-| `NODE_ENV`         | `development` | Environment                  |
-| `DATABASE_URL`     | Required      | PostgreSQL connection string |
-| `MINIO_ENDPOINT`   | `localhost`   | MinIO host                   |
-| `MINIO_PORT`       | `9000`        | MinIO port                   |
-| `MINIO_ACCESS_KEY` | `minioadmin`  | MinIO access key             |
-| `MINIO_SECRET_KEY` | `minioadmin`  | MinIO secret key             |
+| Variable               | Default       | Description                          |
+| ---------------------- | ------------- | ------------------------------------ |
+| `PORT`                 | `8080`        | Server port                          |
+| `NODE_ENV`             | `development` | Environment (development/production) |
+| `DATABASE_URL`         | Required      | PostgreSQL connection string         |
+| `JWT_SECRET`           | Required      | JWT signing secret (min 32 chars)    |
+| `GOOGLE_CLIENT_ID`     | Required      | Google OAuth client ID               |
+| `GOOGLE_CLIENT_SECRET` | Required      | Google OAuth client secret           |
+| `MINIO_ENDPOINT`       | `localhost`   | MinIO host                           |
+| `MINIO_PORT`           | `9000`        | MinIO port                           |
+| `MINIO_ACCESS_KEY`     | `minioadmin`  | MinIO access key                     |
+| `MINIO_SECRET_KEY`     | `minioadmin`  | MinIO secret key                     |
+
+## 🔑 Authentication
+
+### JWT Authentication
+
+All protected endpoints require a JWT token in the `Authorization` header:
+
+```
+Authorization: Bearer <jwt-token>
+```
+
+The JWT contains user information and is issued after successful login.
+
+### Google OAuth
+
+Login with Google:
+
+```bash
+POST /api/auth/google
+Content-Type: application/json
+
+{
+  "token": "<google-id-token>"
+}
+```
+
+Response:
+
+```json
+{
+  "accessToken": "<jwt-token>",
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "fullName": "User Name",
+    "role": "KINDERGARTEN",
+    "googleId": "google-id"
+  }
+}
+```
+
+### Email/Password Authentication
+
+Register and login with email:
+
+```bash
+POST /api/auth/register
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "secure-password",
+  "fullName": "User Name"
+}
+```
+
+```bash
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "secure-password"
+}
+```
 
 ## 🐛 Error Handling
 

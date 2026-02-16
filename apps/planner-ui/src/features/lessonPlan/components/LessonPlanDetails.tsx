@@ -329,7 +329,7 @@ export const LessonPlanDetails = () => {
                         </div>
 
                         <a
-                          href={`${import.meta.env.VITE_API_BASE_URL || "http://localhost:3000"}/api/lessons/attachments/${file.id}/download`}
+                          href={`${import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"}/api/lessons/attachments/${file.id}/download`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors shrink-0"

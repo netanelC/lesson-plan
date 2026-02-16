@@ -1,15 +1,12 @@
-import * as dotenv from "dotenv";
-import { buildApp } from "./app.js"; // Note the .js extension! Required in ESM
-
-// 1. Load environment variables (.env file)
-dotenv.config();
+import { buildApp } from "./app";
+import config from "config";
 
 const start = async () => {
   const app = buildApp();
-  const PORT = Number(process.env.PORT) || 3000;
+  const PORT = config.get<number>("server.port");
 
   try {
-    await app.listen({ port: PORT });
+    await app.listen({ port: PORT, host: "0.0.0.0" });
     console.log(`🚀 Server running at http://localhost:${PORT}`);
   } catch (err) {
     app.log.error(err);

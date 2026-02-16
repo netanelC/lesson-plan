@@ -8,6 +8,7 @@ import { lessonPlanRoutes } from "./lessonPlan";
 import { authRoutes } from "./auth/routes";
 import fastifyJwt from "@fastify/jwt";
 import { userRoutes } from "./users/routes";
+import cors from '@fastify/cors';
 
 export function buildApp(): FastifyInstance {
   const app = Fastify({ logger: true });
@@ -20,6 +21,13 @@ export function buildApp(): FastifyInstance {
   // Health Check (Just to prove it works)
   app.get("/health", async () => {
     return { status: "ok" };
+  });
+
+  // Solves CORS issues when running frontend and backend separately in development (e.g. via Docker)
+  app.register(cors, {
+    origin: true, // Allows all origins (good for local Docker dev)
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   });
 
   // Lesson Plan

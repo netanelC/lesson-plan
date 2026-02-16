@@ -43,26 +43,37 @@ src/
 ├── index.css                        # Global styles
 ├── components/
 │   ├── Layout.tsx                   # Main layout wrapper
+│   ├── auth/
+│   │   └── Can.tsx                  # Authorization wrapper component
 │   └── ui/
 │       ├── TextInput.tsx            # Reusable text input
 │       ├── SelectInput.tsx          # Select dropdown
 │       ├── SectionCard.tsx          # Card wrapper
 │       └── FileUploader.tsx         # File upload component
 ├── features/
-│   └── lessonPlan/
-│       ├── api/                     # API hooks (React Query)
-│       │   ├── useCreateLessonPlan.ts
-│       │   ├── useUpdateLessonPlan.ts
-│       │   ├── useLessonPlan.ts
-│       │   ├── useLessonPlans.ts
-│       │   ├── useDeleteLessonPlan.ts
-│       │   ├── useUploadAttachment.ts
-│       │   └── useRemoveAttachment.ts
-│       └── components/
-│           ├── LessonPlanForm.tsx           # Main form orchestrator
-│           ├── OperativeGoalsSection.tsx    # Goals management
-│           ├── TeachingAidsAndReferences.tsx # Aids & references
-│           └── LessonFlowSection.tsx        # Lesson flow steps
+│   ├── auth/                        # Authentication feature
+│   │   ├── api/                     # Auth API hooks
+│   │   │   └── useLogin.ts          # Login hook
+│   │   ├── components/
+│   │   │   └── LoginPage.tsx        # Login page
+│   │   └── context/                 # Auth context & state
+│   ├── lessonPlan/                  # Lesson plan feature
+│   │   ├── api/                     # API hooks (React Query)
+│   │   │   ├── useCreateLessonPlan.ts
+│   │   │   ├── useUpdateLessonPlan.ts
+│   │   │   ├── useLessonPlan.ts
+│   │   │   ├── useLessonPlans.ts
+│   │   │   ├── useDeleteLessonPlan.ts
+│   │   │   ├── useUploadAttachment.ts
+│   │   │   └── useRemoveAttachment.ts
+│   │   ├── components/
+│   │   │   ├── LessonPlanForm.tsx           # Main form orchestrator
+│   │   │   ├── OperativeGoalsSection.tsx    # Goals management
+│   │   │   ├── TeachingAidsAndReferences.tsx # Aids & references
+│   │   │   └── LessonFlowSection.tsx        # Lesson flow steps
+│   │   └── index.ts                 # Feature exports
+│   └── users/                       # User management feature
+│       └── components/              # User-related components
 ├── lib/
 │   └── axios.ts                     # Configured Axios instance
 ├── providers/
@@ -91,7 +102,7 @@ src/
    Create `.env.local`:
 
    ```env
-   VITE_API_BASE_URL=http://localhost:3000
+   VITE_API_BASE_URL=http://localhost:8080
    ```
 
 3. **Start development server:**
@@ -100,7 +111,7 @@ src/
    pnpm dev
    ```
 
-   Application will be available at `http://localhost:5173`
+   Application will be available at `http://localhost:3000`
 
 ## 🎯 Component Architecture
 
@@ -286,7 +297,7 @@ pnpm type-check       # TypeScript type checking
 
 | Variable            | Required | Default                 |
 | ------------------- | -------- | ----------------------- |
-| `VITE_API_BASE_URL` | Yes      | `http://localhost:3000` |
+| `VITE_API_BASE_URL` | Yes      | `http://localhost:8080` |
 
 ## 🧪 Testing
 

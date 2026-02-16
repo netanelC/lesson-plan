@@ -5,6 +5,7 @@ A full-stack application for creating, managing, and organizing kindergarten les
 ## 📖 Project Summary
 
 **Monorepo Structure:**
+
 - **`apps/planner-manager`** - Fastify REST API backend with PostgreSQL + Prisma ORM, JWT authentication, and MinIO file storage
 - **`apps/planner-ui`** - React 19 SPA frontend with Vite, TypeScript, Tailwind CSS, React Hook Form, and React Query
 - **`packages/types`** - Single source of truth for TypeScript interfaces and Zod validation schemas
@@ -12,6 +13,7 @@ A full-stack application for creating, managing, and organizing kindergarten les
 - **`packages/eslint-config`** - Shared ESLint rules and presets
 
 **Key Capabilities:**
+
 - ✅ **Lesson Plan Creation** - Form with validation for pedagogy, operative goals (3+), and lesson flow steps
 - ✅ **File Attachments** - Upload/download files (images, audio, documents) via S3-compatible MinIO storage
 - ✅ **Dashboard** - Responsive card-based list of all lesson plans
@@ -25,40 +27,44 @@ A full-stack application for creating, managing, and organizing kindergarten les
 ## 🛠️ Tech Stack Overview
 
 ### Monorepo Management
+
 - **Turborepo 2.8+** - Monorepo build system with task orchestration and caching
 - **pnpm 10.0+** - Fast, disk-efficient package manager with strict dependency resolution
 
 ### Backend (`apps/planner-manager`)
-| Layer | Technology |
-|-------|-----------|
-| **Runtime** | Node.js 22+ |
-| **Framework** | Fastify 5.x |
-| **Language** | TypeScript 5.9+ |
-| **Database** | PostgreSQL 15+ via Prisma ORM 7.3+ |
-| **ORM** | Prisma with pg adapter |
-| **File Storage** | MinIO (S3-compatible) |
-| **Authentication** | JWT (native Fastify) + Google OAuth |
-| **Validation** | Zod 4.3+ with Fastify type provider |
-| **HTTP Multipart** | @fastify/multipart for file uploads |
-| **Password Hashing** | bcryptjs 3.0+ |
+
+| Layer                | Technology                          |
+| -------------------- | ----------------------------------- |
+| **Runtime**          | Node.js 22+                         |
+| **Framework**        | Fastify 5.x                         |
+| **Language**         | TypeScript 5.9+                     |
+| **Database**         | PostgreSQL 15+ via Prisma ORM 7.3+  |
+| **ORM**              | Prisma with pg adapter              |
+| **File Storage**     | MinIO (S3-compatible)               |
+| **Authentication**   | JWT (native Fastify) + Google OAuth |
+| **Validation**       | Zod 4.3+ with Fastify type provider |
+| **HTTP Multipart**   | @fastify/multipart for file uploads |
+| **Password Hashing** | bcryptjs 3.0+                       |
 
 ### Frontend (`apps/planner-ui`)
-| Layer | Technology |
-|-------|-----------|
-| **Runtime** | Node.js 22+ |
-| **Framework** | React 19 |
-| **Build Tool** | Vite 7.x |
-| **Language** | TypeScript 5.9+ |
-| **Styling** | Tailwind CSS 3 + PostCSS + Autoprefixer |
-| **Forms** | React Hook Form 7.x + Zod resolver |
-| **Routing** | React Router 7.x |
-| **API Client** | Axios 1.13+ with interceptors |
-| **State Management** | TanStack Query 5.x (React Query) |
-| **Auth Provider** | Google OAuth via @react-oauth/google |
-| **Export** | docx library for Word generation |
-| **Utilities** | clsx, file-saver, use-debounce, react-to-print |
+
+| Layer                | Technology                                     |
+| -------------------- | ---------------------------------------------- |
+| **Runtime**          | Node.js 22+                                    |
+| **Framework**        | React 19                                       |
+| **Build Tool**       | Vite 7.x                                       |
+| **Language**         | TypeScript 5.9+                                |
+| **Styling**          | Tailwind CSS 3 + PostCSS + Autoprefixer        |
+| **Forms**            | React Hook Form 7.x + Zod resolver             |
+| **Routing**          | React Router 7.x                               |
+| **API Client**       | Axios 1.13+ with interceptors                  |
+| **State Management** | TanStack Query 5.x (React Query)               |
+| **Auth Provider**    | Google OAuth via @react-oauth/google           |
+| **Export**           | docx library for Word generation               |
+| **Utilities**        | clsx, file-saver, use-debounce, react-to-print |
 
 ### Shared Packages
+
 - **`@repo/types`** - Zod schemas + TypeScript interfaces (single source of truth)
 - **`@repo/typescript-config`** - Base TypeScript compilation settings
 - **`@repo/eslint-config`** - Shared ESLint rules
@@ -126,7 +132,8 @@ lesson-plan/                           # Root monorepo
 ## ⚡ Quick Start
 
 ### Prerequisites
-- **Node.js** 22+ 
+
+- **Node.js** 22+
 - **pnpm** 10.0+
 - **Docker & Docker Compose**
 - **PostgreSQL 15+** (via Docker)
@@ -151,8 +158,9 @@ pnpm dev
 ```
 
 **Development Servers:**
-- Frontend: http://localhost:5173 (Vite)
-- Backend API: http://localhost:3000 (Fastify)
+
+- Frontend: http://localhost:3000 (Vite)
+- Backend API: http://localhost:8080 (Fastify)
 - MinIO Console: http://localhost:9001 (admin/admin)
 - PostgreSQL: localhost:5432
 
@@ -215,6 +223,7 @@ Validation                                     Response
 ```
 
 **Layers:**
+
 - **Routes** - Define endpoints and register middleware
 - **Controller** - Handle HTTP requests/responses (stateless)
 - **Service** - Contain business logic and orchestration
@@ -233,6 +242,7 @@ All validation rules and type definitions live in `@repo/types`:
 ```
 
 **Benefits:**
+
 - Frontend and backend validate using the same rules
 - Type consistency prevents data mismatches
 - Centralized updates propagate everywhere
@@ -261,7 +271,9 @@ AuthContext
 Full Hebrew language support:
 
 ```tsx
-<div dir="rtl" lang="he">  // All components wrapped
+<div dir="rtl" lang="he">
+  {" "}
+  // All components wrapped
   {/* Tailwind RTL variants automatically applied */}
 </div>
 ```
@@ -279,11 +291,11 @@ All error messages, labels, and UI text use Hebrew localizations from Zod schema
 
 ### User Roles
 
-| Role | Permissions |
-|------|------------|
-| **OWNER** | Full system access, create/edit/delete any plan |
-| **ADMIN** | Create/edit/delete own plans, manage attachments |
-| **KINDERGARTEN** | Read-only access to published plans |
+| Role             | Permissions                                      |
+| ---------------- | ------------------------------------------------ |
+| **OWNER**        | Full system access, create/edit/delete any plan  |
+| **ADMIN**        | Create/edit/delete own plans, manage attachments |
+| **KINDERGARTEN** | Read-only access to published plans              |
 
 ### Token-Based Auth
 
@@ -337,6 +349,7 @@ Attachment
 ## 📋 Feature Checklist
 
 ### Lesson Plan Management
+
 - ✅ Create lesson plans with structured form
 - ✅ Edit existing plans
 - ✅ Delete plans (soft delete via isPublished)
@@ -345,24 +358,28 @@ Attachment
 - ✅ Export plans to Word (.docx) format
 
 ### File Management
+
 - ✅ Upload attachments (images, audio, documents)
 - ✅ Download attachments
 - ✅ Remove attachments
 - ✅ S3-compatible storage (MinIO)
 
 ### User Management
+
 - ✅ User registration (email/password)
 - ✅ User login (email/password + Google OAuth)
 - ✅ JWT-based session management
 - ✅ Role-based access control
 
 ### Form Validation
+
 - ✅ Frontend validation with React Hook Form + Zod
 - ✅ Backend validation with Zod
 - ✅ Hebrew error messages
 - ✅ Real-time validation feedback
 
 ### Internationalization
+
 - ✅ Hebrew language support
 - ✅ RTL layout support
 - ✅ Hebrew form labels and placeholders
@@ -381,6 +398,7 @@ pnpm test:ui           # Vitest UI dashboard
 ```
 
 **Test Structure:**
+
 - Black-box tests (testing behavior, not implementation)
 - Happy path, sad path, bad input coverage
 - AAA pattern (Arrange, Act, Assert)
@@ -402,6 +420,7 @@ docs(README): update API documentation
 ```
 
 **Commit Types:**
+
 - `feat` - New feature
 - `fix` - Bug fix
 - `docs` - Documentation
@@ -429,6 +448,7 @@ docs(README): update API documentation
 ### Common Issues
 
 **Q: "Cannot find module '@repo/types'"**
+
 ```bash
 # Solution: Ensure pnpm install was run
 pnpm install
@@ -436,13 +456,15 @@ pnpm build  # Build shared packages first
 ```
 
 **Q: "Database connection refused"**
+
 ```bash
 # Solution: Start Docker services
 docker-compose up -d
 pnpm db:push  # Apply migrations
 ```
 
-**Q: "Port 3000 already in use"**
+**Q: "Port 8080 already in use"**
+
 ```bash
 # Solution: Kill process or change PORT env var
 PORT=3001 pnpm dev

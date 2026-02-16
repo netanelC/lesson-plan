@@ -3,7 +3,7 @@ import { prisma } from "../db/prisma/prisma";
 import { LoginResult } from "./types.js";
 import { OAuth2Client } from "google-auth-library";
 import { UserRole } from "../db/prisma/generated/client";
-import config from 'config'
+import config from "config";
 
 const clientId = config.get<string>("google.clientId");
 const client = new OAuth2Client(clientId);
@@ -59,7 +59,6 @@ export const authService = {
   },
 
   async verifyGoogleToken(token: string) {
-    
     const ticket = await client.verifyIdToken({
       idToken: token,
       audience: clientId,
