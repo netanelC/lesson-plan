@@ -1,16 +1,12 @@
-// apps/planner-manager/prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
   output = "generated/client"
 }
 
-// This is the magic that creates our single source of truth
 generator zod {
   provider                  = "zod-prisma-types"
-  // We will eventually route this output directly into our shared types package
   output                    = "../../../../../packages/types/src/generated" 
-  createInputTypes          = true // Keeps the generated file clean, we only need the base models for now
+  createInputTypes          = true
   createModelTypes          = true
   addInputTypeValidation    = true
   addIncludeType            = false
@@ -21,13 +17,37 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Frame {
+  PLENARY
+  SMALL_GROUP
+}
+
+enum AgeGroup {
+  THREE_TO_FOUR
+  FOUR_TO_FIVE
+}
+
 model LessonPlan {
-  id        String   @id @default(uuid())
+  id             String   @id @default(uuid())
 
-  // The triple-slash comments attach Zod validation and Hebrew error messages directly to the generated schema
   /// @zod.string.min(3, { message: "הנושא חייב להכיל לפחות 3 תווים" }).max(100, { message: "הנושא ארוך מדי" })
-  topic     String
+  topic          String
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  /// @zod.string.min(2, { message: "נא להזין יחידת לימוד" })
+  unit           String
+
+  frame          Frame
+  ageGroup       AgeGroup
+
+  /// @zod.string.min(5, { message: "מטרת העל חייבת להכיל לפחות 5 תווים" })
+  superGoal      String
+  operativeGoals String[] // prisma doesn't support arrays of objects, so we'll handle this in our types package and validation logic
+  lessonFlow     Json
+  teachingAids   String[]
+  references     String[]
+
+  isPublished    Boolean  @default(true)
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }

@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { LessonPlanCreateInputSchema } from "@repo/types";
+import { CreateLessonPlanSchema } from "@repo/types";
 import { createLessonPlanController } from "./controller";
 
 export function lessonPlanRoutes(fastify: FastifyInstance): void {
@@ -7,7 +7,7 @@ export function lessonPlanRoutes(fastify: FastifyInstance): void {
     "/",
     {
       schema: {
-        body: LessonPlanCreateInputSchema,
+        body: CreateLessonPlanSchema,
       },
     },
     createLessonPlanController
