@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "../../../lib/axios";
 import type { User, UserRole } from "@repo/types";
+import api from "../../../lib/axios";
 
 export const UserManagement = () => {
   const queryClient = useQueryClient();
@@ -42,7 +42,7 @@ export const UserManagement = () => {
               <tr key={user.id}>
                 <td className="px-6 py-4 flex items-center gap-3">
                   <img
-                    src={user.avatarUrl || ""}
+                    src={user.avatarUrl ?? ""}
                     className="h-8 w-8 rounded-full bg-gray-200"
                     alt=""
                     referrerPolicy="no-referrer"

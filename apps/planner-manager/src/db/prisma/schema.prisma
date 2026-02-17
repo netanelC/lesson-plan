@@ -6,6 +6,10 @@ generator client {
   output = "generated/client"
 }
 
+generator json {
+  provider = "prisma-json-types-generator"
+}
+
 datasource db {
   provider = "postgresql"
 }
@@ -15,6 +19,16 @@ enum UserRole {
   OWNER    // Full system access
   ADMIN    // Can create/edit/delete THEIR OWN plans
   KINDERGARTEN  // Read-only access to public plans
+}
+
+enum AgeGroup {
+  AG_3_4
+  AG_4_5
+}
+
+enum Frame {
+  PLENARY
+  SMALL_GROUP
 }
 
 // 2. The User Model (Hybrid Auth)
@@ -44,15 +58,15 @@ model LessonPlan {
   
   // Link to the User (Foreign Key)
   author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  authorId    String
+  authorId    String @unique
 
   // Header Info
   topic       String
   unit        String
   
   // Context
-  frame       String    // "plenary" or "small-group"
-  ageGroup    String    // "3-4" or "4-5"
+  frame       Frame
+  ageGroup    AgeGroup
   
   // Pedagogy
   superGoal       String

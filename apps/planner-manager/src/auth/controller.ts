@@ -1,104 +1,125 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { z } from "zod";
-import { LoginSchema, RegisterSchema } from "@repo/types";
-import { authService } from "./service";
+import {
+  LoginDto,
+  RegisterDto,
+  GoogleLoginDto,
+  ApiResponse,
+  User,
+} from "@repo/types";
+import { status } from "http-status";
+import { authService } from "./DAL";
+
+interface AuthResponseData {
+  token: string;
+  user: User;
+}
 
 export const authController = {
-  register: async (req: FastifyRequest, reply: FastifyReply) => {
+  register: async (
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    req: FastifyRequest<{ Body: RegisterDto }>,
+    reply: FastifyReply,
+  ): Promise<FastifyReply> => {
     try {
-      // 1. Validate Input
-      const body = RegisterSchema.parse(req.body);
-
-      // 2. Call Service
       const newUser = await authService.register(
-        body.email,
-        body.password,
-        body.fullName,
+        req.body.email,
+        req.body.password,
+        req.body.fullName,
       );
 
-      // 3. Send Success
-      return reply.code(201).send({
-        message: "User created successfully",
-        user: newUser,
-      });
-    } catch (error: any) {
+      const response: ApiResponse<User> = { success: true, data: newUser };
+      return await reply.code(status.CREATED).send(response);
+    } catch (error: unknown) {
       req.log.error(error);
-
-      if (error.message === "User already exists") {
-        return reply.code(409).send({ message: "User already exists" }); // 409 Conflict
+      if (!(error instanceof Error)) {
+        const response: ApiResponse<null> = {
+          success: false,
+          error: "Bad Request",
+          message: "Registration failed",
+          statusCode: status.BAD_REQUEST,
+        };
+        return reply.code(status.BAD_REQUEST).send(response);
       }
-
-      return reply.code(400).send({ message: "Registration failed", error });
+      const response: ApiResponse<null> = {
+        success: false,
+        error: "User Conflict",
+        message: error.message,
+        statusCode: status.CONFLICT,
+      };
+      return reply.code(status.CONFLICT).send(response);
     }
   },
 
-  login: async (req: FastifyRequest, reply: FastifyReply) => {
+  login: async (
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    req: FastifyRequest<{ Body: LoginDto }>,
+    reply: FastifyReply,
+  ): Promise<FastifyReply> => {
     try {
-      // 1. Validate Input
-      const body = LoginSchema.parse(req.body);
-
-      // 2. Verify Credentials
-      const user = await authService.validateUser(body.email, body.password);
+      const user = await authService.validateUser(
+        req.body.email,
+        req.body.password,
+      );
 
       if (!user) {
-        // Generic error message for security (don't say "User not found")
-        return reply.code(401).send({ message: "Invalid email or password" });
+        const response: ApiResponse<null> = {
+          success: false,
+          error: "Unauthorized",
+          message: "Invalid email or password",
+          statusCode: 401,
+        };
+        return await reply.code(status.UNAUTHORIZED).send(response);
       }
 
-      // 3. Sign Token (The "Session Ticket")
       const token = await reply.jwtSign(
-        {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-        },
-        {
-          expiresIn: "7d", // Token valid for 1 week
-        },
-      );
-
-      // 4. Send Response
-      return reply.send({
-        message: "Login successful",
-        token,
-        user,
-      });
-    } catch (error) {
-      req.log.error(error);
-      return reply.code(400).send({ message: "Login failed", error });
-    }
-  },
-
-  googleLogin: async (req: FastifyRequest, reply: FastifyReply) => {
-    try {
-      const { token } = req.body as { token: string };
-
-      // 1. Verify token and get/create user in DB
-      const user = await authService.verifyGoogleToken(token);
-
-      // 2. Sign JWT for our app
-      const appToken = await reply.jwtSign(
-        {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-        },
+        { id: user.id, email: user.email, role: user.role },
         { expiresIn: "7d" },
       );
 
-      return reply.send({
-        token: appToken,
-        user: {
-          id: user.id,
-          email: user.email,
-          fullName: user.fullName,
-          role: user.role,
-          avatarUrl: user.avatarUrl,
-        },
-      });
+      const response: ApiResponse<AuthResponseData> = {
+        success: true,
+        data: { token, user },
+      };
+      return await reply.send(response);
     } catch (error) {
       req.log.error(error);
-      return reply.code(401).send({ message: "Google authentication failed" });
+      const response: ApiResponse<null> = {
+        success: false,
+        error: "Bad Request",
+        message: "Login failed",
+        statusCode: 400,
+      };
+      return reply.code(status.BAD_REQUEST).send(response);
+    }
+  },
+
+  googleLogin: async (
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    req: FastifyRequest<{ Body: GoogleLoginDto }>,
+    reply: FastifyReply,
+  ): Promise<FastifyReply> => {
+    try {
+      const user = await authService.verifyGoogleToken(req.body.token);
+
+      const token = await reply.jwtSign(
+        { id: user.id, email: user.email, role: user.role },
+        { expiresIn: "7d" },
+      );
+
+      const response: ApiResponse<AuthResponseData> = {
+        success: true,
+        data: { token, user },
+      };
+      return await reply.send(response);
+    } catch (error) {
+      req.log.error(error);
+      const response: ApiResponse<null> = {
+        success: false,
+        error: "Unauthorized",
+        message: "Google authentication failed",
+        statusCode: 401,
+      };
+      return reply.code(status.UNAUTHORIZED).send(response);
     }
   },
 };

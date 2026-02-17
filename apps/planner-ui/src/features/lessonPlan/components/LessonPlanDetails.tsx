@@ -8,7 +8,7 @@ import { Can } from "../../../components/auth/Can"; // <--- Import the new Can c
 
 export const LessonPlanDetails = () => {
   const { id } = useParams<{ id: string }>();
-  const { data: plan, isLoading, isError } = useLessonPlan(id || "");
+  const { data: plan, isLoading, isError } = useLessonPlan(id ?? "");
 
   const componentRef = useRef<HTMLDivElement>(null);
 
@@ -132,7 +132,7 @@ export const LessonPlanDetails = () => {
             </div>
             {/* Author Name Display - Relies on Backend include: { author: true } */}
             <span className="text-sm text-gray-400">
-              נוצר ע״י: {plan.author?.fullName || "משתמש לא ידוע"}
+              נוצר ע״י: {plan.author?.fullName ?? "משתמש לא ידוע"}
             </span>
           </div>
 
@@ -236,7 +236,7 @@ export const LessonPlanDetails = () => {
                     {plan.frame === "plenary" ? "מליאה" : "קבוצה קטנה"}
                   </dd>
                 </div>
-                {plan.priorKnowledge && (
+                {plan.priorKnowledge != null && (
                   <div>
                     <dt className="text-sm text-gray-500">ידע קודם נדרש</dt>
                     <dd className="font-medium text-gray-900">
@@ -279,7 +279,7 @@ export const LessonPlanDetails = () => {
               </div>
             )}
 
-            {plan.attachments && plan.attachments.length > 0 && (
+            {plan.attachments.length > 0 && (
               <div className="print:hidden">
                 <SectionCard
                   title="קבצים ומדיה"
@@ -329,7 +329,7 @@ export const LessonPlanDetails = () => {
                         </div>
 
                         <a
-                          href={`${import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"}/api/lessons/attachments/${file.id}/download`}
+                          href={`${import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080"}/api/lessons/attachments/${file.id}/download`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors shrink-0"

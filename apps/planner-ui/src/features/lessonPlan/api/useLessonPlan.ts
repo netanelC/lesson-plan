@@ -1,16 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import { api } from "../../../lib/axios";
 import type { LessonPlan } from "@repo/types";
+import api from "../../../lib/axios";
 
 // Update this interface to match your Backend & Prisma Schema exactly
 export interface LessonPlanWithAttachments extends LessonPlan {
-  attachments: Array<{
+  attachments: {
     id: string;
     filename: string; // Changed from fileName
     url: string; // Changed from fileUrl
     fileType: string; // Changed from mimeType
     sizeBytes: number;
-  }>;
+  }[];
 }
 
 export const useLessonPlan = (id: string) => {

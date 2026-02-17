@@ -14,7 +14,7 @@ import { UserManagement } from "./features/users/components/UserManagement";
 const queryClient = new QueryClient();
 
 // Accessing the variable safely via import.meta.env
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
 
 function App() {
   if (!GOOGLE_CLIENT_ID) {
@@ -24,7 +24,7 @@ function App() {
   }
 
   return (
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID || ""}>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <BrowserRouter>

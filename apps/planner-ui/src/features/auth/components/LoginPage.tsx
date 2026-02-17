@@ -2,10 +2,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google"; // <--- Add this
-import { api } from "../../../lib/axios";
+import { loginSchema, type LoginDto, type User } from "@repo/types";
+import api from "../../../lib/axios";
 import { useAuth } from "../context/AuthContext";
 import { TextInput } from "../../../components/ui/TextInput";
-import { loginSchema, type LoginDto, type User } from "@repo/types";
 
 export const LoginPage = () => {
   const { login } = useAuth();
@@ -41,7 +41,7 @@ export const LoginPage = () => {
   ) => {
     try {
       // credentialResponse.credential is the JWT string from Google
-      if (!credentialResponse.credential) {
+      if (credentialResponse.credential == null) {
         throw new Error("No credential received from Google");
       }
 

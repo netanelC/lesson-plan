@@ -22,5 +22,9 @@
   "google": {
     "clientId": "client-id.google.com",
     "clientSecret": "google-client-secret"
+  },
+  "page": {
+    "size": 10,
+    "limit": 12
   }
 }

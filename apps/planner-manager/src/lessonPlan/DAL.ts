@@ -1,31 +1,94 @@
+import type { 
+  CreateLessonPlanDto, 
+  LessonPlan, 
+  LessonFilters, 
+  PaginationMeta,
+  UserRole
+} from "@repo/types";
+import config from "config";
 import { Prisma } from "../db/prisma/generated/client";
-import type { CreateLessonPlanDto } from "@repo/types";
-import { LessonFilters } from "@repo/types";
 import { prisma } from "../db/prisma/prisma";
+import { 
+  mapAgeGroupToDb, 
+  mapFrameToDb, 
+  mapAgeGroupToDto, 
+  mapFrameToDto 
+} from "./mapper";
+
+const PAGE_LIMIT = config.get<number>("page.limit");
+
+// ==========================================
+// Reusable Mapper: Prisma -> DTO
+// ==========================================
+// This ensures every DAL method returns the exact same clean shape
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mapToSharedLessonPlan = (prismaLesson: any): LessonPlan => {
+  return {
+    ...prismaLesson,
+    // Translate Prisma Enums to UI Strings
+    ageGroup: mapAgeGroupToDto[prismaLesson.ageGroup],
+    frame: mapFrameToDto[prismaLesson.frame],
+    // Translate Dates to ISO Strings
+    createdAt: prismaLesson.createdAt.toISOString(),
+    updatedAt: prismaLesson.updatedAt.toISOString(),
+    // Map Author if it was included in the query
+    ...(prismaLesson.author && {
+      author: {
+        id: prismaLesson.author.id,
+        email: prismaLesson.author.email,
+        fullName: prismaLesson.author.fullName,
+        role: prismaLesson.author.role as UserRole,
+        avatarUrl: prismaLesson.author.avatarUrl,
+        createdAt: prismaLesson.author.createdAt.toISOString(),
+      },
+    }),
+    // Attachments can be passed through safely if they exist
+    ...(prismaLesson.attachments && {
+      attachments: prismaLesson.attachments,
+    }),
+  };
+};
 
 export const lessonPlanDal = {
-  async create(data: CreateLessonPlanDto, userId: string) {
-    return prisma.lessonPlan.create({
+  async create(data: CreateLessonPlanDto, userId: string): Promise<LessonPlan> {
+    const newLesson = await prisma.lessonPlan.create({
       data: {
-        ...data, // Spread all the simple fields (topic, unit, arrays)
+        topic: data.topic,
+        unit: data.unit,
+        superGoal: data.superGoal,
+        operativeGoals: data.operativeGoals,
+        priorKnowledge: data.priorKnowledge,
+        teachingAids: data.teachingAids,
+        references: data.references,
+        
+        // 1. Translate UI strings to DB enums
+        ageGroup: mapAgeGroupToDb[data.ageGroup],
+        frame: mapFrameToDb[data.frame],
+        
         author: {
           connect: { id: userId },
         },
-        // JSON.parse/stringify ensures proper Prisma JSON serialization
-        lessonFlow: JSON.parse(JSON.stringify(data.lessonFlow)),
+        
+        // 2. Clean cast instead of the JSON.parse(JSON.stringify) hack
+        lessonFlow: data.lessonFlow as unknown as Prisma.InputJsonValue,
       },
+      include: { author: true },
     });
+
+    return mapToSharedLessonPlan(newLesson);
   },
 
-  async getAll(filters: LessonFilters = {}) {
-    const { search, ageGroup, frame, authorId, page = 1, limit = 10 } = filters;
+  // Notice the strict return type for your pagination!
+  async getAll(filters: LessonFilters = {}): Promise<{ data: LessonPlan[]; meta: PaginationMeta }> {
+    const { search, ageGroup, frame, authorId, page = 1, limit = PAGE_LIMIT } = filters;
     const skip = (page - 1) * limit;
 
     const where: Prisma.LessonPlanWhereInput = { isPublished: true };
 
-    if (ageGroup) where.ageGroup = ageGroup;
+    // Translate UI filter strings to DB Enums before querying
+    if (ageGroup) where.ageGroup = mapAgeGroupToDb[ageGroup];
+    if (frame) where.frame = mapFrameToDb[frame];
     if (authorId) where.authorId = authorId;
-    if (frame) where.frame = frame;
     if (search) {
       where.OR = [
         { topic: { contains: search, mode: "insensitive" } },
@@ -34,8 +97,7 @@ export const lessonPlanDal = {
       ];
     }
 
-    // Execute count and data fetch in parallel for performance
-    const [totalItems, data] = await Promise.all([
+    const [totalItems, rawData] = await Promise.all([
       prisma.lessonPlan.count({ where }),
       prisma.lessonPlan.findMany({
         where,
@@ -47,10 +109,11 @@ export const lessonPlanDal = {
     ]);
 
     return {
-      data,
+      // Run all results through the mapper
+      data: rawData.map(mapToSharedLessonPlan),
       meta: {
         totalItems,
-        itemCount: data.length,
+        itemCount: rawData.length,
         itemsPerPage: limit,
         totalPages: Math.ceil(totalItems / limit),
         currentPage: page,
@@ -58,43 +121,41 @@ export const lessonPlanDal = {
     };
   },
 
-  /**
-   * Fetches a single lesson plan and "Joins" all its attachments
-   */
-  async getById(id: string) {
-    return prisma.lessonPlan.findUnique({
+  async getById(id: string): Promise<LessonPlan | null> {
+    const lesson = await prisma.lessonPlan.findUnique({
       where: { id },
       include: {
-        author: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-            role: true,
-            avatarUrl: true,
-          },
-        },
+        author: true,
         attachments: true,
       },
     });
+
+    if (!lesson) return null;
+    return mapToSharedLessonPlan(lesson);
   },
 
-  async update(id: string, data: CreateLessonPlanDto) {
-    return prisma.lessonPlan.update({
+  async update(id: string, data: Partial<CreateLessonPlanDto>): Promise<LessonPlan> {
+    const updatedLesson = await prisma.lessonPlan.update({
       where: { id },
       data: {
         ...data,
-        // JSON.parse/stringify ensures proper Prisma JSON serialization
-        lessonFlow: JSON.parse(JSON.stringify(data.lessonFlow)),
+        // Only map these if they were actually provided in the partial update
+        ...(data.ageGroup && { ageGroup: mapAgeGroupToDb[data.ageGroup] }),
+        ...(data.frame && { frame: mapFrameToDb[data.frame] }),
+        ...(data.lessonFlow && { lessonFlow: data.lessonFlow as unknown as Prisma.InputJsonValue }),
       },
     });
+
+    return mapToSharedLessonPlan(updatedLesson);
   },
 
-  async delete(id: string) {
-    return prisma.lessonPlan.delete({
+  async delete(id: string): Promise<void> {
+    await prisma.lessonPlan.delete({
       where: { id },
     });
   },
+
+  // --- Attachment Methods (Kept clean) ---
 
   async addAttachment(
     lessonPlanId: string,
@@ -113,21 +174,8 @@ export const lessonPlanDal = {
     });
   },
 
-  async getWithAttachments(id: string) {
-    return prisma.lessonPlan.findUnique({
-      where: { id },
-      include: { attachments: true }, // This "joins" the tables automatically
-    });
-  },
-
-  async getAttachmentById(id: string) {
-    return prisma.attachment.findUnique({
-      where: { id },
-    });
-  },
-
-  async deleteAttachment(id: string) {
-    return prisma.attachment.delete({
+  async deleteAttachment(id: string): Promise<void> {
+    await prisma.attachment.delete({
       where: { id },
     });
   },

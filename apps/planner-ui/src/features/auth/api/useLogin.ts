@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { api } from "../../../lib/axios";
+import api from "../../../lib/axios";
 
 // Define types locally or import from @repo/types if you added them there
 export interface LoginDto {

@@ -1,25 +1,23 @@
-import Fastify, { FastifyInstance } from "fastify";
-import fastifyMultipart from "@fastify/multipart";
+import { fastify, FastifyInstance } from "fastify";
+import { fastifyMultipart } from "@fastify/multipart";
 import {
   serializerCompiler,
   validatorCompiler,
 } from "fastify-type-provider-zod";
+import { fastifyJwt } from "@fastify/jwt";
+import cors from "@fastify/cors";
 import { lessonPlanRoutes } from "./lessonPlan";
 import { authRoutes } from "./auth/routes";
-import fastifyJwt from "@fastify/jwt";
 import { userRoutes } from "./users/routes";
-import cors from "@fastify/cors";
 
 export function buildApp(): FastifyInstance {
-  const app = Fastify({ logger: true });
+  const app = fastify({ logger: true });
 
   // Setup Zod (Validation)
-  // We do this globally so we don't have to repeat it in every route
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
 
-  // Health Check (Just to prove it works)
-  app.get("/health", async () => {
+  app.get("/health", () => {
     return { status: "ok" };
   });
 
@@ -33,15 +31,17 @@ export function buildApp(): FastifyInstance {
   // Lesson Plan
   app.register(fastifyMultipart, {
     limits: {
-      fileSize: 50 * 1024 * 1024, // 50 MB
+      // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+      fileSize: 50 * 1024 * 1024, // 50MB
     },
   });
+
   app.register(lessonPlanRoutes, { prefix: "/api/lessons" });
 
   // Auth
   // Register JWT (TODO: Move secret to .env later)
   app.register(fastifyJwt, {
-    secret: process.env.JWT_SECRET || "supersecret",
+    secret: process.env.JWT_SECRET ?? "supersecret",
   });
   app.register(authRoutes, { prefix: "/api/auth" });
 

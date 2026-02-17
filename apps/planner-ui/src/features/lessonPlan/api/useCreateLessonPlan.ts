@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { CreateLessonPlanDto } from "@repo/types";
-import { api } from "../../../lib/axios";
+import api from "../../../lib/axios";
 
 const LESSON_PLANS_QUERY_KEY = ["lessons"] as const;
 

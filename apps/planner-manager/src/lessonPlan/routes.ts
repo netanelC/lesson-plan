@@ -1,17 +1,15 @@
 import { FastifyInstance } from "fastify";
-import { CreateLessonPlanSchema } from "@repo/types";
-import { lessonPlanController } from "./controller";
+import { createLessonPlanSchema } from "@repo/types";
 import { authenticate } from "../middleware/auth";
+import { lessonPlanController } from "./controller";
 
-// This function is a "Fastify Plugin"
-// It encapsulates all the routes for this feature.
-export async function lessonPlanRoutes(fastify: FastifyInstance) {
+export function lessonPlanRoutes(fastify: FastifyInstance): void {
   fastify.addHook("onRequest", authenticate);
 
   // Lesson Plan Routes
   fastify.post(
     "/",
-    { schema: { body: CreateLessonPlanSchema } },
+    { schema: { body: createLessonPlanSchema } },
     lessonPlanController.create,
   );
   fastify.get("/", lessonPlanController.getAll);

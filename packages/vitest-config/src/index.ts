@@ -1,7 +1,7 @@
-import { defineProject } from 'vitest/config';
+import { defineProject } from "vitest/config";
 
 export default defineProject({
   test: {
-    include: ['tests/**/*.spec.ts'],
+    include: ["tests/**/*.spec.ts"],
   },
 });

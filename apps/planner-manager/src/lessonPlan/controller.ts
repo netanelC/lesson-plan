@@ -1,172 +1,146 @@
-import axios from "axios";
 import { FastifyRequest, FastifyReply } from "fastify";
-import { lessonPlanDal } from "./DAL";
+import { status } from "http-status";
+import { CreateLessonPlanDto, LessonFilters, ApiResponse } from "@repo/types";
 import { lessonPlanService } from "./service";
-import type { CreateLessonPlanDto } from "@repo/types";
-import { fileStorageService } from "../file-storage";
-import { LessonFilters } from "@repo/types";
 
 export const lessonPlanController = {
   create: async (
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     req: FastifyRequest<{ Body: CreateLessonPlanDto }>,
     reply: FastifyReply,
-  ) => {
-    const planData = req.body;
-    const userId = req.user.id;
-
-    const newPlan = await lessonPlanDal.create(planData, userId);
-
-    // Send back 201 (Created) and the data
-    return reply.code(201).send(newPlan);
+  ): Promise<FastifyReply> => {
+    try {
+      const newPlan = await lessonPlanService.create(req.body, req.user.id);
+      return await reply.code(status.CREATED).send({ success: true, data: newPlan } as ApiResponse<typeof newPlan>);
+    } catch (error) {
+      req.log.error(error);
+      return reply.code(status.INTERNAL_SERVER_ERROR).send({ success: false, error: "Creation Failed", statusCode: status.INTERNAL_SERVER_ERROR });
+    }
   },
 
   getAll: async (
-    req: FastifyRequest<{ Querystring: any }>,
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    req: FastifyRequest<{ Querystring: LessonFilters }>,
     reply: FastifyReply,
-  ) => {
+  ): Promise<FastifyReply> => {
     try {
-      const query = req.query as Partial<LessonFilters>;
-      const filters: LessonFilters = {
-        ...query,
-        page: query.page ? parseInt(query.page as unknown as string) : 1,
-        limit: query.limit ? parseInt(query.limit as unknown as string) : 12, // 12 works well for 3-column grids
-      };
-
-      const result = await lessonPlanService.getLessonPlans(filters);
-      return result;
+      const result = await lessonPlanService.getLessonPlans(req.query as Partial<LessonFilters>);
+      return await reply.code(status.OK).send({ success: true, data: result } as ApiResponse<typeof result>);
     } catch (error) {
       req.log.error(error);
-      return reply.code(500).send({ message: "Error fetching lesson plans" });
+      return reply.code(status.INTERNAL_SERVER_ERROR).send({ success: false, error: "Fetch Failed", statusCode: status.INTERNAL_SERVER_ERROR });
     }
   },
 
   getOne: async (
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     req: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply,
-  ) => {
-    const { id } = req.params;
-    const plan = await lessonPlanDal.getById(id);
-
-    if (!plan) {
-      return reply.code(404).send({ message: "Lesson plan not found" });
+  ): Promise<FastifyReply> => {
+    try {
+      const plan = await lessonPlanService.getById(req.params.id);
+      if (!plan) {
+        return await reply.code(status.NOT_FOUND).send({ success: false, error: "Not Found", message: "Lesson plan not found", statusCode: status.NOT_FOUND });
+      }
+      return await reply.code(status.OK).send({ success: true, data: plan } as ApiResponse<typeof plan>);
+    } catch (error) {
+      req.log.error(error);
+      return reply.code(status.INTERNAL_SERVER_ERROR).send({ success: false, error: "Fetch Failed", statusCode: status.INTERNAL_SERVER_ERROR });
     }
-
-    return reply.code(200).send(plan);
   },
 
   update: async (
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     req: FastifyRequest<{ Params: { id: string }; Body: CreateLessonPlanDto }>,
     reply: FastifyReply,
-  ) => {
-    const { id } = req.params;
-    const updateData = req.body;
-
+  ): Promise<FastifyReply> => {
     try {
-      // 1. Check if it exists
-      const existing = await lessonPlanDal.getById(id);
-      if (!existing) {
-        return reply.code(404).send({ message: "המערך לא נמצא" });
-      }
-
-      // 2. Perform update
-      const updatedPlan = await lessonPlanDal.update(id, updateData);
-      return reply.code(200).send(updatedPlan);
+      const updatedPlan = await lessonPlanService.update(req.params.id, req.body);
+      return await reply.code(status.OK).send({ success: true, data: updatedPlan } as ApiResponse<typeof updatedPlan>);
     } catch (error) {
       req.log.error(error);
-      return reply.code(500).send({ message: "שגיאה בעדכון המערך" });
+      if (error instanceof Error) {
+        const statusCode = error.message === "Lesson plan not found" ? status.NOT_FOUND : status.INTERNAL_SERVER_ERROR;
+        return reply.code(statusCode).send({ success: false, error: "Update Failed", message: error.message, statusCode });
+      }
+      return reply.code(status.INTERNAL_SERVER_ERROR).send({ success: false, error: "Update Failed", message: `Unknown error: ${String(error)}`, statusCode: status.INTERNAL_SERVER_ERROR });
     }
   },
 
   delete: async (
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     req: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply,
-  ) => {
-    const { id } = req.params;
-    await lessonPlanDal.delete(id);
-    // 204 No Content is the standard for successful deletion
-    return reply.code(204).send();
+  ): Promise<FastifyReply> => {
+    try {
+      await lessonPlanService.delete(req.params.id);
+      return await reply.code(status.NO_CONTENT).send();
+    } catch (error) {
+      req.log.error(error);
+      return reply.code(status.INTERNAL_SERVER_ERROR).send({ success: false, error: "Delete Failed", statusCode: status.INTERNAL_SERVER_ERROR });
+    }
   },
 
   uploadAttachment: async (
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     req: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply,
-  ) => {
-    // 1. Get the file from the request stream
-    const data = await req.file();
-    if (!data) {
-      return reply.code(400).send({ message: "No file uploaded" });
+  ): Promise<FastifyReply> => {
+    try {
+      const data = await req.file();
+      if (!data) {
+        return await reply.code(status.BAD_REQUEST).send({ success: false, error: "Bad Request", message: "No file uploaded", statusCode: status.BAD_REQUEST });
+      }
+
+      const fileBuffer = await data.toBuffer();
+      const attachment = await lessonPlanService.uploadAttachment(
+        req.params.id,
+        fileBuffer,
+        data.filename,
+        data.mimetype
+      );
+
+      return await reply.code(status.CREATED).send({ success: true, data: attachment } as ApiResponse<typeof attachment>);
+    } catch (error) {
+      req.log.error(error);
+      return reply.code(status.INTERNAL_SERVER_ERROR).send({ success: false, error: "Upload Failed", statusCode: status.INTERNAL_SERVER_ERROR });
     }
-
-    const lessonPlanId = req.params.id;
-
-    // 2. Upload to MinIO using our service
-    // We convert the stream to a Buffer for the S3 SDK
-    const fileBuffer = await data.toBuffer();
-    const uploadResult = await fileStorageService.uploadFile(
-      lessonPlanId,
-      fileBuffer,
-      data.filename,
-      data.mimetype,
-    );
-
-    // 3. Save the metadata to Postgres
-    const attachment = await lessonPlanDal.addAttachment(lessonPlanId, {
-      filename: uploadResult.filename,
-      url: uploadResult.url,
-      fileType: data.mimetype,
-      sizeBytes: fileBuffer.length,
-    });
-
-    return reply.code(201).send(attachment);
   },
 
   downloadAttachment: async (
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     req: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply,
-  ) => {
-    const { id } = req.params;
-
-    // 1. Get attachment metadata from DB
-    const attachment = await lessonPlanDal.getAttachmentById(id);
-    if (!attachment) {
-      return reply.code(404).send({ message: "Attachment not found" });
-    }
-
+  ): Promise<FastifyReply> => {
     try {
-      // 2. Fetch the file stream from MinIO (Internal Network Call)
-      const response = await axios.get(attachment.url, {
-        responseType: "stream",
-      });
+      const { stream, filename, fileType } = await lessonPlanService.getDownloadStream(req.params.id);
 
-      // 3. Set headers to FORCE download and hide the origin
-      reply.header("Content-Type", attachment.fileType);
-      // This header tells the browser: "Don't open this! Save it as..."
-      reply.header(
-        "Content-Disposition",
-        `attachment; filename="${encodeURIComponent(attachment.filename)}"`,
-      );
-
-      // 4. Send the stream
-      return reply.send(response.data);
+      reply.header("Content-Type", fileType);
+      reply.header("Content-Disposition", `attachment; filename="${encodeURIComponent(filename)}"`);
+      
+      return await reply.send(stream);
     } catch (error) {
       req.log.error(error);
-      return reply.code(500).send({ message: "Failed to download file" });
+      const statusCode = error.message === "Attachment not found" ? status.NOT_FOUND : status.INTERNAL_SERVER_ERROR;
+      return reply.code(statusCode).send({ success: false, error: "Download Failed", message: error.message, statusCode });
     }
   },
 
   removeAttachment: async (
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     req: FastifyRequest<{ Params: { fileId: string } }>,
     reply: FastifyReply,
-  ) => {
-    const { fileId } = req.params;
-
+  ): Promise<FastifyReply> => {
     try {
-      // Delegate to service to handle orchestration
-      await lessonPlanService.removeAttachment(fileId);
-      return reply.code(204).send();
+      await lessonPlanService.removeAttachment(req.params.fileId);
+      return await reply.code(status.NO_CONTENT).send();
     } catch (error) {
       req.log.error(error);
-      return reply.code(500).send({ message: "שגיאה במחיקת הקובץ" });
+      if (error instanceof Error) {
+        const statusCode = error.message === "Attachment not found" ? status.NOT_FOUND : status.INTERNAL_SERVER_ERROR;
+        return reply.code(statusCode).send({ success: false, error: "Delete Failed", message: error.message, statusCode });
+      }
+      return reply.code(status.INTERNAL_SERVER_ERROR).send({ success: false, error: "Delete Failed", message: `Unknown error: ${String(error)}`, statusCode: status.INTERNAL_SERVER_ERROR });
     }
   },
 };

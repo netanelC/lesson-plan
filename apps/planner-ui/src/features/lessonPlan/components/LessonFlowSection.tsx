@@ -1,4 +1,3 @@
-import { TextInput } from "../../../components/ui/TextInput";
 import type {
   FieldError,
   UseFieldArrayAppend,
@@ -7,9 +6,10 @@ import type {
   UseFormWatch,
 } from "react-hook-form";
 import type { CreateLessonPlanDto } from "@repo/types";
+import { TextInput } from "../../../components/ui/TextInput";
 
 interface LessonFlowSectionProps {
-  lessonFlowFields: Array<{ id: string }>;
+  lessonFlowFields: { id: string }[];
   append: UseFieldArrayAppend<CreateLessonPlanDto, "lessonFlow">;
   remove: UseFieldArrayRemove;
   register: UseFormRegister<CreateLessonPlanDto>;

@@ -1,103 +1,98 @@
 import { z } from "zod";
 
-const MIN_STRING_LENGTH = 2; // Minimum length for string fields
+// =========================================
+// 1. Internal Constants & Configurations
+// =========================================
+const MIN_STRING_LENGTH = 2;
+const MAX_DURATION_MINUTES = 60;
+const MIN_DURATION_MINUTES = 1;
+
+// =========================================
+// 2. Exportable Constants
+// =========================================
+const MIN_OPERATIVE_GOALS = 3;
+const USER_ROLES = ["OWNER", "ADMIN", "KINDERGARTEN"] as const;
+const AGE_GROUPS = ["3-4", "4-5"] as const;
+const ACTIVITY_FRAMES = ["plenary", "small-group"] as const;
+
+// =========================================
+// 3. Base & Utility Types
+// =========================================
+type UserRole = (typeof USER_ROLES)[number];
+type AgeGroup = (typeof AGE_GROUPS)[number];
+type ActivityFrame = (typeof ACTIVITY_FRAMES)[number];
+
+interface PaginationMeta {
+  totalItems: number;
+  itemCount: number;
+  itemsPerPage: number;
+  totalPages: number;
+  currentPage: number;
+}
+
+type ApiResponse<T> =
+  | { success: true; data: T; meta?: PaginationMeta }
+  | { success: false; error: string; message: string; statusCode: number };
+
+// =========================================
+// 4. Filters
+// =========================================
+interface BaseFilters {
+  search?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+
+interface LessonFilters extends BaseFilters {
+  ageGroup?: AgeGroup | "";
+  frame?: ActivityFrame | "";
+  authorId?: string;
+}
+
+interface UserFilters extends BaseFilters {
+  role?: UserRole;
+}
+
+// =========================================
+// 5. Zod Schemas
+// =========================================
+const loginSchema = z.object({
+  email: z.email("כתובת אימייל לא תקינה"),
+  password: z.string().min(1, "חובה להזין סיסמה"),
+});
+
+const registerSchema = loginSchema.extend({
+  fullName: z
+    .string()
+    .min(MIN_STRING_LENGTH, "שם מלא חייב להכיל לפחות 2 תווים"),
+});
+
+const googleLoginSchema = z.object({
+  token: z.string().min(1, "Google token is required"),
+});
+
+const updateUserRoleSchema = z.object({
+  role: z.enum(USER_ROLES),
+});
 
 const lessonStepSchema = z.object({
   name: z.string().min(1, "יש למלא את שם שלב השיעור"),
   durationMinutes: z
     .number()
-    .optional()
-    .transform((v) => (v === undefined || Number.isNaN(v) ? undefined : v)),
-  description: z.string().min(1, "יש למלא את תיאור שלב השיעור"),
+    .min(
+      MIN_DURATION_MINUTES,
+      `משך זמן חייב להיות לפחות ${MIN_DURATION_MINUTES} דקה`,
+    )
+    .max(
+      MAX_DURATION_MINUTES,
+      `משך זמן לא יכול להעלות על ${MAX_DURATION_MINUTES} דקות`,
+    ),
+  description: z.string().min(MIN_STRING_LENGTH, "יש למלא את תיאור שלב השיעור"),
 });
 
-export interface PaginatedResponse<T> {
-  data: T[];
-  meta: {
-    totalItems: number;
-    itemCount: number;
-    itemsPerPage: number;
-    totalPages: number;
-    currentPage: number;
-  };
-}
-
-export interface LessonFilters {
-  search?: string;
-  ageGroup?: AgeGroup | "";
-  frame?: ActivityFrame | "";
-  authorId?: string;
-  page?: number;
-  limit?: number;
-}
-
-// =========================================
-// 1. User & Authentication (NEW)
-// =========================================
-
-export const USER_ROLES = ["OWNER", "ADMIN", "KINDERGARTEN"] as const;
-export type UserRole = (typeof USER_ROLES)[number];
-
-// The "Safe" User object sent to the frontend (no password/googleId)
-export interface User {
-  id: string;
-  email: string;
-  fullName: string;
-  role: UserRole;
-  avatarUrl?: string | null;
-  createdAt: string;
-}
-
-// Zod Schemas for Auth Forms
-export const loginSchema = z.object({
-  email: z.email("כתובת אימייל לא תקינה"),
-  password: z.string().min(1, "חובה להזין סיסמה"),
-});
-export type LoginDto = z.infer<typeof loginSchema>;
-
-export const registerSchema = loginSchema.extend({
-  fullName: z.string().min(MIN_STRING_LENGTH, "שם מלא חייב להכיל לפחות 2 תווים"),
-});
-export type RegisterDto = z.infer<typeof registerSchema>;
-
-export interface AuthResponse {
-  token: string;
-  user: User;
-}
-
-// =========================================
-// 2. Lesson Plan Constants
-// =========================================
-export const AGE_GROUPS = ["3-4", "4-5"] as const;
-export const ACTIVITY_FRAMES = ["plenary", "small-group"] as const;
-
-export type AgeGroup = (typeof AGE_GROUPS)[number];
-export type ActivityFrame = (typeof ACTIVITY_FRAMES)[number];
-
-// =========================================
-// 3. Sub-Entities (Steps, Attachments)
-// =========================================
-export interface LessonStep {
-  name: string; // e.g., "פתיחה", "גוף", "סיכום"
-  durationMinutes?: number;
-  description: string;
-}
-
-export interface Attachment {
-  id: string;
-  filename: string;
-  url: string;
-  fileType: string;
-  sizeBytes: number;
-  lessonPlanId?: string;
-}
-
-// =========================================
-// 4. Create Lesson Plan (Zod schema and DTO)
-// =========================================
-export const MIN_OPERATIVE_GOALS = 3; // Ensure this matches UI validation logic
-
-export const createLessonPlanSchema = z.object({
+const createLessonPlanSchema = z.object({
   topic: z.string().min(MIN_STRING_LENGTH, "יש למלא את נושא השיחה"),
   unit: z.string().min(MIN_STRING_LENGTH, "יש למלא את יחידת הלימוד"),
   ageGroup: z.enum(AGE_GROUPS),
@@ -115,39 +110,83 @@ export const createLessonPlanSchema = z.object({
   lessonFlow: z.array(lessonStepSchema).min(1),
 });
 
-export type CreateLessonPlanDto = z.infer<typeof createLessonPlanSchema>;
+const updateLessonPlanSchema = createLessonPlanSchema.partial();
 
 // =========================================
-// 5. The Main Lesson Plan Interface
+// 6. DTOs & Domain Interfaces
 // =========================================
-export interface LessonPlan {
+type LoginDto = z.infer<typeof loginSchema>;
+type RegisterDto = z.infer<typeof registerSchema>;
+type GoogleLoginDto = z.infer<typeof googleLoginSchema>;
+type UpdateUserRoleDto = z.infer<typeof updateUserRoleSchema>;
+type CreateLessonPlanDto = z.infer<typeof createLessonPlanSchema>;
+type UpdateLessonPlanDto = z.infer<typeof updateLessonPlanSchema>;
+
+interface User {
   id: string;
+  email: string;
+  fullName: string;
+  role: UserRole;
+  avatarUrl?: string | null;
+  createdAt: string;
+}
 
+interface Attachment {
+  id: string;
+  filename: string;
+  url: string;
+  fileType: string;
+  sizeBytes: number;
+  lessonPlanId?: string;
+}
+
+interface LessonPlan extends CreateLessonPlanDto {
+  id: string;
   authorId: string;
   author?: User;
-
   createdAt: Date | string;
   updatedAt?: Date | string;
   isPublished: boolean;
-
-  // Header Info
-  topic: string; // נושא השיחה
-  unit: string; // יחידה
-
-  // Context
-  frame: ActivityFrame; // מסגרת הוראה
-  ageGroup: AgeGroup; // גיל הילדים
-
-  // Pedagogy
-  superGoal: string; // מטרת על
-  operativeGoals: string[]; // מטרות אופרטיביות
-  priorKnowledge?: string; // ידע קודם
-
-  // Preparation
-  teachingAids: string[]; // אמצעי הוראה
-  references: string[]; // מקורות מידע
-
-  // The Plan
-  lessonFlow: LessonStep[];
   attachments?: Attachment[];
 }
+
+// =========================================
+// 7. Exports
+// =========================================
+export {
+  // Constants
+  MIN_OPERATIVE_GOALS,
+  USER_ROLES,
+  AGE_GROUPS,
+  ACTIVITY_FRAMES,
+
+  // Base & Utility Types
+  type UserRole,
+  type AgeGroup,
+  type ActivityFrame,
+  type PaginationMeta,
+  type ApiResponse,
+
+  // Filters
+  type LessonFilters,
+  type UserFilters,
+
+  // Zod Schemas
+  loginSchema,
+  registerSchema,
+  googleLoginSchema,
+  updateUserRoleSchema,
+  createLessonPlanSchema,
+  updateLessonPlanSchema,
+
+  // DTOs & Domain Interfaces
+  type LoginDto,
+  type RegisterDto,
+  type GoogleLoginDto,
+  type UpdateUserRoleDto,
+  type CreateLessonPlanDto,
+  type UpdateLessonPlanDto,
+  type User,
+  type Attachment,
+  type LessonPlan,
+};

@@ -1,7 +1,7 @@
 import axios from "axios";
 
-export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL as string,
 });
 
 // Interceptor to automatically attach the token to every request
@@ -12,13 +12,15 @@ api.interceptors.request.use(
     const token = localStorage.getItem("token");
 
     // 2. If the token exists, attach it to the Authorization header
-    if (token) {
+    if (token !== null) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
     return config;
   },
-  (error) => {
+  async (error: Error) => {
     return Promise.reject(error);
   },
 );
+
+export default api;

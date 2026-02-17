@@ -1,9 +1,27 @@
 import { FastifyInstance } from "fastify";
+import { googleLoginSchema, loginSchema, registerSchema } from "@repo/types";
 import { authController } from "./controller";
 
-export async function authRoutes(fastify: FastifyInstance) {
-  fastify.post("/register", authController.register);
-  fastify.post("/login", authController.login);
+export function authRoutes(fastify: FastifyInstance): void {
+  fastify.post(
+    "/register",
+    {
+      schema: { body: registerSchema },
+    },
+    authController.register,
+  );
 
-  fastify.post("/google", authController.googleLogin);
+  fastify.post(
+    "/login",
+    {
+      schema: { body: loginSchema },
+    },
+    authController.login,
+  );
+
+  fastify.post(
+    "/google",
+    { schema: { body: googleLoginSchema } },
+    authController.googleLogin,
+  );
 }

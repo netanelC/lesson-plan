@@ -1,10 +1,10 @@
-import { TextInput } from "../../../components/ui/TextInput";
 import type {
   UseFormSetValue,
   UseFormWatch,
   UseFormRegister,
 } from "react-hook-form";
 import type { CreateLessonPlanDto } from "@repo/types";
+import { TextInput } from "../../../components/ui/TextInput";
 
 interface TeachingAidsAndReferencesProps {
   register: UseFormRegister<CreateLessonPlanDto>;
@@ -17,8 +17,8 @@ export const TeachingAidsAndReferences = ({
   watch,
   setValue,
 }: TeachingAidsAndReferencesProps) => {
-  const teachingAids = watch("teachingAids") || [];
-  const references = watch("references") || [];
+  const teachingAids = watch("teachingAids");
+  const references = watch("references");
 
   const handleRemoveAid = (index: number) => {
     setValue(

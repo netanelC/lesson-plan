@@ -1,6 +1,6 @@
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "./generated/client";
 import { createDbConnectUrl } from "../helpers";
+import { PrismaClient } from "./generated/client";
 
 const connectionString = createDbConnectUrl();
 

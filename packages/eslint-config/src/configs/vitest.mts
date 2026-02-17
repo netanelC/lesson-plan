@@ -1,12 +1,12 @@
-import { defineConfig } from 'eslint/config';
 import type vitestPluginType from '@vitest/eslint-plugin';
+import { defineConfig } from 'eslint/config';
 import { importOrThrow } from '../internal/helpers.js';
 
 const vitestPlugin = await importOrThrow<typeof vitestPluginType>('@vitest/eslint-plugin');
 
-const vitestConfig = defineConfig({
+const vitestRules = defineConfig([{
   name: 'vitest/rules',
-  files: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx'],
+  files: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}'],
   plugins: { vitest: vitestPlugin },
   rules: {
     ...vitestPlugin.configs.recommended.rules,
@@ -20,18 +20,20 @@ const vitestConfig = defineConfig({
     'vitest/prefer-equality-matcher': 'warn',
     'vitest/valid-title': ['warn', { mustMatch: { it: ['^should .+.$'] } }],
   },
-});
+}]);
 
 /**
- * The default export for the Vitest configuration.
- * This configuration is used to set up and customize the behavior of Vitest,
- * a JavaScript testing framework.
+ * Vitest ESLint configuration
+ *
+ * Provides ESLint rules for Vitest tests, including:
+ * - Vitest recommended rules
+ * - Custom test validation rules
+ * - Proper test file pattern matching (*.test.ts, *.spec.tsx, etc.)
  *
  * @group configs
  * @example
  * import vitestConfig from '@repo/eslint-config/vitest';
- * import { defineConfig } from 'eslint/config';
  *
- * export default defineConfig(vitestConfig);
+ * export default vitestConfig;
  */
-export default vitestConfig;
+export default vitestRules;

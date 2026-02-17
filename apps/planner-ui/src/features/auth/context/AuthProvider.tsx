@@ -1,7 +1,7 @@
 import { useState, useEffect, type ReactNode } from "react";
-import { api } from "../../../lib/axios";
-import { AuthContext } from "./AuthContext"; // Import from the new file
 import type { User } from "@repo/types";
+import api from "../../../lib/axios";
+import { AuthContext } from "./AuthContext"; // Import from the new file
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(() => {

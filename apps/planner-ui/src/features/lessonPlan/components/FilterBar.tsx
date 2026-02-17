@@ -15,6 +15,8 @@ interface FilterBarProps {
   userId?: string;
 }
 
+const DEBOUNCE_DELAY = 400; // milliseconds
+
 export const FilterBar = ({
   filters,
   onFilterChange,
@@ -22,13 +24,13 @@ export const FilterBar = ({
   userRole,
   userId,
 }: FilterBarProps) => {
-  const [searchTerm, setSearchTerm] = useState(filters.search || "");
-  const [debouncedSearch] = useDebounce(searchTerm, 400);
+  const [searchTerm, setSearchTerm] = useState(filters.search ?? "");
+  const [debouncedSearch] = useDebounce(searchTerm, DEBOUNCE_DELAY);
 
   // Sync local state when parent resets filters
   useEffect(() => {
     if (filters.search !== searchTerm) {
-      setSearchTerm(filters.search || "");
+      setSearchTerm(filters.search ?? "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.search]);
@@ -94,7 +96,7 @@ export const FilterBar = ({
           קבוצת גיל
         </label>
         <select
-          value={filters.ageGroup || ""}
+          value={filters.ageGroup ?? ""}
           onChange={handleAgeChange}
           className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
         >
@@ -113,7 +115,7 @@ export const FilterBar = ({
           מסגרת פעילות
         </label>
         <select
-          value={filters.frame || ""}
+          value={filters.frame ?? ""}
           onChange={handleFrameChange}
           className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
         >

@@ -1,7 +1,9 @@
 import { saveAs } from "file-saver";
 import type { LessonPlanWithAttachments } from "../features/lessonPlan/api/useLessonPlan";
 
-export const exportLessonPlanToWord = (plan: LessonPlanWithAttachments) => {
+export const exportLessonPlanToWord = (
+  plan: LessonPlanWithAttachments,
+): void => {
   // עיבוד נתונים לפורמט התצוגה
   const dateStr = new Date(plan.createdAt).toLocaleDateString("he-IL");
   const frameStr = plan.frame === "plenary" ? "מליאה" : "קבוצה קטנה";
@@ -115,7 +117,7 @@ export const exportLessonPlanToWord = (plan: LessonPlanWithAttachments) => {
       </ol>
 
       ${
-        plan.priorKnowledge
+        plan.priorKnowledge !== undefined
           ? `
         <p><span class="label">ידע קודם:</span> ${plan.priorKnowledge}</p>
       `
