@@ -1,17 +1,18 @@
-import { buildApp } from "./app";
 import config from "config";
+import { buildApp } from "./app";
 
-const start = async () => {
+const PORT = config.get<number>("server.port");
+
+const start = async (): Promise<void> => {
   const app = buildApp();
-  const PORT = config.get<number>("server.port");
-
-  try {
-    await app.listen({ port: PORT, host: "0.0.0.0" });
-    console.log(`🚀 Server running at http://localhost:${PORT}`);
-  } catch (err) {
-    app.log.error(err);
-    process.exit(1);
-  }
+  await app.listen({ port: PORT, host: "0.0.0.0" });
 };
 
-start();
+void start()
+  .then(() => {
+    console.log(`🚀 Server running at http://localhost:${PORT}`);
+  })
+  .catch((err) => {
+    console.error("Failed to start server:", err);
+    process.exit(1);
+  });

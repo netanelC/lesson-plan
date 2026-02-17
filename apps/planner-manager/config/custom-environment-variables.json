@@ -25,5 +25,9 @@
   "google": {
     "clientId": "GOOGLE_CLIENT_ID",
     "clientSecret": "GOOGLE_CLIENT_SECRET"
+  },
+  "page": {
+    "size": "PAGE_SIZE",
+    "limit": "PAGE_LIMIT"
   }
 }

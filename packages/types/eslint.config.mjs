@@ -1,4 +1,4 @@
 import baseConfig from '@repo/eslint-config/ts-base';
 import { defineConfig } from 'eslint/config';
 
-export default defineConfig(baseConfig, { ignores: ['vitest.config.ts'] });
+export default defineConfig(baseConfig, { ignores: ['vitest.config.ts', './src/generated'] });
