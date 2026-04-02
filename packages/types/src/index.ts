@@ -16,7 +16,6 @@ export const LessonFlowStepSchema = z.object({
   description: z.string().min(5, { message: "נא להזין תיאור מפורט לשלב זה" }),
 });
 
-
 // Re-export all raw generated types
 export * from "./generated";
 
@@ -34,3 +33,4 @@ export const CreateLessonPlanSchema = BaseHttpCreateSchema.extend({
 
 export type CreateLessonPlanBody = z.infer<typeof CreateLessonPlanSchema>;
 export type LessonFlowStep = z.infer<typeof LessonFlowStepSchema>;
+export type CreateLessonPlanInput = z.input<typeof CreateLessonPlanSchema>;

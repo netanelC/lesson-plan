@@ -707,7 +707,8 @@ export const NestedDateTimeWithAggregatesFilterSchema: z.ZodType<Prisma.NestedDa
 // ARGS
 /////////////////////////////////////////
 
-export const LessonPlanFindFirstArgsSchema: z.ZodType<Omit<Prisma.LessonPlanFindFirstArgs, "select">> = z.object({
+export const LessonPlanFindFirstArgsSchema: z.ZodType<Prisma.LessonPlanFindFirstArgs> = z.object({
+  select: LessonPlanSelectSchema.optional(),
   where: LessonPlanWhereInputSchema.optional(), 
   orderBy: z.union([ LessonPlanOrderByWithRelationInputSchema.array(), LessonPlanOrderByWithRelationInputSchema ]).optional(),
   cursor: LessonPlanWhereUniqueInputSchema.optional(), 
@@ -716,7 +717,8 @@ export const LessonPlanFindFirstArgsSchema: z.ZodType<Omit<Prisma.LessonPlanFind
   distinct: z.union([ LessonPlanScalarFieldEnumSchema, LessonPlanScalarFieldEnumSchema.array() ]).optional(),
 }).strict();
 
-export const LessonPlanFindFirstOrThrowArgsSchema: z.ZodType<Omit<Prisma.LessonPlanFindFirstOrThrowArgs, "select">> = z.object({
+export const LessonPlanFindFirstOrThrowArgsSchema: z.ZodType<Prisma.LessonPlanFindFirstOrThrowArgs> = z.object({
+  select: LessonPlanSelectSchema.optional(),
   where: LessonPlanWhereInputSchema.optional(), 
   orderBy: z.union([ LessonPlanOrderByWithRelationInputSchema.array(), LessonPlanOrderByWithRelationInputSchema ]).optional(),
   cursor: LessonPlanWhereUniqueInputSchema.optional(), 
@@ -725,7 +727,8 @@ export const LessonPlanFindFirstOrThrowArgsSchema: z.ZodType<Omit<Prisma.LessonP
   distinct: z.union([ LessonPlanScalarFieldEnumSchema, LessonPlanScalarFieldEnumSchema.array() ]).optional(),
 }).strict();
 
-export const LessonPlanFindManyArgsSchema: z.ZodType<Omit<Prisma.LessonPlanFindManyArgs, "select">> = z.object({
+export const LessonPlanFindManyArgsSchema: z.ZodType<Prisma.LessonPlanFindManyArgs> = z.object({
+  select: LessonPlanSelectSchema.optional(),
   where: LessonPlanWhereInputSchema.optional(), 
   orderBy: z.union([ LessonPlanOrderByWithRelationInputSchema.array(), LessonPlanOrderByWithRelationInputSchema ]).optional(),
   cursor: LessonPlanWhereUniqueInputSchema.optional(), 
@@ -751,19 +754,23 @@ export const LessonPlanGroupByArgsSchema: z.ZodType<Prisma.LessonPlanGroupByArgs
   skip: z.number().optional(),
 }).strict();
 
-export const LessonPlanFindUniqueArgsSchema: z.ZodType<Omit<Prisma.LessonPlanFindUniqueArgs, "select">> = z.object({
+export const LessonPlanFindUniqueArgsSchema: z.ZodType<Prisma.LessonPlanFindUniqueArgs> = z.object({
+  select: LessonPlanSelectSchema.optional(),
   where: LessonPlanWhereUniqueInputSchema, 
 }).strict();
 
-export const LessonPlanFindUniqueOrThrowArgsSchema: z.ZodType<Omit<Prisma.LessonPlanFindUniqueOrThrowArgs, "select">> = z.object({
+export const LessonPlanFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.LessonPlanFindUniqueOrThrowArgs> = z.object({
+  select: LessonPlanSelectSchema.optional(),
   where: LessonPlanWhereUniqueInputSchema, 
 }).strict();
 
-export const LessonPlanCreateArgsSchema: z.ZodType<Omit<Prisma.LessonPlanCreateArgs, "select">> = z.object({
+export const LessonPlanCreateArgsSchema: z.ZodType<Prisma.LessonPlanCreateArgs> = z.object({
+  select: LessonPlanSelectSchema.optional(),
   data: z.union([ LessonPlanCreateInputSchema, LessonPlanUncheckedCreateInputSchema ]),
 }).strict();
 
-export const LessonPlanUpsertArgsSchema: z.ZodType<Omit<Prisma.LessonPlanUpsertArgs, "select">> = z.object({
+export const LessonPlanUpsertArgsSchema: z.ZodType<Prisma.LessonPlanUpsertArgs> = z.object({
+  select: LessonPlanSelectSchema.optional(),
   where: LessonPlanWhereUniqueInputSchema, 
   create: z.union([ LessonPlanCreateInputSchema, LessonPlanUncheckedCreateInputSchema ]),
   update: z.union([ LessonPlanUpdateInputSchema, LessonPlanUncheckedUpdateInputSchema ]),
@@ -779,11 +786,13 @@ export const LessonPlanCreateManyAndReturnArgsSchema: z.ZodType<Prisma.LessonPla
   skipDuplicates: z.boolean().optional(),
 }).strict();
 
-export const LessonPlanDeleteArgsSchema: z.ZodType<Omit<Prisma.LessonPlanDeleteArgs, "select">> = z.object({
+export const LessonPlanDeleteArgsSchema: z.ZodType<Prisma.LessonPlanDeleteArgs> = z.object({
+  select: LessonPlanSelectSchema.optional(),
   where: LessonPlanWhereUniqueInputSchema, 
 }).strict();
 
-export const LessonPlanUpdateArgsSchema: z.ZodType<Omit<Prisma.LessonPlanUpdateArgs, "select">> = z.object({
+export const LessonPlanUpdateArgsSchema: z.ZodType<Prisma.LessonPlanUpdateArgs> = z.object({
+  select: LessonPlanSelectSchema.optional(),
   data: z.union([ LessonPlanUpdateInputSchema, LessonPlanUncheckedUpdateInputSchema ]),
   where: LessonPlanWhereUniqueInputSchema, 
 }).strict();

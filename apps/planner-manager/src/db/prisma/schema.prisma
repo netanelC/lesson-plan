@@ -9,8 +9,6 @@ generator zod {
   createInputTypes          = true
   createModelTypes          = true
   addInputTypeValidation    = true
-  addIncludeType            = false
-  addSelectType             = false
 }
 
 datasource db {
