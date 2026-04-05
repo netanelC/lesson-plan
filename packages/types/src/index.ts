@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
 /* eslint-disable @typescript-eslint/naming-convention */
 import { z } from "zod";
-import { LessonPlanSchema } from "./generated";
+import { AgeGroupSchema, FrameSchema, LessonPlanSchema, UserSchema } from "./generated";
 
 // Omit the fields the database handles automatically
 const BaseHttpCreateSchema = LessonPlanSchema.omit({
@@ -31,6 +31,46 @@ export const CreateLessonPlanSchema = BaseHttpCreateSchema.extend({
   references: z.array(z.string()).default([]),
 });
 
+export const LessonFiltersSchema = z.object({
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(100).default(12),
+  search: z.string().optional(),
+  ageGroup: AgeGroupSchema.optional(), 
+  frame: FrameSchema.optional(),
+  authorId: z.string().optional(),
+});
+
+export const LoginSchema = z.object({
+  email: z.email("כתובת אימייל לא תקינה"),
+  password: z.string().min(1, "חובה להזין סיסמה"),
+});
+export const RegisterSchema = LoginSchema.extend({
+  fullName: z.string().min(2, "שם מלא חייב להכיל לפחות 2 תווים"),
+});
+
 export type CreateLessonPlanBody = z.infer<typeof CreateLessonPlanSchema>;
 export type LessonFlowStep = z.infer<typeof LessonFlowStepSchema>;
 export type CreateLessonPlanInput = z.input<typeof CreateLessonPlanSchema>;
+export type LessonFilters = z.infer<typeof LessonFiltersSchema>;
+export type User = z.infer<typeof UserSchema>;
+export type Login = z.infer<typeof LoginSchema>;
+export type Register = z.infer<typeof RegisterSchema>;
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export type LessonPlan = z.infer<typeof LessonPlanSchema> & {
+  author?: Pick<User, "id" | "fullName" | "role" | "email">;
+};
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+}

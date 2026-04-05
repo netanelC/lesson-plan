@@ -5,7 +5,10 @@ import {
   validatorCompiler,
 } from "fastify-type-provider-zod";
 import cors from "@fastify/cors";
+import { fastifyJwt } from "@fastify/jwt";
 import { lessonPlanRoutes } from "./lessonPlan/routes";
+import { userRoutes } from "./users/routes";
+import { authRoutes } from "./auth/routes";
 
 export function buildApp(): FastifyInstance {
   const app = fastify({ logger: true });
@@ -34,6 +37,16 @@ export function buildApp(): FastifyInstance {
   });
 
   app.register(lessonPlanRoutes, { prefix: "/api/lessons" });
+
+  // Auth
+  // Register JWT (TODO: Move secret to .env later)
+  app.register(fastifyJwt, {
+    secret: process.env.JWT_SECRET ?? "supersecret",
+  });
+  app.register(authRoutes, { prefix: "/api/auth" });
+
+  // Users
+  app.register(userRoutes, { prefix: "/api/users" });
 
   return app;
 }

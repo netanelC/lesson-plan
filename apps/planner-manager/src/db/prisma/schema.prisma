@@ -25,6 +25,31 @@ enum AgeGroup {
   FOUR_TO_FIVE
 }
 
+enum Role {
+  KINDERGARTEN
+  ADMIN
+  OWNER
+}
+
+model User {
+  id        String       @id @default(cuid())
+  email     String       @unique
+  fullName  String
+  role      Role         @default(KINDERGARTEN)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  isActive      Boolean   @default(true)  // For banning users without deleting data
+
+  // Auth: Supports both Email/Password AND Google Login
+  passwordHash  String?   // Nullable: Empty if using Google-only
+  googleId      String?   @unique // Nullable: Empty if using Password-only
+  avatarUrl     String?
+
+
+  // Relation: A user can author many lesson plans
+  lessonPlans LessonPlan[]
+}
+
 model LessonPlan {
   id             String   @id @default(uuid())
 
@@ -48,4 +73,24 @@ model LessonPlan {
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  authorId       String
+  author         User     @relation(fields: [authorId], references: [id])
+
+  attachments Attachment[]
+
+}
+
+model Attachment {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  
+  filename  String    // Original filename
+  url       String    // MinIO URL
+  fileType  String    // MIME type
+  sizeBytes Int
+  
+  // Foreign Key
+  lessonPlan   LessonPlan @relation(fields: [lessonPlanId], references: [id], onDelete: Cascade)
+  lessonPlanId String
 }
