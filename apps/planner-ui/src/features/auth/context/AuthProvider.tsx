@@ -1,12 +1,12 @@
 import { useState, useEffect, type ReactNode } from "react";
+import type { User } from "@repo/types";
 import { api } from "../../../lib/axios";
 import { AuthContext } from "./AuthContext"; // Import from the new file
-import type { User } from "@repo/types";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(() => {
     const saved = localStorage.getItem("user");
-    return saved ? JSON.parse(saved) : null;
+    return saved != null ? (JSON.parse(saved) as User) : null;
   });
 
   const [token, setToken] = useState<string | null>(() => {
@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Sync axios on app load
   useEffect(() => {
-    if (token) {
+    if (token != null && token !== "") {
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     }
   }, [token]);

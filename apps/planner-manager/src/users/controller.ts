@@ -1,37 +1,48 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { RoleType } from "@repo/types";
-import { prisma } from "../db/prisma/prisma";
+import { status } from "http-status";
+import { Role } from "../db/prisma/generated/client";
+import { getAllUsers, updateUserRole } from "./DAL";
 
-export const userController = {
-  // List all users for the management table
-  getAll: async (req: FastifyRequest, reply: FastifyReply) => {
-    const users = await prisma.user.findMany({
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        email: true,
-        fullName: true,
-        role: true,
-        avatarUrl: true,
-        createdAt: true,
-      },
+export async function getAllUsersController(
+  request: FastifyRequest,
+  reply: FastifyReply,
+): Promise<FastifyReply> {
+  try {
+    const users = await getAllUsers();
+
+    return await reply.status(status.OK).send(users);
+  } catch (error) {
+    request.log.error({ err: error }, "Failed to get users");
+
+    return reply.status(status.INTERNAL_SERVER_ERROR).send({
+      success: false,
+      error: "Internal Server Error",
     });
-    return users;
-  },
+  }
+}
 
-  // Update a user's role
-  updateRole: async (
-    req: FastifyRequest<{ Params: { id: string }; Body: { role: RoleType } }>,
-    reply: FastifyReply,
-  ) => {
-    const { id } = req.params;
-    const { role } = req.body;
+export async function updateUserRoleController(
+  request: FastifyRequest<{
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    Params: { id: string };
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    Body: { role: Role };
+  }>,
+  reply: FastifyReply,
+): Promise<FastifyReply> {
+  try {
+    const { id } = request.params;
+    const { role } = request.body;
 
-    const updated = await prisma.user.update({
-      where: { id },
-      data: { role },
+    const updated = await updateUserRole(id, role);
+
+    return await reply.status(status.OK).send(updated);
+  } catch (error) {
+    request.log.error({ err: error }, "Failed to update user role");
+
+    return reply.status(status.INTERNAL_SERVER_ERROR).send({
+      success: false,
+      error: "Internal Server Error",
     });
-
-    return updated;
-  },
-};
+  }
+}

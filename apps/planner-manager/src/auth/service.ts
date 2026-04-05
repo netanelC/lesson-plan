@@ -1,23 +1,28 @@
 import bcrypt from "bcryptjs";
 import { OAuth2Client } from "google-auth-library";
-import { RoleType } from "@repo/types";
 import config from "config";
+import { Role, User } from "../db/prisma/generated/client";
 import { prisma } from "../db/prisma/prisma";
 import { LoginResult } from "./types";
 
+const saltRounds = 10;
 const clientId = config.get<string>("google.clientId");
 const client = new OAuth2Client(clientId);
 
 export const authService = {
-  async register(email: string, password: string, fullName: string) {
+  async register(
+    email: string,
+    password: string,
+    fullName: string,
+  ): Promise<Partial<User>> {
     // 1. Check if user exists
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       throw new Error("User already exists");
     }
 
-    // 2. Hash the password (10 rounds is standard)
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // 2. Hash the password
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // 3. Create the user
     return prisma.user.create({
@@ -25,7 +30,7 @@ export const authService = {
         email,
         passwordHash: hashedPassword,
         fullName,
-        role: UserRole.ADMIN, // Default to ADMIN so they can create content immediately
+        role: Role.ADMIN, // Default to ADMIN so they can create content immediately
       },
       select: {
         id: true,
@@ -41,7 +46,7 @@ export const authService = {
     const user = await prisma.user.findUnique({ where: { email } });
 
     // 2. Hybrid Check: If user exists but has no password (Google-only account)
-    if (!user || !user.passwordHash) {
+    if (user?.passwordHash == null) {
       return null;
     }
 
@@ -58,14 +63,16 @@ export const authService = {
     };
   },
 
-  async verifyGoogleToken(token: string) {
+  async verifyGoogleToken(token: string): Promise<User> {
     const ticket = await client.verifyIdToken({
       idToken: token,
       audience: clientId,
     });
 
     const payload = ticket.getPayload();
-    if (!payload || !payload.email) throw new Error("Invalid Google Token");
+    if (payload?.email == null) {
+      throw new Error("Invalid Google Token");
+    }
 
     // Upsert: Find user by email, or create them if they don't exist
     return prisma.user.upsert({
@@ -76,10 +83,10 @@ export const authService = {
       },
       create: {
         email: payload.email,
-        fullName: payload.name || "Google User",
+        fullName: payload.name ?? "Google User",
         googleId: payload.sub,
         avatarUrl: payload.picture,
-        role: "KINDERGARTEN",
+        role: Role.KINDERGARTEN,
       },
     });
   },

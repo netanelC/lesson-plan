@@ -14,7 +14,7 @@ export const useUploadAttachment = () => {
       formData.append("file", file);
 
       // שליחת הקובץ ל-Endpoint שיצרנו ב-Backend
-      const { data } = await api.post(
+      const result = await api.post<{ data: unknown }>(
         `/lessons/${lessonPlanId}/attachments`,
         formData,
         {
@@ -23,7 +23,7 @@ export const useUploadAttachment = () => {
           },
         },
       );
-      return data;
+      return result.data;
     },
   });
 };

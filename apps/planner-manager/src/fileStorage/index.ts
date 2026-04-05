@@ -4,8 +4,15 @@ import {
   PutObjectCommand,
   S3ClientConfig,
   DeleteObjectCommand,
+  DeleteObjectCommandOutput,
 } from "@aws-sdk/client-s3";
 import config from "config";
+
+interface UploadFileResult {
+  key: string;
+  url: string;
+  filename: string;
+}
 
 // 1. Initialize S3 Client (Same as before)
 const s3Config = config.get<S3ClientConfig>("minio");
@@ -25,7 +32,7 @@ export const fileStorageService = {
     fileBuffer: Buffer,
     originalName: string,
     mimeType: string,
-  ) {
+  ): Promise<UploadFileResult> {
     // 2. Sanitize the filename to be URL-safe
     // "My Cool Song!.mp3" -> "my-cool-song.mp3"
     const safeName = originalName
@@ -46,10 +53,12 @@ export const fileStorageService = {
 
     await s3Client.send(command);
 
+    const endpointStr = s3Config.endpoint as string;
+
     return {
-      key: key,
+      key,
       // The URL will look like: http://localhost:9000/lesson-attachments/123-abc/song.mp3
-      url: `${s3Config.endpoint}/${BUCKET_NAME}/${key}`,
+      url: `${endpointStr}/${BUCKET_NAME}/${key}`,
       filename: safeName,
     };
   },
@@ -57,7 +66,7 @@ export const fileStorageService = {
   /**
    * Deletes a file from MinIO based on its stored key.
    */
-  async deleteFile(key: string) {
+  async deleteFile(key: string): Promise<DeleteObjectCommandOutput> {
     const command = new DeleteObjectCommand({
       Bucket: BUCKET_NAME,
       Key: key,

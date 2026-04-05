@@ -10,10 +10,10 @@ export const EditLessonPlan = () => {
   const navigate = useNavigate();
 
   // 1. Fetch existing data (Ensure ID exists)
-  const { data: plan, isLoading, isError } = useLessonPlan(id || "");
+  const { data: plan, isLoading, isError } = useLessonPlan(id ?? "");
 
   // 2. Mutations for Updating
-  const updateMutation = useUpdateLessonPlan(id || "");
+  const updateMutation = useUpdateLessonPlan(id ?? "");
   const uploadMutation = useUploadAttachment();
 
   const handleUpdate = async (data: CreateLessonPlanBody, newFiles: File[]) => {
@@ -22,7 +22,7 @@ export const EditLessonPlan = () => {
       await updateMutation.mutateAsync(data);
 
       // Step 2: If the user added new files during the edit, upload them
-      if (newFiles.length > 0 && id) {
+      if (newFiles.length > 0 && id != null) {
         await Promise.all(
           newFiles.map((file) =>
             uploadMutation.mutateAsync({
@@ -34,7 +34,7 @@ export const EditLessonPlan = () => {
       }
 
       alert("המערך עודכן בהצלחה!");
-      navigate(`/plan/${id}`); // Navigate back to the details view
+      void navigate(`/plan/${id}`); // Navigate back to the details view
     } catch (error) {
       console.error("Update failed:", error);
       alert("אירעה שגיאה בעדכון המערך. נסה שנית.");

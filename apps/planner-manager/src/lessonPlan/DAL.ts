@@ -8,7 +8,7 @@ import { prisma } from "../db/prisma/prisma";
  * @returns The created LessonPlan record
  */
 export async function createLessonPlan(
-  data: Prisma.LessonPlanCreateInput
+  data: Prisma.LessonPlanUncheckedCreateInput
 ): Promise<LessonPlan> {
   return prisma.lessonPlan.create({
     data,

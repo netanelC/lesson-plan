@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { CreateLessonPlanBody } from "@repo/types";
+import type { CreateLessonPlanBody, LessonPlan } from "@repo/types";
 import { api } from "../../../lib/axios";
 
 export const useUpdateLessonPlan = (id: string) => {
@@ -7,12 +7,12 @@ export const useUpdateLessonPlan = (id: string) => {
 
   return useMutation({
     mutationFn: async (data: CreateLessonPlanBody) => {
-      const { data: result } = await api.put(`/lessons/${id}`, data);
-      return result;
+      const result = await api.put<{ data: LessonPlan }>(`/lessons/${id}`, data);
+      return result.data.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["lessons"] });
-      queryClient.invalidateQueries({ queryKey: ["lessons", id] });
+      void queryClient.invalidateQueries({ queryKey: ["lessons"] });
+      void queryClient.invalidateQueries({ queryKey: ["lessons", id] });
     },
   });
 };

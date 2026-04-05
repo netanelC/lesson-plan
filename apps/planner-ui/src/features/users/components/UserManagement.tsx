@@ -6,7 +6,7 @@ export const UserManagement = () => {
   const queryClient = useQueryClient();
   const { data: users, isLoading } = useQuery<User[]>({
     queryKey: ["users"],
-    queryFn: () => api.get("/users").then((res) => res.data),
+    queryFn: () => api.get<User[]>("/users").then((res) => res.data),
   });
 
   const mutation = useMutation({
@@ -42,7 +42,7 @@ export const UserManagement = () => {
               <tr key={user.id}>
                 <td className="px-6 py-4 flex items-center gap-3">
                   <img
-                    src={user.avatarUrl || ""}
+                    src={user.avatarUrl ?? ""}
                     className="h-8 w-8 rounded-full bg-gray-200"
                     alt=""
                     referrerPolicy="no-referrer"

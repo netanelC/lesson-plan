@@ -1,19 +1,20 @@
 import { FastifyInstance } from "fastify";
+import { status } from "http-status";
 import { authenticate } from "../middleware/auth";
-import { userController } from "./controller";
+import { getAllUsersController, updateUserRoleController } from "./controller";
 
-export async function userRoutes(fastify: FastifyInstance) {
+export function userRoutes(fastify: FastifyInstance): void {
   fastify.addHook("onRequest", authenticate);
 
   // Custom check: only allow OWNER
-  fastify.addHook("preHandler", async (req, reply) => {
-    if (req.user.role !== "OWNER") {
+  fastify.addHook("preHandler", async (request, reply) => {
+    if (request.user.role !== "OWNER") {
       return reply
-        .code(403)
+        .status(status.FORBIDDEN)
         .send({ message: "Only the Owner can manage users" });
     }
   });
 
-  fastify.get("/", userController.getAll);
-  fastify.patch("/:id/role", userController.updateRole);
+  fastify.get("/", getAllUsersController);
+  fastify.patch("/:id/role", updateUserRoleController);
 }

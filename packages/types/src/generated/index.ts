@@ -56,15 +56,19 @@ export type InputJsonValueType = z.infer<typeof InputJsonValueSchema>;
 
 export const TransactionIsolationLevelSchema = z.enum(['ReadUncommitted','ReadCommitted','RepeatableRead','Serializable']);
 
-export const UserScalarFieldEnumSchema = z.enum(['id','email','fullName','role','createdAt','updatedAt']);
+export const UserScalarFieldEnumSchema = z.enum(['id','email','fullName','role','createdAt','updatedAt','isActive','passwordHash','googleId','avatarUrl']);
 
 export const LessonPlanScalarFieldEnumSchema = z.enum(['id','topic','unit','frame','ageGroup','superGoal','operativeGoals','lessonFlow','teachingAids','references','isPublished','createdAt','updatedAt','authorId']);
+
+export const AttachmentScalarFieldEnumSchema = z.enum(['id','createdAt','filename','url','fileType','sizeBytes','lessonPlanId']);
 
 export const SortOrderSchema = z.enum(['asc','desc']);
 
 export const JsonNullValueInputSchema: z.ZodType<Prisma.JsonNullValueInput> = z.enum(['JsonNull',]).transform((value) => (value === 'JsonNull' ? Prisma.JsonNull : value));
 
 export const QueryModeSchema = z.enum(['default','insensitive']);
+
+export const NullsOrderSchema = z.enum(['first','last']);
 
 export const JsonNullValueFilterSchema: z.ZodType<Prisma.JsonNullValueFilter> = z.enum(['DbNull','JsonNull','AnyNull',]).transform((value) => value === 'JsonNull' ? Prisma.JsonNull : value === 'DbNull' ? Prisma.DbNull : value === 'AnyNull' ? Prisma.AnyNull : value);
 
@@ -95,6 +99,10 @@ export const UserSchema = z.object({
   fullName: z.string(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
+  isActive: z.boolean(),
+  passwordHash: z.string().nullable(),
+  googleId: z.string().nullable(),
+  avatarUrl: z.string().nullable(),
 })
 
 export type User = z.infer<typeof UserSchema>
@@ -121,6 +129,22 @@ export const LessonPlanSchema = z.object({
 })
 
 export type LessonPlan = z.infer<typeof LessonPlanSchema>
+
+/////////////////////////////////////////
+// ATTACHMENT SCHEMA
+/////////////////////////////////////////
+
+export const AttachmentSchema = z.object({
+  id: z.uuid(),
+  createdAt: z.coerce.date(),
+  filename: z.string(),
+  url: z.string(),
+  fileType: z.string(),
+  sizeBytes: z.number().int(),
+  lessonPlanId: z.string(),
+})
+
+export type Attachment = z.infer<typeof AttachmentSchema>
 
 /////////////////////////////////////////
 // SELECT & INCLUDE
@@ -154,6 +178,10 @@ export const UserSelectSchema: z.ZodType<Prisma.UserSelect> = z.object({
   role: z.boolean().optional(),
   createdAt: z.boolean().optional(),
   updatedAt: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+  passwordHash: z.boolean().optional(),
+  googleId: z.boolean().optional(),
+  avatarUrl: z.boolean().optional(),
   lessonPlans: z.union([z.boolean(),z.lazy(() => LessonPlanFindManyArgsSchema)]).optional(),
   _count: z.union([z.boolean(),z.lazy(() => UserCountOutputTypeArgsSchema)]).optional(),
 }).strict()
@@ -163,11 +191,21 @@ export const UserSelectSchema: z.ZodType<Prisma.UserSelect> = z.object({
 
 export const LessonPlanIncludeSchema: z.ZodType<Prisma.LessonPlanInclude> = z.object({
   author: z.union([z.boolean(),z.lazy(() => UserArgsSchema)]).optional(),
+  attachments: z.union([z.boolean(),z.lazy(() => AttachmentFindManyArgsSchema)]).optional(),
+  _count: z.union([z.boolean(),z.lazy(() => LessonPlanCountOutputTypeArgsSchema)]).optional(),
 }).strict();
 
 export const LessonPlanArgsSchema: z.ZodType<Prisma.LessonPlanDefaultArgs> = z.object({
   select: z.lazy(() => LessonPlanSelectSchema).optional(),
   include: z.lazy(() => LessonPlanIncludeSchema).optional(),
+}).strict();
+
+export const LessonPlanCountOutputTypeArgsSchema: z.ZodType<Prisma.LessonPlanCountOutputTypeDefaultArgs> = z.object({
+  select: z.lazy(() => LessonPlanCountOutputTypeSelectSchema).nullish(),
+}).strict();
+
+export const LessonPlanCountOutputTypeSelectSchema: z.ZodType<Prisma.LessonPlanCountOutputTypeSelect> = z.object({
+  attachments: z.boolean().optional(),
 }).strict();
 
 export const LessonPlanSelectSchema: z.ZodType<Prisma.LessonPlanSelect> = z.object({
@@ -186,6 +224,31 @@ export const LessonPlanSelectSchema: z.ZodType<Prisma.LessonPlanSelect> = z.obje
   updatedAt: z.boolean().optional(),
   authorId: z.boolean().optional(),
   author: z.union([z.boolean(),z.lazy(() => UserArgsSchema)]).optional(),
+  attachments: z.union([z.boolean(),z.lazy(() => AttachmentFindManyArgsSchema)]).optional(),
+  _count: z.union([z.boolean(),z.lazy(() => LessonPlanCountOutputTypeArgsSchema)]).optional(),
+}).strict()
+
+// ATTACHMENT
+//------------------------------------------------------
+
+export const AttachmentIncludeSchema: z.ZodType<Prisma.AttachmentInclude> = z.object({
+  lessonPlan: z.union([z.boolean(),z.lazy(() => LessonPlanArgsSchema)]).optional(),
+}).strict();
+
+export const AttachmentArgsSchema: z.ZodType<Prisma.AttachmentDefaultArgs> = z.object({
+  select: z.lazy(() => AttachmentSelectSchema).optional(),
+  include: z.lazy(() => AttachmentIncludeSchema).optional(),
+}).strict();
+
+export const AttachmentSelectSchema: z.ZodType<Prisma.AttachmentSelect> = z.object({
+  id: z.boolean().optional(),
+  createdAt: z.boolean().optional(),
+  filename: z.boolean().optional(),
+  url: z.boolean().optional(),
+  fileType: z.boolean().optional(),
+  sizeBytes: z.boolean().optional(),
+  lessonPlanId: z.boolean().optional(),
+  lessonPlan: z.union([z.boolean(),z.lazy(() => LessonPlanArgsSchema)]).optional(),
 }).strict()
 
 
@@ -203,6 +266,10 @@ export const UserWhereInputSchema: z.ZodType<Prisma.UserWhereInput> = z.strictOb
   role: z.union([ z.lazy(() => EnumRoleFilterSchema), z.lazy(() => RoleSchema) ]).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  isActive: z.union([ z.lazy(() => BoolFilterSchema), z.boolean() ]).optional(),
+  passwordHash: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
+  googleId: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
+  avatarUrl: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
   lessonPlans: z.lazy(() => LessonPlanListRelationFilterSchema).optional(),
 });
 
@@ -213,6 +280,10 @@ export const UserOrderByWithRelationInputSchema: z.ZodType<Prisma.UserOrderByWit
   role: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  isActive: z.lazy(() => SortOrderSchema).optional(),
+  passwordHash: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
+  googleId: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
+  avatarUrl: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   lessonPlans: z.lazy(() => LessonPlanOrderByRelationAggregateInputSchema).optional(),
 });
 
@@ -220,17 +291,34 @@ export const UserWhereUniqueInputSchema: z.ZodType<Prisma.UserWhereUniqueInput> 
   z.object({
     id: z.cuid(),
     email: z.string(),
+    googleId: z.string(),
+  }),
+  z.object({
+    id: z.cuid(),
+    email: z.string(),
+  }),
+  z.object({
+    id: z.cuid(),
+    googleId: z.string(),
   }),
   z.object({
     id: z.cuid(),
   }),
   z.object({
     email: z.string(),
+    googleId: z.string(),
+  }),
+  z.object({
+    email: z.string(),
+  }),
+  z.object({
+    googleId: z.string(),
   }),
 ])
 .and(z.strictObject({
   id: z.cuid().optional(),
   email: z.string().optional(),
+  googleId: z.string().optional(),
   AND: z.union([ z.lazy(() => UserWhereInputSchema), z.lazy(() => UserWhereInputSchema).array() ]).optional(),
   OR: z.lazy(() => UserWhereInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => UserWhereInputSchema), z.lazy(() => UserWhereInputSchema).array() ]).optional(),
@@ -238,6 +326,9 @@ export const UserWhereUniqueInputSchema: z.ZodType<Prisma.UserWhereUniqueInput> 
   role: z.union([ z.lazy(() => EnumRoleFilterSchema), z.lazy(() => RoleSchema) ]).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  isActive: z.union([ z.lazy(() => BoolFilterSchema), z.boolean() ]).optional(),
+  passwordHash: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
+  avatarUrl: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
   lessonPlans: z.lazy(() => LessonPlanListRelationFilterSchema).optional(),
 }));
 
@@ -248,6 +339,10 @@ export const UserOrderByWithAggregationInputSchema: z.ZodType<Prisma.UserOrderBy
   role: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  isActive: z.lazy(() => SortOrderSchema).optional(),
+  passwordHash: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
+  googleId: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
+  avatarUrl: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   _count: z.lazy(() => UserCountOrderByAggregateInputSchema).optional(),
   _max: z.lazy(() => UserMaxOrderByAggregateInputSchema).optional(),
   _min: z.lazy(() => UserMinOrderByAggregateInputSchema).optional(),
@@ -263,6 +358,10 @@ export const UserScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.UserScal
   role: z.union([ z.lazy(() => EnumRoleWithAggregatesFilterSchema), z.lazy(() => RoleSchema) ]).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
+  isActive: z.union([ z.lazy(() => BoolWithAggregatesFilterSchema), z.boolean() ]).optional(),
+  passwordHash: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema), z.string() ]).optional().nullable(),
+  googleId: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema), z.string() ]).optional().nullable(),
+  avatarUrl: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema), z.string() ]).optional().nullable(),
 });
 
 export const LessonPlanWhereInputSchema: z.ZodType<Prisma.LessonPlanWhereInput> = z.strictObject({
@@ -284,6 +383,7 @@ export const LessonPlanWhereInputSchema: z.ZodType<Prisma.LessonPlanWhereInput> 
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   authorId: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   author: z.union([ z.lazy(() => UserScalarRelationFilterSchema), z.lazy(() => UserWhereInputSchema) ]).optional(),
+  attachments: z.lazy(() => AttachmentListRelationFilterSchema).optional(),
 });
 
 export const LessonPlanOrderByWithRelationInputSchema: z.ZodType<Prisma.LessonPlanOrderByWithRelationInput> = z.strictObject({
@@ -302,6 +402,7 @@ export const LessonPlanOrderByWithRelationInputSchema: z.ZodType<Prisma.LessonPl
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   authorId: z.lazy(() => SortOrderSchema).optional(),
   author: z.lazy(() => UserOrderByWithRelationInputSchema).optional(),
+  attachments: z.lazy(() => AttachmentOrderByRelationAggregateInputSchema).optional(),
 });
 
 export const LessonPlanWhereUniqueInputSchema: z.ZodType<Prisma.LessonPlanWhereUniqueInput> = z.object({
@@ -326,6 +427,7 @@ export const LessonPlanWhereUniqueInputSchema: z.ZodType<Prisma.LessonPlanWhereU
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   authorId: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   author: z.union([ z.lazy(() => UserScalarRelationFilterSchema), z.lazy(() => UserWhereInputSchema) ]).optional(),
+  attachments: z.lazy(() => AttachmentListRelationFilterSchema).optional(),
 }));
 
 export const LessonPlanOrderByWithAggregationInputSchema: z.ZodType<Prisma.LessonPlanOrderByWithAggregationInput> = z.strictObject({
@@ -368,6 +470,76 @@ export const LessonPlanScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.Le
   authorId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
 });
 
+export const AttachmentWhereInputSchema: z.ZodType<Prisma.AttachmentWhereInput> = z.strictObject({
+  AND: z.union([ z.lazy(() => AttachmentWhereInputSchema), z.lazy(() => AttachmentWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => AttachmentWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => AttachmentWhereInputSchema), z.lazy(() => AttachmentWhereInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  filename: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  url: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  fileType: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  sizeBytes: z.union([ z.lazy(() => IntFilterSchema), z.number() ]).optional(),
+  lessonPlanId: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  lessonPlan: z.union([ z.lazy(() => LessonPlanScalarRelationFilterSchema), z.lazy(() => LessonPlanWhereInputSchema) ]).optional(),
+});
+
+export const AttachmentOrderByWithRelationInputSchema: z.ZodType<Prisma.AttachmentOrderByWithRelationInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  filename: z.lazy(() => SortOrderSchema).optional(),
+  url: z.lazy(() => SortOrderSchema).optional(),
+  fileType: z.lazy(() => SortOrderSchema).optional(),
+  sizeBytes: z.lazy(() => SortOrderSchema).optional(),
+  lessonPlanId: z.lazy(() => SortOrderSchema).optional(),
+  lessonPlan: z.lazy(() => LessonPlanOrderByWithRelationInputSchema).optional(),
+});
+
+export const AttachmentWhereUniqueInputSchema: z.ZodType<Prisma.AttachmentWhereUniqueInput> = z.object({
+  id: z.uuid(),
+})
+.and(z.strictObject({
+  id: z.uuid().optional(),
+  AND: z.union([ z.lazy(() => AttachmentWhereInputSchema), z.lazy(() => AttachmentWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => AttachmentWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => AttachmentWhereInputSchema), z.lazy(() => AttachmentWhereInputSchema).array() ]).optional(),
+  createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  filename: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  url: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  fileType: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  sizeBytes: z.union([ z.lazy(() => IntFilterSchema), z.number().int() ]).optional(),
+  lessonPlanId: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  lessonPlan: z.union([ z.lazy(() => LessonPlanScalarRelationFilterSchema), z.lazy(() => LessonPlanWhereInputSchema) ]).optional(),
+}));
+
+export const AttachmentOrderByWithAggregationInputSchema: z.ZodType<Prisma.AttachmentOrderByWithAggregationInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  filename: z.lazy(() => SortOrderSchema).optional(),
+  url: z.lazy(() => SortOrderSchema).optional(),
+  fileType: z.lazy(() => SortOrderSchema).optional(),
+  sizeBytes: z.lazy(() => SortOrderSchema).optional(),
+  lessonPlanId: z.lazy(() => SortOrderSchema).optional(),
+  _count: z.lazy(() => AttachmentCountOrderByAggregateInputSchema).optional(),
+  _avg: z.lazy(() => AttachmentAvgOrderByAggregateInputSchema).optional(),
+  _max: z.lazy(() => AttachmentMaxOrderByAggregateInputSchema).optional(),
+  _min: z.lazy(() => AttachmentMinOrderByAggregateInputSchema).optional(),
+  _sum: z.lazy(() => AttachmentSumOrderByAggregateInputSchema).optional(),
+});
+
+export const AttachmentScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.AttachmentScalarWhereWithAggregatesInput> = z.strictObject({
+  AND: z.union([ z.lazy(() => AttachmentScalarWhereWithAggregatesInputSchema), z.lazy(() => AttachmentScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  OR: z.lazy(() => AttachmentScalarWhereWithAggregatesInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => AttachmentScalarWhereWithAggregatesInputSchema), z.lazy(() => AttachmentScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
+  createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
+  filename: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
+  url: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
+  fileType: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
+  sizeBytes: z.union([ z.lazy(() => IntWithAggregatesFilterSchema), z.number() ]).optional(),
+  lessonPlanId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
+});
+
 export const UserCreateInputSchema: z.ZodType<Prisma.UserCreateInput> = z.strictObject({
   id: z.cuid().optional(),
   email: z.string(),
@@ -375,6 +547,10 @@ export const UserCreateInputSchema: z.ZodType<Prisma.UserCreateInput> = z.strict
   role: z.lazy(() => RoleSchema).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  isActive: z.boolean().optional(),
+  passwordHash: z.string().optional().nullable(),
+  googleId: z.string().optional().nullable(),
+  avatarUrl: z.string().optional().nullable(),
   lessonPlans: z.lazy(() => LessonPlanCreateNestedManyWithoutAuthorInputSchema).optional(),
 });
 
@@ -385,6 +561,10 @@ export const UserUncheckedCreateInputSchema: z.ZodType<Prisma.UserUncheckedCreat
   role: z.lazy(() => RoleSchema).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  isActive: z.boolean().optional(),
+  passwordHash: z.string().optional().nullable(),
+  googleId: z.string().optional().nullable(),
+  avatarUrl: z.string().optional().nullable(),
   lessonPlans: z.lazy(() => LessonPlanUncheckedCreateNestedManyWithoutAuthorInputSchema).optional(),
 });
 
@@ -395,6 +575,10 @@ export const UserUpdateInputSchema: z.ZodType<Prisma.UserUpdateInput> = z.strict
   role: z.union([ z.lazy(() => RoleSchema), z.lazy(() => EnumRoleFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  passwordHash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  googleId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  avatarUrl: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   lessonPlans: z.lazy(() => LessonPlanUpdateManyWithoutAuthorNestedInputSchema).optional(),
 });
 
@@ -405,6 +589,10 @@ export const UserUncheckedUpdateInputSchema: z.ZodType<Prisma.UserUncheckedUpdat
   role: z.union([ z.lazy(() => RoleSchema), z.lazy(() => EnumRoleFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  passwordHash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  googleId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  avatarUrl: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   lessonPlans: z.lazy(() => LessonPlanUncheckedUpdateManyWithoutAuthorNestedInputSchema).optional(),
 });
 
@@ -415,6 +603,10 @@ export const UserCreateManyInputSchema: z.ZodType<Prisma.UserCreateManyInput> = 
   role: z.lazy(() => RoleSchema).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  isActive: z.boolean().optional(),
+  passwordHash: z.string().optional().nullable(),
+  googleId: z.string().optional().nullable(),
+  avatarUrl: z.string().optional().nullable(),
 });
 
 export const UserUpdateManyMutationInputSchema: z.ZodType<Prisma.UserUpdateManyMutationInput> = z.strictObject({
@@ -424,6 +616,10 @@ export const UserUpdateManyMutationInputSchema: z.ZodType<Prisma.UserUpdateManyM
   role: z.union([ z.lazy(() => RoleSchema), z.lazy(() => EnumRoleFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  passwordHash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  googleId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  avatarUrl: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 });
 
 export const UserUncheckedUpdateManyInputSchema: z.ZodType<Prisma.UserUncheckedUpdateManyInput> = z.strictObject({
@@ -433,6 +629,10 @@ export const UserUncheckedUpdateManyInputSchema: z.ZodType<Prisma.UserUncheckedU
   role: z.union([ z.lazy(() => RoleSchema), z.lazy(() => EnumRoleFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  passwordHash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  googleId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  avatarUrl: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 });
 
 export const LessonPlanCreateInputSchema: z.ZodType<Prisma.LessonPlanCreateInput> = z.strictObject({
@@ -450,6 +650,7 @@ export const LessonPlanCreateInputSchema: z.ZodType<Prisma.LessonPlanCreateInput
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   author: z.lazy(() => UserCreateNestedOneWithoutLessonPlansInputSchema),
+  attachments: z.lazy(() => AttachmentCreateNestedManyWithoutLessonPlanInputSchema).optional(),
 });
 
 export const LessonPlanUncheckedCreateInputSchema: z.ZodType<Prisma.LessonPlanUncheckedCreateInput> = z.strictObject({
@@ -467,6 +668,7 @@ export const LessonPlanUncheckedCreateInputSchema: z.ZodType<Prisma.LessonPlanUn
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   authorId: z.string(),
+  attachments: z.lazy(() => AttachmentUncheckedCreateNestedManyWithoutLessonPlanInputSchema).optional(),
 });
 
 export const LessonPlanUpdateInputSchema: z.ZodType<Prisma.LessonPlanUpdateInput> = z.strictObject({
@@ -484,6 +686,7 @@ export const LessonPlanUpdateInputSchema: z.ZodType<Prisma.LessonPlanUpdateInput
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   author: z.lazy(() => UserUpdateOneRequiredWithoutLessonPlansNestedInputSchema).optional(),
+  attachments: z.lazy(() => AttachmentUpdateManyWithoutLessonPlanNestedInputSchema).optional(),
 });
 
 export const LessonPlanUncheckedUpdateInputSchema: z.ZodType<Prisma.LessonPlanUncheckedUpdateInput> = z.strictObject({
@@ -501,6 +704,7 @@ export const LessonPlanUncheckedUpdateInputSchema: z.ZodType<Prisma.LessonPlanUn
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   authorId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  attachments: z.lazy(() => AttachmentUncheckedUpdateManyWithoutLessonPlanNestedInputSchema).optional(),
 });
 
 export const LessonPlanCreateManyInputSchema: z.ZodType<Prisma.LessonPlanCreateManyInput> = z.strictObject({
@@ -553,6 +757,75 @@ export const LessonPlanUncheckedUpdateManyInputSchema: z.ZodType<Prisma.LessonPl
   authorId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
 });
 
+export const AttachmentCreateInputSchema: z.ZodType<Prisma.AttachmentCreateInput> = z.strictObject({
+  id: z.uuid().optional(),
+  createdAt: z.coerce.date().optional(),
+  filename: z.string(),
+  url: z.string(),
+  fileType: z.string(),
+  sizeBytes: z.number().int(),
+  lessonPlan: z.lazy(() => LessonPlanCreateNestedOneWithoutAttachmentsInputSchema),
+});
+
+export const AttachmentUncheckedCreateInputSchema: z.ZodType<Prisma.AttachmentUncheckedCreateInput> = z.strictObject({
+  id: z.uuid().optional(),
+  createdAt: z.coerce.date().optional(),
+  filename: z.string(),
+  url: z.string(),
+  fileType: z.string(),
+  sizeBytes: z.number().int(),
+  lessonPlanId: z.string(),
+});
+
+export const AttachmentUpdateInputSchema: z.ZodType<Prisma.AttachmentUpdateInput> = z.strictObject({
+  id: z.union([ z.uuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  filename: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  url: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  fileType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  sizeBytes: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  lessonPlan: z.lazy(() => LessonPlanUpdateOneRequiredWithoutAttachmentsNestedInputSchema).optional(),
+});
+
+export const AttachmentUncheckedUpdateInputSchema: z.ZodType<Prisma.AttachmentUncheckedUpdateInput> = z.strictObject({
+  id: z.union([ z.uuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  filename: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  url: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  fileType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  sizeBytes: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  lessonPlanId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+});
+
+export const AttachmentCreateManyInputSchema: z.ZodType<Prisma.AttachmentCreateManyInput> = z.strictObject({
+  id: z.uuid().optional(),
+  createdAt: z.coerce.date().optional(),
+  filename: z.string(),
+  url: z.string(),
+  fileType: z.string(),
+  sizeBytes: z.number().int(),
+  lessonPlanId: z.string(),
+});
+
+export const AttachmentUpdateManyMutationInputSchema: z.ZodType<Prisma.AttachmentUpdateManyMutationInput> = z.strictObject({
+  id: z.union([ z.uuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  filename: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  url: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  fileType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  sizeBytes: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+});
+
+export const AttachmentUncheckedUpdateManyInputSchema: z.ZodType<Prisma.AttachmentUncheckedUpdateManyInput> = z.strictObject({
+  id: z.union([ z.uuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  filename: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  url: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  fileType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  sizeBytes: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  lessonPlanId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+});
+
 export const StringFilterSchema: z.ZodType<Prisma.StringFilter> = z.strictObject({
   equals: z.string().optional(),
   in: z.string().array().optional(),
@@ -586,10 +859,35 @@ export const DateTimeFilterSchema: z.ZodType<Prisma.DateTimeFilter> = z.strictOb
   not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeFilterSchema) ]).optional(),
 });
 
+export const BoolFilterSchema: z.ZodType<Prisma.BoolFilter> = z.strictObject({
+  equals: z.boolean().optional(),
+  not: z.union([ z.boolean(),z.lazy(() => NestedBoolFilterSchema) ]).optional(),
+});
+
+export const StringNullableFilterSchema: z.ZodType<Prisma.StringNullableFilter> = z.strictObject({
+  equals: z.string().optional().nullable(),
+  in: z.string().array().optional().nullable(),
+  notIn: z.string().array().optional().nullable(),
+  lt: z.string().optional(),
+  lte: z.string().optional(),
+  gt: z.string().optional(),
+  gte: z.string().optional(),
+  contains: z.string().optional(),
+  startsWith: z.string().optional(),
+  endsWith: z.string().optional(),
+  mode: z.lazy(() => QueryModeSchema).optional(),
+  not: z.union([ z.string(),z.lazy(() => NestedStringNullableFilterSchema) ]).optional().nullable(),
+});
+
 export const LessonPlanListRelationFilterSchema: z.ZodType<Prisma.LessonPlanListRelationFilter> = z.strictObject({
   every: z.lazy(() => LessonPlanWhereInputSchema).optional(),
   some: z.lazy(() => LessonPlanWhereInputSchema).optional(),
   none: z.lazy(() => LessonPlanWhereInputSchema).optional(),
+});
+
+export const SortOrderInputSchema: z.ZodType<Prisma.SortOrderInput> = z.strictObject({
+  sort: z.lazy(() => SortOrderSchema),
+  nulls: z.lazy(() => NullsOrderSchema).optional(),
 });
 
 export const LessonPlanOrderByRelationAggregateInputSchema: z.ZodType<Prisma.LessonPlanOrderByRelationAggregateInput> = z.strictObject({
@@ -603,6 +901,10 @@ export const UserCountOrderByAggregateInputSchema: z.ZodType<Prisma.UserCountOrd
   role: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  isActive: z.lazy(() => SortOrderSchema).optional(),
+  passwordHash: z.lazy(() => SortOrderSchema).optional(),
+  googleId: z.lazy(() => SortOrderSchema).optional(),
+  avatarUrl: z.lazy(() => SortOrderSchema).optional(),
 });
 
 export const UserMaxOrderByAggregateInputSchema: z.ZodType<Prisma.UserMaxOrderByAggregateInput> = z.strictObject({
@@ -612,6 +914,10 @@ export const UserMaxOrderByAggregateInputSchema: z.ZodType<Prisma.UserMaxOrderBy
   role: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  isActive: z.lazy(() => SortOrderSchema).optional(),
+  passwordHash: z.lazy(() => SortOrderSchema).optional(),
+  googleId: z.lazy(() => SortOrderSchema).optional(),
+  avatarUrl: z.lazy(() => SortOrderSchema).optional(),
 });
 
 export const UserMinOrderByAggregateInputSchema: z.ZodType<Prisma.UserMinOrderByAggregateInput> = z.strictObject({
@@ -621,6 +927,10 @@ export const UserMinOrderByAggregateInputSchema: z.ZodType<Prisma.UserMinOrderBy
   role: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  isActive: z.lazy(() => SortOrderSchema).optional(),
+  passwordHash: z.lazy(() => SortOrderSchema).optional(),
+  googleId: z.lazy(() => SortOrderSchema).optional(),
+  avatarUrl: z.lazy(() => SortOrderSchema).optional(),
 });
 
 export const StringWithAggregatesFilterSchema: z.ZodType<Prisma.StringWithAggregatesFilter> = z.strictObject({
@@ -665,6 +975,32 @@ export const DateTimeWithAggregatesFilterSchema: z.ZodType<Prisma.DateTimeWithAg
   _max: z.lazy(() => NestedDateTimeFilterSchema).optional(),
 });
 
+export const BoolWithAggregatesFilterSchema: z.ZodType<Prisma.BoolWithAggregatesFilter> = z.strictObject({
+  equals: z.boolean().optional(),
+  not: z.union([ z.boolean(),z.lazy(() => NestedBoolWithAggregatesFilterSchema) ]).optional(),
+  _count: z.lazy(() => NestedIntFilterSchema).optional(),
+  _min: z.lazy(() => NestedBoolFilterSchema).optional(),
+  _max: z.lazy(() => NestedBoolFilterSchema).optional(),
+});
+
+export const StringNullableWithAggregatesFilterSchema: z.ZodType<Prisma.StringNullableWithAggregatesFilter> = z.strictObject({
+  equals: z.string().optional().nullable(),
+  in: z.string().array().optional().nullable(),
+  notIn: z.string().array().optional().nullable(),
+  lt: z.string().optional(),
+  lte: z.string().optional(),
+  gt: z.string().optional(),
+  gte: z.string().optional(),
+  contains: z.string().optional(),
+  startsWith: z.string().optional(),
+  endsWith: z.string().optional(),
+  mode: z.lazy(() => QueryModeSchema).optional(),
+  not: z.union([ z.string(),z.lazy(() => NestedStringNullableWithAggregatesFilterSchema) ]).optional().nullable(),
+  _count: z.lazy(() => NestedIntNullableFilterSchema).optional(),
+  _min: z.lazy(() => NestedStringNullableFilterSchema).optional(),
+  _max: z.lazy(() => NestedStringNullableFilterSchema).optional(),
+});
+
 export const EnumFrameFilterSchema: z.ZodType<Prisma.EnumFrameFilter> = z.strictObject({
   equals: z.lazy(() => FrameSchema).optional(),
   in: z.lazy(() => FrameSchema).array().optional(),
@@ -704,14 +1040,19 @@ export const JsonFilterSchema: z.ZodType<Prisma.JsonFilter> = z.strictObject({
   not: InputJsonValueSchema.optional(),
 });
 
-export const BoolFilterSchema: z.ZodType<Prisma.BoolFilter> = z.strictObject({
-  equals: z.boolean().optional(),
-  not: z.union([ z.boolean(),z.lazy(() => NestedBoolFilterSchema) ]).optional(),
-});
-
 export const UserScalarRelationFilterSchema: z.ZodType<Prisma.UserScalarRelationFilter> = z.strictObject({
   is: z.lazy(() => UserWhereInputSchema).optional(),
   isNot: z.lazy(() => UserWhereInputSchema).optional(),
+});
+
+export const AttachmentListRelationFilterSchema: z.ZodType<Prisma.AttachmentListRelationFilter> = z.strictObject({
+  every: z.lazy(() => AttachmentWhereInputSchema).optional(),
+  some: z.lazy(() => AttachmentWhereInputSchema).optional(),
+  none: z.lazy(() => AttachmentWhereInputSchema).optional(),
+});
+
+export const AttachmentOrderByRelationAggregateInputSchema: z.ZodType<Prisma.AttachmentOrderByRelationAggregateInput> = z.strictObject({
+  _count: z.lazy(() => SortOrderSchema).optional(),
 });
 
 export const LessonPlanCountOrderByAggregateInputSchema: z.ZodType<Prisma.LessonPlanCountOrderByAggregateInput> = z.strictObject({
@@ -797,12 +1138,74 @@ export const JsonWithAggregatesFilterSchema: z.ZodType<Prisma.JsonWithAggregates
   _max: z.lazy(() => NestedJsonFilterSchema).optional(),
 });
 
-export const BoolWithAggregatesFilterSchema: z.ZodType<Prisma.BoolWithAggregatesFilter> = z.strictObject({
-  equals: z.boolean().optional(),
-  not: z.union([ z.boolean(),z.lazy(() => NestedBoolWithAggregatesFilterSchema) ]).optional(),
+export const IntFilterSchema: z.ZodType<Prisma.IntFilter> = z.strictObject({
+  equals: z.number().optional(),
+  in: z.number().array().optional(),
+  notIn: z.number().array().optional(),
+  lt: z.number().optional(),
+  lte: z.number().optional(),
+  gt: z.number().optional(),
+  gte: z.number().optional(),
+  not: z.union([ z.number(),z.lazy(() => NestedIntFilterSchema) ]).optional(),
+});
+
+export const LessonPlanScalarRelationFilterSchema: z.ZodType<Prisma.LessonPlanScalarRelationFilter> = z.strictObject({
+  is: z.lazy(() => LessonPlanWhereInputSchema).optional(),
+  isNot: z.lazy(() => LessonPlanWhereInputSchema).optional(),
+});
+
+export const AttachmentCountOrderByAggregateInputSchema: z.ZodType<Prisma.AttachmentCountOrderByAggregateInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  filename: z.lazy(() => SortOrderSchema).optional(),
+  url: z.lazy(() => SortOrderSchema).optional(),
+  fileType: z.lazy(() => SortOrderSchema).optional(),
+  sizeBytes: z.lazy(() => SortOrderSchema).optional(),
+  lessonPlanId: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const AttachmentAvgOrderByAggregateInputSchema: z.ZodType<Prisma.AttachmentAvgOrderByAggregateInput> = z.strictObject({
+  sizeBytes: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const AttachmentMaxOrderByAggregateInputSchema: z.ZodType<Prisma.AttachmentMaxOrderByAggregateInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  filename: z.lazy(() => SortOrderSchema).optional(),
+  url: z.lazy(() => SortOrderSchema).optional(),
+  fileType: z.lazy(() => SortOrderSchema).optional(),
+  sizeBytes: z.lazy(() => SortOrderSchema).optional(),
+  lessonPlanId: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const AttachmentMinOrderByAggregateInputSchema: z.ZodType<Prisma.AttachmentMinOrderByAggregateInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  filename: z.lazy(() => SortOrderSchema).optional(),
+  url: z.lazy(() => SortOrderSchema).optional(),
+  fileType: z.lazy(() => SortOrderSchema).optional(),
+  sizeBytes: z.lazy(() => SortOrderSchema).optional(),
+  lessonPlanId: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const AttachmentSumOrderByAggregateInputSchema: z.ZodType<Prisma.AttachmentSumOrderByAggregateInput> = z.strictObject({
+  sizeBytes: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const IntWithAggregatesFilterSchema: z.ZodType<Prisma.IntWithAggregatesFilter> = z.strictObject({
+  equals: z.number().optional(),
+  in: z.number().array().optional(),
+  notIn: z.number().array().optional(),
+  lt: z.number().optional(),
+  lte: z.number().optional(),
+  gt: z.number().optional(),
+  gte: z.number().optional(),
+  not: z.union([ z.number(),z.lazy(() => NestedIntWithAggregatesFilterSchema) ]).optional(),
   _count: z.lazy(() => NestedIntFilterSchema).optional(),
-  _min: z.lazy(() => NestedBoolFilterSchema).optional(),
-  _max: z.lazy(() => NestedBoolFilterSchema).optional(),
+  _avg: z.lazy(() => NestedFloatFilterSchema).optional(),
+  _sum: z.lazy(() => NestedIntFilterSchema).optional(),
+  _min: z.lazy(() => NestedIntFilterSchema).optional(),
+  _max: z.lazy(() => NestedIntFilterSchema).optional(),
 });
 
 export const LessonPlanCreateNestedManyWithoutAuthorInputSchema: z.ZodType<Prisma.LessonPlanCreateNestedManyWithoutAuthorInput> = z.strictObject({
@@ -829,6 +1232,14 @@ export const EnumRoleFieldUpdateOperationsInputSchema: z.ZodType<Prisma.EnumRole
 
 export const DateTimeFieldUpdateOperationsInputSchema: z.ZodType<Prisma.DateTimeFieldUpdateOperationsInput> = z.strictObject({
   set: z.coerce.date().optional(),
+});
+
+export const BoolFieldUpdateOperationsInputSchema: z.ZodType<Prisma.BoolFieldUpdateOperationsInput> = z.strictObject({
+  set: z.boolean().optional(),
+});
+
+export const NullableStringFieldUpdateOperationsInputSchema: z.ZodType<Prisma.NullableStringFieldUpdateOperationsInput> = z.strictObject({
+  set: z.string().optional().nullable(),
 });
 
 export const LessonPlanUpdateManyWithoutAuthorNestedInputSchema: z.ZodType<Prisma.LessonPlanUpdateManyWithoutAuthorNestedInput> = z.strictObject({
@@ -877,6 +1288,20 @@ export const UserCreateNestedOneWithoutLessonPlansInputSchema: z.ZodType<Prisma.
   connect: z.lazy(() => UserWhereUniqueInputSchema).optional(),
 });
 
+export const AttachmentCreateNestedManyWithoutLessonPlanInputSchema: z.ZodType<Prisma.AttachmentCreateNestedManyWithoutLessonPlanInput> = z.strictObject({
+  create: z.union([ z.lazy(() => AttachmentCreateWithoutLessonPlanInputSchema), z.lazy(() => AttachmentCreateWithoutLessonPlanInputSchema).array(), z.lazy(() => AttachmentUncheckedCreateWithoutLessonPlanInputSchema), z.lazy(() => AttachmentUncheckedCreateWithoutLessonPlanInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => AttachmentCreateOrConnectWithoutLessonPlanInputSchema), z.lazy(() => AttachmentCreateOrConnectWithoutLessonPlanInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => AttachmentCreateManyLessonPlanInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => AttachmentWhereUniqueInputSchema), z.lazy(() => AttachmentWhereUniqueInputSchema).array() ]).optional(),
+});
+
+export const AttachmentUncheckedCreateNestedManyWithoutLessonPlanInputSchema: z.ZodType<Prisma.AttachmentUncheckedCreateNestedManyWithoutLessonPlanInput> = z.strictObject({
+  create: z.union([ z.lazy(() => AttachmentCreateWithoutLessonPlanInputSchema), z.lazy(() => AttachmentCreateWithoutLessonPlanInputSchema).array(), z.lazy(() => AttachmentUncheckedCreateWithoutLessonPlanInputSchema), z.lazy(() => AttachmentUncheckedCreateWithoutLessonPlanInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => AttachmentCreateOrConnectWithoutLessonPlanInputSchema), z.lazy(() => AttachmentCreateOrConnectWithoutLessonPlanInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => AttachmentCreateManyLessonPlanInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => AttachmentWhereUniqueInputSchema), z.lazy(() => AttachmentWhereUniqueInputSchema).array() ]).optional(),
+});
+
 export const EnumFrameFieldUpdateOperationsInputSchema: z.ZodType<Prisma.EnumFrameFieldUpdateOperationsInput> = z.strictObject({
   set: z.lazy(() => FrameSchema).optional(),
 });
@@ -900,16 +1325,62 @@ export const LessonPlanUpdatereferencesInputSchema: z.ZodType<Prisma.LessonPlanU
   push: z.union([ z.string(),z.string().array() ]).optional(),
 });
 
-export const BoolFieldUpdateOperationsInputSchema: z.ZodType<Prisma.BoolFieldUpdateOperationsInput> = z.strictObject({
-  set: z.boolean().optional(),
-});
-
 export const UserUpdateOneRequiredWithoutLessonPlansNestedInputSchema: z.ZodType<Prisma.UserUpdateOneRequiredWithoutLessonPlansNestedInput> = z.strictObject({
   create: z.union([ z.lazy(() => UserCreateWithoutLessonPlansInputSchema), z.lazy(() => UserUncheckedCreateWithoutLessonPlansInputSchema) ]).optional(),
   connectOrCreate: z.lazy(() => UserCreateOrConnectWithoutLessonPlansInputSchema).optional(),
   upsert: z.lazy(() => UserUpsertWithoutLessonPlansInputSchema).optional(),
   connect: z.lazy(() => UserWhereUniqueInputSchema).optional(),
   update: z.union([ z.lazy(() => UserUpdateToOneWithWhereWithoutLessonPlansInputSchema), z.lazy(() => UserUpdateWithoutLessonPlansInputSchema), z.lazy(() => UserUncheckedUpdateWithoutLessonPlansInputSchema) ]).optional(),
+});
+
+export const AttachmentUpdateManyWithoutLessonPlanNestedInputSchema: z.ZodType<Prisma.AttachmentUpdateManyWithoutLessonPlanNestedInput> = z.strictObject({
+  create: z.union([ z.lazy(() => AttachmentCreateWithoutLessonPlanInputSchema), z.lazy(() => AttachmentCreateWithoutLessonPlanInputSchema).array(), z.lazy(() => AttachmentUncheckedCreateWithoutLessonPlanInputSchema), z.lazy(() => AttachmentUncheckedCreateWithoutLessonPlanInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => AttachmentCreateOrConnectWithoutLessonPlanInputSchema), z.lazy(() => AttachmentCreateOrConnectWithoutLessonPlanInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => AttachmentUpsertWithWhereUniqueWithoutLessonPlanInputSchema), z.lazy(() => AttachmentUpsertWithWhereUniqueWithoutLessonPlanInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => AttachmentCreateManyLessonPlanInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => AttachmentWhereUniqueInputSchema), z.lazy(() => AttachmentWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => AttachmentWhereUniqueInputSchema), z.lazy(() => AttachmentWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => AttachmentWhereUniqueInputSchema), z.lazy(() => AttachmentWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => AttachmentWhereUniqueInputSchema), z.lazy(() => AttachmentWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => AttachmentUpdateWithWhereUniqueWithoutLessonPlanInputSchema), z.lazy(() => AttachmentUpdateWithWhereUniqueWithoutLessonPlanInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => AttachmentUpdateManyWithWhereWithoutLessonPlanInputSchema), z.lazy(() => AttachmentUpdateManyWithWhereWithoutLessonPlanInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => AttachmentScalarWhereInputSchema), z.lazy(() => AttachmentScalarWhereInputSchema).array() ]).optional(),
+});
+
+export const AttachmentUncheckedUpdateManyWithoutLessonPlanNestedInputSchema: z.ZodType<Prisma.AttachmentUncheckedUpdateManyWithoutLessonPlanNestedInput> = z.strictObject({
+  create: z.union([ z.lazy(() => AttachmentCreateWithoutLessonPlanInputSchema), z.lazy(() => AttachmentCreateWithoutLessonPlanInputSchema).array(), z.lazy(() => AttachmentUncheckedCreateWithoutLessonPlanInputSchema), z.lazy(() => AttachmentUncheckedCreateWithoutLessonPlanInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => AttachmentCreateOrConnectWithoutLessonPlanInputSchema), z.lazy(() => AttachmentCreateOrConnectWithoutLessonPlanInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => AttachmentUpsertWithWhereUniqueWithoutLessonPlanInputSchema), z.lazy(() => AttachmentUpsertWithWhereUniqueWithoutLessonPlanInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => AttachmentCreateManyLessonPlanInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => AttachmentWhereUniqueInputSchema), z.lazy(() => AttachmentWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => AttachmentWhereUniqueInputSchema), z.lazy(() => AttachmentWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => AttachmentWhereUniqueInputSchema), z.lazy(() => AttachmentWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => AttachmentWhereUniqueInputSchema), z.lazy(() => AttachmentWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => AttachmentUpdateWithWhereUniqueWithoutLessonPlanInputSchema), z.lazy(() => AttachmentUpdateWithWhereUniqueWithoutLessonPlanInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => AttachmentUpdateManyWithWhereWithoutLessonPlanInputSchema), z.lazy(() => AttachmentUpdateManyWithWhereWithoutLessonPlanInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => AttachmentScalarWhereInputSchema), z.lazy(() => AttachmentScalarWhereInputSchema).array() ]).optional(),
+});
+
+export const LessonPlanCreateNestedOneWithoutAttachmentsInputSchema: z.ZodType<Prisma.LessonPlanCreateNestedOneWithoutAttachmentsInput> = z.strictObject({
+  create: z.union([ z.lazy(() => LessonPlanCreateWithoutAttachmentsInputSchema), z.lazy(() => LessonPlanUncheckedCreateWithoutAttachmentsInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => LessonPlanCreateOrConnectWithoutAttachmentsInputSchema).optional(),
+  connect: z.lazy(() => LessonPlanWhereUniqueInputSchema).optional(),
+});
+
+export const IntFieldUpdateOperationsInputSchema: z.ZodType<Prisma.IntFieldUpdateOperationsInput> = z.strictObject({
+  set: z.number().optional(),
+  increment: z.number().optional(),
+  decrement: z.number().optional(),
+  multiply: z.number().optional(),
+  divide: z.number().optional(),
+});
+
+export const LessonPlanUpdateOneRequiredWithoutAttachmentsNestedInputSchema: z.ZodType<Prisma.LessonPlanUpdateOneRequiredWithoutAttachmentsNestedInput> = z.strictObject({
+  create: z.union([ z.lazy(() => LessonPlanCreateWithoutAttachmentsInputSchema), z.lazy(() => LessonPlanUncheckedCreateWithoutAttachmentsInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => LessonPlanCreateOrConnectWithoutAttachmentsInputSchema).optional(),
+  upsert: z.lazy(() => LessonPlanUpsertWithoutAttachmentsInputSchema).optional(),
+  connect: z.lazy(() => LessonPlanWhereUniqueInputSchema).optional(),
+  update: z.union([ z.lazy(() => LessonPlanUpdateToOneWithWhereWithoutAttachmentsInputSchema), z.lazy(() => LessonPlanUpdateWithoutAttachmentsInputSchema), z.lazy(() => LessonPlanUncheckedUpdateWithoutAttachmentsInputSchema) ]).optional(),
 });
 
 export const NestedStringFilterSchema: z.ZodType<Prisma.NestedStringFilter> = z.strictObject({
@@ -942,6 +1413,25 @@ export const NestedDateTimeFilterSchema: z.ZodType<Prisma.NestedDateTimeFilter> 
   gt: z.coerce.date().optional(),
   gte: z.coerce.date().optional(),
   not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeFilterSchema) ]).optional(),
+});
+
+export const NestedBoolFilterSchema: z.ZodType<Prisma.NestedBoolFilter> = z.strictObject({
+  equals: z.boolean().optional(),
+  not: z.union([ z.boolean(),z.lazy(() => NestedBoolFilterSchema) ]).optional(),
+});
+
+export const NestedStringNullableFilterSchema: z.ZodType<Prisma.NestedStringNullableFilter> = z.strictObject({
+  equals: z.string().optional().nullable(),
+  in: z.string().array().optional().nullable(),
+  notIn: z.string().array().optional().nullable(),
+  lt: z.string().optional(),
+  lte: z.string().optional(),
+  gt: z.string().optional(),
+  gte: z.string().optional(),
+  contains: z.string().optional(),
+  startsWith: z.string().optional(),
+  endsWith: z.string().optional(),
+  not: z.union([ z.string(),z.lazy(() => NestedStringNullableFilterSchema) ]).optional().nullable(),
 });
 
 export const NestedStringWithAggregatesFilterSchema: z.ZodType<Prisma.NestedStringWithAggregatesFilter> = z.strictObject({
@@ -996,6 +1486,42 @@ export const NestedDateTimeWithAggregatesFilterSchema: z.ZodType<Prisma.NestedDa
   _max: z.lazy(() => NestedDateTimeFilterSchema).optional(),
 });
 
+export const NestedBoolWithAggregatesFilterSchema: z.ZodType<Prisma.NestedBoolWithAggregatesFilter> = z.strictObject({
+  equals: z.boolean().optional(),
+  not: z.union([ z.boolean(),z.lazy(() => NestedBoolWithAggregatesFilterSchema) ]).optional(),
+  _count: z.lazy(() => NestedIntFilterSchema).optional(),
+  _min: z.lazy(() => NestedBoolFilterSchema).optional(),
+  _max: z.lazy(() => NestedBoolFilterSchema).optional(),
+});
+
+export const NestedStringNullableWithAggregatesFilterSchema: z.ZodType<Prisma.NestedStringNullableWithAggregatesFilter> = z.strictObject({
+  equals: z.string().optional().nullable(),
+  in: z.string().array().optional().nullable(),
+  notIn: z.string().array().optional().nullable(),
+  lt: z.string().optional(),
+  lte: z.string().optional(),
+  gt: z.string().optional(),
+  gte: z.string().optional(),
+  contains: z.string().optional(),
+  startsWith: z.string().optional(),
+  endsWith: z.string().optional(),
+  not: z.union([ z.string(),z.lazy(() => NestedStringNullableWithAggregatesFilterSchema) ]).optional().nullable(),
+  _count: z.lazy(() => NestedIntNullableFilterSchema).optional(),
+  _min: z.lazy(() => NestedStringNullableFilterSchema).optional(),
+  _max: z.lazy(() => NestedStringNullableFilterSchema).optional(),
+});
+
+export const NestedIntNullableFilterSchema: z.ZodType<Prisma.NestedIntNullableFilter> = z.strictObject({
+  equals: z.number().optional().nullable(),
+  in: z.number().array().optional().nullable(),
+  notIn: z.number().array().optional().nullable(),
+  lt: z.number().optional(),
+  lte: z.number().optional(),
+  gt: z.number().optional(),
+  gte: z.number().optional(),
+  not: z.union([ z.number(),z.lazy(() => NestedIntNullableFilterSchema) ]).optional().nullable(),
+});
+
 export const NestedEnumFrameFilterSchema: z.ZodType<Prisma.NestedEnumFrameFilter> = z.strictObject({
   equals: z.lazy(() => FrameSchema).optional(),
   in: z.lazy(() => FrameSchema).array().optional(),
@@ -1008,11 +1534,6 @@ export const NestedEnumAgeGroupFilterSchema: z.ZodType<Prisma.NestedEnumAgeGroup
   in: z.lazy(() => AgeGroupSchema).array().optional(),
   notIn: z.lazy(() => AgeGroupSchema).array().optional(),
   not: z.union([ z.lazy(() => AgeGroupSchema), z.lazy(() => NestedEnumAgeGroupFilterSchema) ]).optional(),
-});
-
-export const NestedBoolFilterSchema: z.ZodType<Prisma.NestedBoolFilter> = z.strictObject({
-  equals: z.boolean().optional(),
-  not: z.union([ z.boolean(),z.lazy(() => NestedBoolFilterSchema) ]).optional(),
 });
 
 export const NestedEnumFrameWithAggregatesFilterSchema: z.ZodType<Prisma.NestedEnumFrameWithAggregatesFilter> = z.strictObject({
@@ -1052,12 +1573,31 @@ export const NestedJsonFilterSchema: z.ZodType<Prisma.NestedJsonFilter> = z.stri
   not: InputJsonValueSchema.optional(),
 });
 
-export const NestedBoolWithAggregatesFilterSchema: z.ZodType<Prisma.NestedBoolWithAggregatesFilter> = z.strictObject({
-  equals: z.boolean().optional(),
-  not: z.union([ z.boolean(),z.lazy(() => NestedBoolWithAggregatesFilterSchema) ]).optional(),
+export const NestedIntWithAggregatesFilterSchema: z.ZodType<Prisma.NestedIntWithAggregatesFilter> = z.strictObject({
+  equals: z.number().optional(),
+  in: z.number().array().optional(),
+  notIn: z.number().array().optional(),
+  lt: z.number().optional(),
+  lte: z.number().optional(),
+  gt: z.number().optional(),
+  gte: z.number().optional(),
+  not: z.union([ z.number(),z.lazy(() => NestedIntWithAggregatesFilterSchema) ]).optional(),
   _count: z.lazy(() => NestedIntFilterSchema).optional(),
-  _min: z.lazy(() => NestedBoolFilterSchema).optional(),
-  _max: z.lazy(() => NestedBoolFilterSchema).optional(),
+  _avg: z.lazy(() => NestedFloatFilterSchema).optional(),
+  _sum: z.lazy(() => NestedIntFilterSchema).optional(),
+  _min: z.lazy(() => NestedIntFilterSchema).optional(),
+  _max: z.lazy(() => NestedIntFilterSchema).optional(),
+});
+
+export const NestedFloatFilterSchema: z.ZodType<Prisma.NestedFloatFilter> = z.strictObject({
+  equals: z.number().optional(),
+  in: z.number().array().optional(),
+  notIn: z.number().array().optional(),
+  lt: z.number().optional(),
+  lte: z.number().optional(),
+  gt: z.number().optional(),
+  gte: z.number().optional(),
+  not: z.union([ z.number(),z.lazy(() => NestedFloatFilterSchema) ]).optional(),
 });
 
 export const LessonPlanCreateWithoutAuthorInputSchema: z.ZodType<Prisma.LessonPlanCreateWithoutAuthorInput> = z.strictObject({
@@ -1074,6 +1614,7 @@ export const LessonPlanCreateWithoutAuthorInputSchema: z.ZodType<Prisma.LessonPl
   isPublished: z.boolean().optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  attachments: z.lazy(() => AttachmentCreateNestedManyWithoutLessonPlanInputSchema).optional(),
 });
 
 export const LessonPlanUncheckedCreateWithoutAuthorInputSchema: z.ZodType<Prisma.LessonPlanUncheckedCreateWithoutAuthorInput> = z.strictObject({
@@ -1090,6 +1631,7 @@ export const LessonPlanUncheckedCreateWithoutAuthorInputSchema: z.ZodType<Prisma
   isPublished: z.boolean().optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  attachments: z.lazy(() => AttachmentUncheckedCreateNestedManyWithoutLessonPlanInputSchema).optional(),
 });
 
 export const LessonPlanCreateOrConnectWithoutAuthorInputSchema: z.ZodType<Prisma.LessonPlanCreateOrConnectWithoutAuthorInput> = z.strictObject({
@@ -1145,6 +1687,10 @@ export const UserCreateWithoutLessonPlansInputSchema: z.ZodType<Prisma.UserCreat
   role: z.lazy(() => RoleSchema).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  isActive: z.boolean().optional(),
+  passwordHash: z.string().optional().nullable(),
+  googleId: z.string().optional().nullable(),
+  avatarUrl: z.string().optional().nullable(),
 });
 
 export const UserUncheckedCreateWithoutLessonPlansInputSchema: z.ZodType<Prisma.UserUncheckedCreateWithoutLessonPlansInput> = z.strictObject({
@@ -1154,11 +1700,43 @@ export const UserUncheckedCreateWithoutLessonPlansInputSchema: z.ZodType<Prisma.
   role: z.lazy(() => RoleSchema).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  isActive: z.boolean().optional(),
+  passwordHash: z.string().optional().nullable(),
+  googleId: z.string().optional().nullable(),
+  avatarUrl: z.string().optional().nullable(),
 });
 
 export const UserCreateOrConnectWithoutLessonPlansInputSchema: z.ZodType<Prisma.UserCreateOrConnectWithoutLessonPlansInput> = z.strictObject({
   where: z.lazy(() => UserWhereUniqueInputSchema),
   create: z.union([ z.lazy(() => UserCreateWithoutLessonPlansInputSchema), z.lazy(() => UserUncheckedCreateWithoutLessonPlansInputSchema) ]),
+});
+
+export const AttachmentCreateWithoutLessonPlanInputSchema: z.ZodType<Prisma.AttachmentCreateWithoutLessonPlanInput> = z.strictObject({
+  id: z.uuid().optional(),
+  createdAt: z.coerce.date().optional(),
+  filename: z.string(),
+  url: z.string(),
+  fileType: z.string(),
+  sizeBytes: z.number().int(),
+});
+
+export const AttachmentUncheckedCreateWithoutLessonPlanInputSchema: z.ZodType<Prisma.AttachmentUncheckedCreateWithoutLessonPlanInput> = z.strictObject({
+  id: z.uuid().optional(),
+  createdAt: z.coerce.date().optional(),
+  filename: z.string(),
+  url: z.string(),
+  fileType: z.string(),
+  sizeBytes: z.number().int(),
+});
+
+export const AttachmentCreateOrConnectWithoutLessonPlanInputSchema: z.ZodType<Prisma.AttachmentCreateOrConnectWithoutLessonPlanInput> = z.strictObject({
+  where: z.lazy(() => AttachmentWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => AttachmentCreateWithoutLessonPlanInputSchema), z.lazy(() => AttachmentUncheckedCreateWithoutLessonPlanInputSchema) ]),
+});
+
+export const AttachmentCreateManyLessonPlanInputEnvelopeSchema: z.ZodType<Prisma.AttachmentCreateManyLessonPlanInputEnvelope> = z.strictObject({
+  data: z.union([ z.lazy(() => AttachmentCreateManyLessonPlanInputSchema), z.lazy(() => AttachmentCreateManyLessonPlanInputSchema).array() ]),
+  skipDuplicates: z.boolean().optional(),
 });
 
 export const UserUpsertWithoutLessonPlansInputSchema: z.ZodType<Prisma.UserUpsertWithoutLessonPlansInput> = z.strictObject({
@@ -1179,6 +1757,10 @@ export const UserUpdateWithoutLessonPlansInputSchema: z.ZodType<Prisma.UserUpdat
   role: z.union([ z.lazy(() => RoleSchema), z.lazy(() => EnumRoleFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  passwordHash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  googleId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  avatarUrl: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 });
 
 export const UserUncheckedUpdateWithoutLessonPlansInputSchema: z.ZodType<Prisma.UserUncheckedUpdateWithoutLessonPlansInput> = z.strictObject({
@@ -1188,6 +1770,123 @@ export const UserUncheckedUpdateWithoutLessonPlansInputSchema: z.ZodType<Prisma.
   role: z.union([ z.lazy(() => RoleSchema), z.lazy(() => EnumRoleFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  passwordHash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  googleId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  avatarUrl: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+});
+
+export const AttachmentUpsertWithWhereUniqueWithoutLessonPlanInputSchema: z.ZodType<Prisma.AttachmentUpsertWithWhereUniqueWithoutLessonPlanInput> = z.strictObject({
+  where: z.lazy(() => AttachmentWhereUniqueInputSchema),
+  update: z.union([ z.lazy(() => AttachmentUpdateWithoutLessonPlanInputSchema), z.lazy(() => AttachmentUncheckedUpdateWithoutLessonPlanInputSchema) ]),
+  create: z.union([ z.lazy(() => AttachmentCreateWithoutLessonPlanInputSchema), z.lazy(() => AttachmentUncheckedCreateWithoutLessonPlanInputSchema) ]),
+});
+
+export const AttachmentUpdateWithWhereUniqueWithoutLessonPlanInputSchema: z.ZodType<Prisma.AttachmentUpdateWithWhereUniqueWithoutLessonPlanInput> = z.strictObject({
+  where: z.lazy(() => AttachmentWhereUniqueInputSchema),
+  data: z.union([ z.lazy(() => AttachmentUpdateWithoutLessonPlanInputSchema), z.lazy(() => AttachmentUncheckedUpdateWithoutLessonPlanInputSchema) ]),
+});
+
+export const AttachmentUpdateManyWithWhereWithoutLessonPlanInputSchema: z.ZodType<Prisma.AttachmentUpdateManyWithWhereWithoutLessonPlanInput> = z.strictObject({
+  where: z.lazy(() => AttachmentScalarWhereInputSchema),
+  data: z.union([ z.lazy(() => AttachmentUpdateManyMutationInputSchema), z.lazy(() => AttachmentUncheckedUpdateManyWithoutLessonPlanInputSchema) ]),
+});
+
+export const AttachmentScalarWhereInputSchema: z.ZodType<Prisma.AttachmentScalarWhereInput> = z.strictObject({
+  AND: z.union([ z.lazy(() => AttachmentScalarWhereInputSchema), z.lazy(() => AttachmentScalarWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => AttachmentScalarWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => AttachmentScalarWhereInputSchema), z.lazy(() => AttachmentScalarWhereInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  filename: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  url: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  fileType: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  sizeBytes: z.union([ z.lazy(() => IntFilterSchema), z.number() ]).optional(),
+  lessonPlanId: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+});
+
+export const LessonPlanCreateWithoutAttachmentsInputSchema: z.ZodType<Prisma.LessonPlanCreateWithoutAttachmentsInput> = z.strictObject({
+  id: z.uuid().optional(),
+  topic: z.string().min(3, { message: "הנושא חייב להכיל לפחות 3 תווים" }).max(100, { message: "הנושא ארוך מדי" }),
+  unit: z.string().min(2, { message: "נא להזין יחידת לימוד" }),
+  frame: z.lazy(() => FrameSchema),
+  ageGroup: z.lazy(() => AgeGroupSchema),
+  superGoal: z.string().min(5, { message: "מטרת העל חייבת להכיל לפחות 5 תווים" }),
+  operativeGoals: z.union([ z.lazy(() => LessonPlanCreateoperativeGoalsInputSchema), z.string().array() ]).optional(),
+  lessonFlow: z.union([ z.lazy(() => JsonNullValueInputSchema), InputJsonValueSchema ]),
+  teachingAids: z.union([ z.lazy(() => LessonPlanCreateteachingAidsInputSchema), z.string().array() ]).optional(),
+  references: z.union([ z.lazy(() => LessonPlanCreatereferencesInputSchema), z.string().array() ]).optional(),
+  isPublished: z.boolean().optional(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  author: z.lazy(() => UserCreateNestedOneWithoutLessonPlansInputSchema),
+});
+
+export const LessonPlanUncheckedCreateWithoutAttachmentsInputSchema: z.ZodType<Prisma.LessonPlanUncheckedCreateWithoutAttachmentsInput> = z.strictObject({
+  id: z.uuid().optional(),
+  topic: z.string().min(3, { message: "הנושא חייב להכיל לפחות 3 תווים" }).max(100, { message: "הנושא ארוך מדי" }),
+  unit: z.string().min(2, { message: "נא להזין יחידת לימוד" }),
+  frame: z.lazy(() => FrameSchema),
+  ageGroup: z.lazy(() => AgeGroupSchema),
+  superGoal: z.string().min(5, { message: "מטרת העל חייבת להכיל לפחות 5 תווים" }),
+  operativeGoals: z.union([ z.lazy(() => LessonPlanCreateoperativeGoalsInputSchema), z.string().array() ]).optional(),
+  lessonFlow: z.union([ z.lazy(() => JsonNullValueInputSchema), InputJsonValueSchema ]),
+  teachingAids: z.union([ z.lazy(() => LessonPlanCreateteachingAidsInputSchema), z.string().array() ]).optional(),
+  references: z.union([ z.lazy(() => LessonPlanCreatereferencesInputSchema), z.string().array() ]).optional(),
+  isPublished: z.boolean().optional(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  authorId: z.string(),
+});
+
+export const LessonPlanCreateOrConnectWithoutAttachmentsInputSchema: z.ZodType<Prisma.LessonPlanCreateOrConnectWithoutAttachmentsInput> = z.strictObject({
+  where: z.lazy(() => LessonPlanWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => LessonPlanCreateWithoutAttachmentsInputSchema), z.lazy(() => LessonPlanUncheckedCreateWithoutAttachmentsInputSchema) ]),
+});
+
+export const LessonPlanUpsertWithoutAttachmentsInputSchema: z.ZodType<Prisma.LessonPlanUpsertWithoutAttachmentsInput> = z.strictObject({
+  update: z.union([ z.lazy(() => LessonPlanUpdateWithoutAttachmentsInputSchema), z.lazy(() => LessonPlanUncheckedUpdateWithoutAttachmentsInputSchema) ]),
+  create: z.union([ z.lazy(() => LessonPlanCreateWithoutAttachmentsInputSchema), z.lazy(() => LessonPlanUncheckedCreateWithoutAttachmentsInputSchema) ]),
+  where: z.lazy(() => LessonPlanWhereInputSchema).optional(),
+});
+
+export const LessonPlanUpdateToOneWithWhereWithoutAttachmentsInputSchema: z.ZodType<Prisma.LessonPlanUpdateToOneWithWhereWithoutAttachmentsInput> = z.strictObject({
+  where: z.lazy(() => LessonPlanWhereInputSchema).optional(),
+  data: z.union([ z.lazy(() => LessonPlanUpdateWithoutAttachmentsInputSchema), z.lazy(() => LessonPlanUncheckedUpdateWithoutAttachmentsInputSchema) ]),
+});
+
+export const LessonPlanUpdateWithoutAttachmentsInputSchema: z.ZodType<Prisma.LessonPlanUpdateWithoutAttachmentsInput> = z.strictObject({
+  id: z.union([ z.uuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  topic: z.union([ z.string().min(3, { message: "הנושא חייב להכיל לפחות 3 תווים" }).max(100, { message: "הנושא ארוך מדי" }),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  unit: z.union([ z.string().min(2, { message: "נא להזין יחידת לימוד" }),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  frame: z.union([ z.lazy(() => FrameSchema), z.lazy(() => EnumFrameFieldUpdateOperationsInputSchema) ]).optional(),
+  ageGroup: z.union([ z.lazy(() => AgeGroupSchema), z.lazy(() => EnumAgeGroupFieldUpdateOperationsInputSchema) ]).optional(),
+  superGoal: z.union([ z.string().min(5, { message: "מטרת העל חייבת להכיל לפחות 5 תווים" }),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  operativeGoals: z.union([ z.lazy(() => LessonPlanUpdateoperativeGoalsInputSchema), z.string().array() ]).optional(),
+  lessonFlow: z.union([ z.lazy(() => JsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  teachingAids: z.union([ z.lazy(() => LessonPlanUpdateteachingAidsInputSchema), z.string().array() ]).optional(),
+  references: z.union([ z.lazy(() => LessonPlanUpdatereferencesInputSchema), z.string().array() ]).optional(),
+  isPublished: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  author: z.lazy(() => UserUpdateOneRequiredWithoutLessonPlansNestedInputSchema).optional(),
+});
+
+export const LessonPlanUncheckedUpdateWithoutAttachmentsInputSchema: z.ZodType<Prisma.LessonPlanUncheckedUpdateWithoutAttachmentsInput> = z.strictObject({
+  id: z.union([ z.uuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  topic: z.union([ z.string().min(3, { message: "הנושא חייב להכיל לפחות 3 תווים" }).max(100, { message: "הנושא ארוך מדי" }),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  unit: z.union([ z.string().min(2, { message: "נא להזין יחידת לימוד" }),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  frame: z.union([ z.lazy(() => FrameSchema), z.lazy(() => EnumFrameFieldUpdateOperationsInputSchema) ]).optional(),
+  ageGroup: z.union([ z.lazy(() => AgeGroupSchema), z.lazy(() => EnumAgeGroupFieldUpdateOperationsInputSchema) ]).optional(),
+  superGoal: z.union([ z.string().min(5, { message: "מטרת העל חייבת להכיל לפחות 5 תווים" }),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  operativeGoals: z.union([ z.lazy(() => LessonPlanUpdateoperativeGoalsInputSchema), z.string().array() ]).optional(),
+  lessonFlow: z.union([ z.lazy(() => JsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  teachingAids: z.union([ z.lazy(() => LessonPlanUpdateteachingAidsInputSchema), z.string().array() ]).optional(),
+  references: z.union([ z.lazy(() => LessonPlanUpdatereferencesInputSchema), z.string().array() ]).optional(),
+  isPublished: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  authorId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
 });
 
 export const LessonPlanCreateManyAuthorInputSchema: z.ZodType<Prisma.LessonPlanCreateManyAuthorInput> = z.strictObject({
@@ -1220,6 +1919,7 @@ export const LessonPlanUpdateWithoutAuthorInputSchema: z.ZodType<Prisma.LessonPl
   isPublished: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  attachments: z.lazy(() => AttachmentUpdateManyWithoutLessonPlanNestedInputSchema).optional(),
 });
 
 export const LessonPlanUncheckedUpdateWithoutAuthorInputSchema: z.ZodType<Prisma.LessonPlanUncheckedUpdateWithoutAuthorInput> = z.strictObject({
@@ -1236,6 +1936,7 @@ export const LessonPlanUncheckedUpdateWithoutAuthorInputSchema: z.ZodType<Prisma
   isPublished: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  attachments: z.lazy(() => AttachmentUncheckedUpdateManyWithoutLessonPlanNestedInputSchema).optional(),
 });
 
 export const LessonPlanUncheckedUpdateManyWithoutAuthorInputSchema: z.ZodType<Prisma.LessonPlanUncheckedUpdateManyWithoutAuthorInput> = z.strictObject({
@@ -1252,6 +1953,42 @@ export const LessonPlanUncheckedUpdateManyWithoutAuthorInputSchema: z.ZodType<Pr
   isPublished: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+});
+
+export const AttachmentCreateManyLessonPlanInputSchema: z.ZodType<Prisma.AttachmentCreateManyLessonPlanInput> = z.strictObject({
+  id: z.uuid().optional(),
+  createdAt: z.coerce.date().optional(),
+  filename: z.string(),
+  url: z.string(),
+  fileType: z.string(),
+  sizeBytes: z.number().int(),
+});
+
+export const AttachmentUpdateWithoutLessonPlanInputSchema: z.ZodType<Prisma.AttachmentUpdateWithoutLessonPlanInput> = z.strictObject({
+  id: z.union([ z.uuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  filename: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  url: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  fileType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  sizeBytes: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+});
+
+export const AttachmentUncheckedUpdateWithoutLessonPlanInputSchema: z.ZodType<Prisma.AttachmentUncheckedUpdateWithoutLessonPlanInput> = z.strictObject({
+  id: z.union([ z.uuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  filename: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  url: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  fileType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  sizeBytes: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+});
+
+export const AttachmentUncheckedUpdateManyWithoutLessonPlanInputSchema: z.ZodType<Prisma.AttachmentUncheckedUpdateManyWithoutLessonPlanInput> = z.strictObject({
+  id: z.union([ z.uuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  filename: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  url: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  fileType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  sizeBytes: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
 });
 
 /////////////////////////////////////////
@@ -1382,6 +2119,68 @@ export const LessonPlanFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.LessonPlanF
   where: LessonPlanWhereUniqueInputSchema, 
 }).strict();
 
+export const AttachmentFindFirstArgsSchema: z.ZodType<Prisma.AttachmentFindFirstArgs> = z.object({
+  select: AttachmentSelectSchema.optional(),
+  include: AttachmentIncludeSchema.optional(),
+  where: AttachmentWhereInputSchema.optional(), 
+  orderBy: z.union([ AttachmentOrderByWithRelationInputSchema.array(), AttachmentOrderByWithRelationInputSchema ]).optional(),
+  cursor: AttachmentWhereUniqueInputSchema.optional(), 
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ AttachmentScalarFieldEnumSchema, AttachmentScalarFieldEnumSchema.array() ]).optional(),
+}).strict();
+
+export const AttachmentFindFirstOrThrowArgsSchema: z.ZodType<Prisma.AttachmentFindFirstOrThrowArgs> = z.object({
+  select: AttachmentSelectSchema.optional(),
+  include: AttachmentIncludeSchema.optional(),
+  where: AttachmentWhereInputSchema.optional(), 
+  orderBy: z.union([ AttachmentOrderByWithRelationInputSchema.array(), AttachmentOrderByWithRelationInputSchema ]).optional(),
+  cursor: AttachmentWhereUniqueInputSchema.optional(), 
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ AttachmentScalarFieldEnumSchema, AttachmentScalarFieldEnumSchema.array() ]).optional(),
+}).strict();
+
+export const AttachmentFindManyArgsSchema: z.ZodType<Prisma.AttachmentFindManyArgs> = z.object({
+  select: AttachmentSelectSchema.optional(),
+  include: AttachmentIncludeSchema.optional(),
+  where: AttachmentWhereInputSchema.optional(), 
+  orderBy: z.union([ AttachmentOrderByWithRelationInputSchema.array(), AttachmentOrderByWithRelationInputSchema ]).optional(),
+  cursor: AttachmentWhereUniqueInputSchema.optional(), 
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ AttachmentScalarFieldEnumSchema, AttachmentScalarFieldEnumSchema.array() ]).optional(),
+}).strict();
+
+export const AttachmentAggregateArgsSchema: z.ZodType<Prisma.AttachmentAggregateArgs> = z.object({
+  where: AttachmentWhereInputSchema.optional(), 
+  orderBy: z.union([ AttachmentOrderByWithRelationInputSchema.array(), AttachmentOrderByWithRelationInputSchema ]).optional(),
+  cursor: AttachmentWhereUniqueInputSchema.optional(), 
+  take: z.number().optional(),
+  skip: z.number().optional(),
+}).strict();
+
+export const AttachmentGroupByArgsSchema: z.ZodType<Prisma.AttachmentGroupByArgs> = z.object({
+  where: AttachmentWhereInputSchema.optional(), 
+  orderBy: z.union([ AttachmentOrderByWithAggregationInputSchema.array(), AttachmentOrderByWithAggregationInputSchema ]).optional(),
+  by: AttachmentScalarFieldEnumSchema.array(), 
+  having: AttachmentScalarWhereWithAggregatesInputSchema.optional(), 
+  take: z.number().optional(),
+  skip: z.number().optional(),
+}).strict();
+
+export const AttachmentFindUniqueArgsSchema: z.ZodType<Prisma.AttachmentFindUniqueArgs> = z.object({
+  select: AttachmentSelectSchema.optional(),
+  include: AttachmentIncludeSchema.optional(),
+  where: AttachmentWhereUniqueInputSchema, 
+}).strict();
+
+export const AttachmentFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.AttachmentFindUniqueOrThrowArgs> = z.object({
+  select: AttachmentSelectSchema.optional(),
+  include: AttachmentIncludeSchema.optional(),
+  where: AttachmentWhereUniqueInputSchema, 
+}).strict();
+
 export const UserCreateArgsSchema: z.ZodType<Prisma.UserCreateArgs> = z.object({
   select: UserSelectSchema.optional(),
   include: UserIncludeSchema.optional(),
@@ -1487,5 +2286,59 @@ export const LessonPlanUpdateManyAndReturnArgsSchema: z.ZodType<Prisma.LessonPla
 
 export const LessonPlanDeleteManyArgsSchema: z.ZodType<Prisma.LessonPlanDeleteManyArgs> = z.object({
   where: LessonPlanWhereInputSchema.optional(), 
+  limit: z.number().optional(),
+}).strict();
+
+export const AttachmentCreateArgsSchema: z.ZodType<Prisma.AttachmentCreateArgs> = z.object({
+  select: AttachmentSelectSchema.optional(),
+  include: AttachmentIncludeSchema.optional(),
+  data: z.union([ AttachmentCreateInputSchema, AttachmentUncheckedCreateInputSchema ]),
+}).strict();
+
+export const AttachmentUpsertArgsSchema: z.ZodType<Prisma.AttachmentUpsertArgs> = z.object({
+  select: AttachmentSelectSchema.optional(),
+  include: AttachmentIncludeSchema.optional(),
+  where: AttachmentWhereUniqueInputSchema, 
+  create: z.union([ AttachmentCreateInputSchema, AttachmentUncheckedCreateInputSchema ]),
+  update: z.union([ AttachmentUpdateInputSchema, AttachmentUncheckedUpdateInputSchema ]),
+}).strict();
+
+export const AttachmentCreateManyArgsSchema: z.ZodType<Prisma.AttachmentCreateManyArgs> = z.object({
+  data: z.union([ AttachmentCreateManyInputSchema, AttachmentCreateManyInputSchema.array() ]),
+  skipDuplicates: z.boolean().optional(),
+}).strict();
+
+export const AttachmentCreateManyAndReturnArgsSchema: z.ZodType<Prisma.AttachmentCreateManyAndReturnArgs> = z.object({
+  data: z.union([ AttachmentCreateManyInputSchema, AttachmentCreateManyInputSchema.array() ]),
+  skipDuplicates: z.boolean().optional(),
+}).strict();
+
+export const AttachmentDeleteArgsSchema: z.ZodType<Prisma.AttachmentDeleteArgs> = z.object({
+  select: AttachmentSelectSchema.optional(),
+  include: AttachmentIncludeSchema.optional(),
+  where: AttachmentWhereUniqueInputSchema, 
+}).strict();
+
+export const AttachmentUpdateArgsSchema: z.ZodType<Prisma.AttachmentUpdateArgs> = z.object({
+  select: AttachmentSelectSchema.optional(),
+  include: AttachmentIncludeSchema.optional(),
+  data: z.union([ AttachmentUpdateInputSchema, AttachmentUncheckedUpdateInputSchema ]),
+  where: AttachmentWhereUniqueInputSchema, 
+}).strict();
+
+export const AttachmentUpdateManyArgsSchema: z.ZodType<Prisma.AttachmentUpdateManyArgs> = z.object({
+  data: z.union([ AttachmentUpdateManyMutationInputSchema, AttachmentUncheckedUpdateManyInputSchema ]),
+  where: AttachmentWhereInputSchema.optional(), 
+  limit: z.number().optional(),
+}).strict();
+
+export const AttachmentUpdateManyAndReturnArgsSchema: z.ZodType<Prisma.AttachmentUpdateManyAndReturnArgs> = z.object({
+  data: z.union([ AttachmentUpdateManyMutationInputSchema, AttachmentUncheckedUpdateManyInputSchema ]),
+  where: AttachmentWhereInputSchema.optional(), 
+  limit: z.number().optional(),
+}).strict();
+
+export const AttachmentDeleteManyArgsSchema: z.ZodType<Prisma.AttachmentDeleteManyArgs> = z.object({
+  where: AttachmentWhereInputSchema.optional(), 
   limit: z.number().optional(),
 }).strict();
