@@ -1,5 +1,6 @@
 import { type ReactNode, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../features/auth/context/AuthContext";
 
 interface LayoutProps {
   children: ReactNode;
@@ -8,14 +9,7 @@ interface LayoutProps {
 export const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  // TEMPORARY: Mock user until we rebuild the Auth layer
-  const user = {
-    fullName: "משתמש זמני",
-    role: "ADMIN",
-    avatarUrl: "",
-  };
-  const logout = () => console.log("Logout clicked");
+  const { user, logout } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -42,6 +36,9 @@ export const Layout = ({ children }: LayoutProps) => {
                 <Link to="/" className={`text-sm font-medium transition-colors ${isActive("/") ? "text-indigo-600" : "text-gray-500 hover:text-gray-900"}`}>
                   ספריית המערכים
                 </Link>
+                <Link to="/create" className={`text-sm font-medium transition-colors ${isActive("/create") ? "text-indigo-600" : "text-gray-500 hover:text-gray-900"}`}>
+                  צור מערך שיעור
+                </Link>
                 {user.role === "OWNER" && (
                   <Link to="/users" className={`text-sm font-medium transition-colors ${isActive("/users") ? "text-indigo-600" : "text-gray-500 hover:text-gray-900"}`}>
                     ניהול משתמשים
@@ -64,10 +61,10 @@ export const Layout = ({ children }: LayoutProps) => {
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   className="flex h-10 w-10 items-center justify-center rounded-full border border-indigo-200 bg-indigo-100 font-bold text-indigo-700 transition-colors hover:bg-indigo-200"
                 >
-                  {user.avatarUrl ? (
+                  {(user.avatarUrl != null) ? (
                     <img src={user.avatarUrl} alt="" referrerPolicy="no-referrer" className="h-full w-full rounded-full border border-indigo-200" />
                   ) : (
-                    user.fullName.charAt(0)
+                    user.fullName.charAt(0) || 'U'
                   )}
                 </button>
 
