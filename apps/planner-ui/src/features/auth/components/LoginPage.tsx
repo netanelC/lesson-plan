@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
-import { type User } from "@repo/types";
+import { type User, type Login, LoginSchema } from "@repo/types";
 import { api } from "../../../lib/axios";
 import { useAuth } from "../context/AuthContext";
 import { TextInput } from "../../../components/ui/TextInput";
@@ -16,18 +16,18 @@ export const LoginPage = () => {
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<LoginDto>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<Login>({
+    resolver: zodResolver(LoginSchema),
   });
 
-  const onSubmit = async (data: LoginDto) => {
+  const onSubmit = async (data: Login) => {
     try {
       const res = await api.post<{ token: string; user: User }>(
         "/auth/login",
         data,
       );
       login(res.data.token, res.data.user);
-      navigate("/");
+      void navigate("/");
     } catch (error) {
       console.error("Login failed", error);
       setError("root", {
@@ -41,7 +41,7 @@ export const LoginPage = () => {
   ) => {
     try {
       // credentialResponse.credential is the JWT string from Google
-      if (!credentialResponse.credential) {
+      if (credentialResponse.credential == null || credentialResponse.credential === "") {
         throw new Error("No credential received from Google");
       }
 
@@ -53,7 +53,7 @@ export const LoginPage = () => {
       );
 
       login(res.data.token, res.data.user);
-      navigate("/");
+      void navigate("/");
     } catch (error) {
       console.error("Google login failed", error);
       setError("root", { message: "ההתחברות עם גוגל נכשלה" });

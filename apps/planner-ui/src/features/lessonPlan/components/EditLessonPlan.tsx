@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import type { CreateLessonPlanBody } from "@repo/types";
+import type { CreateLessonPlanBody, CreateLessonPlanInput } from "@repo/types";
 import { useLessonPlan } from "../api/useLessonPlan";
 import { useUpdateLessonPlan } from "../api/useUpdateLessonPlan";
 import { useUploadAttachment } from "../api/useUploadAttachment";
@@ -16,7 +16,7 @@ export const EditLessonPlan = () => {
   const updateMutation = useUpdateLessonPlan(id ?? "");
   const uploadMutation = useUploadAttachment();
 
-  const handleUpdate = async (data: CreateLessonPlanBody, newFiles: File[]) => {
+  const handleUpdate = async (data: CreateLessonPlanBody, newFiles: File[] = []) => {
     try {
       // Step 1: Update the textual content via the PUT route
       await updateMutation.mutateAsync(data);
@@ -64,7 +64,12 @@ export const EditLessonPlan = () => {
 
   return (
     <LessonPlanForm
-      initialData={plan}
+      initialData={{
+        ...plan,
+        lessonFlow: plan.lessonFlow as CreateLessonPlanInput["lessonFlow"],
+        teachingAids: plan.teachingAids as CreateLessonPlanInput["teachingAids"],
+        references: plan.references as CreateLessonPlanInput["references"],
+      }}
       onSubmit={handleUpdate}
       isSubmitting={updateMutation.isPending || uploadMutation.isPending}
       title="עריכת מערך שיעור"

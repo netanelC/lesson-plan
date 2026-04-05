@@ -65,6 +65,7 @@ model LessonPlan {
   /// @zod.string.min(5, { message: "מטרת העל חייבת להכיל לפחות 5 תווים" })
   superGoal      String
   operativeGoals String[] // prisma doesn't support arrays of objects, so we'll handle this in our types package and validation logic
+  priorKnowledge  String?
   lessonFlow     Json
   teachingAids   String[]
   references     String[]

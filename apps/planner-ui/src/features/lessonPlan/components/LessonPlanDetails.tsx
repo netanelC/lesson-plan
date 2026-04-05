@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useReactToPrint } from "react-to-print";
+import { type LessonFlowStep } from "@repo/types";
 import { useLessonPlan } from "../api/useLessonPlan";
 import { SectionCard } from "../../../components/ui/SectionCard";
 import { exportLessonPlanToWord } from "../../../utils/exportToWord";
@@ -8,7 +9,7 @@ import { Can } from "../../../components/auth/Can"; // <--- Import the new Can c
 
 export const LessonPlanDetails = () => {
   const { id } = useParams<{ id: string }>();
-  const { data: plan, isLoading, isError } = useLessonPlan(id || "");
+  const { data: plan, isLoading, isError } = useLessonPlan(id ?? "");
 
   const componentRef = useRef<HTMLDivElement>(null);
 
@@ -132,7 +133,7 @@ export const LessonPlanDetails = () => {
             </div>
             {/* Author Name Display - Relies on Backend include: { author: true } */}
             <span className="text-sm text-gray-400">
-              נוצר ע״י: {plan.author?.fullName || "משתמש לא ידוע"}
+              נוצר ע״י: {plan.author?.fullName != null && plan.author.fullName.length > 0 ? plan.author.fullName : "משתמש לא ידוע"}
             </span>
           </div>
 
@@ -197,7 +198,7 @@ export const LessonPlanDetails = () => {
               }
             >
               <div className="relative border-r-2 border-green-100 mr-3 space-y-8 pr-6 print:border-none print:mr-0 print:pr-0 print:space-y-4">
-                {plan.lessonFlow.map((step, idx) => (
+                {(plan.lessonFlow as unknown as LessonFlowStep[]).map((step, idx) => (
                   <div
                     key={idx}
                     className="relative print:border-b print:border-gray-100 print:pb-4"
@@ -206,9 +207,9 @@ export const LessonPlanDetails = () => {
 
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="text-lg font-bold text-gray-900">
-                        {step.name}
+                        {step.stage}
                       </h3>
-                      {step.durationMinutes && (
+                      {step.durationMinutes > 0 && (
                         <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded text-gray-600 print:border print:border-gray-200">
                           {step.durationMinutes} דק׳
                         </span>
@@ -233,10 +234,10 @@ export const LessonPlanDetails = () => {
                 <div>
                   <dt className="text-sm text-gray-500">מסגרת הוראה</dt>
                   <dd className="font-medium text-gray-900">
-                    {plan.frame === "plenary" ? "מליאה" : "קבוצה קטנה"}
+                    {plan.frame === "PLENARY" ? "מליאה" : "קבוצה קטנה"}
                   </dd>
                 </div>
-                {plan.priorKnowledge && (
+                {plan.priorKnowledge != null && plan.priorKnowledge !== "" && (
                   <div>
                     <dt className="text-sm text-gray-500">ידע קודם נדרש</dt>
                     <dd className="font-medium text-gray-900">
@@ -279,7 +280,7 @@ export const LessonPlanDetails = () => {
               </div>
             )}
 
-            {plan.attachments && plan.attachments.length > 0 && (
+            {plan.attachments.length > 0 && (
               <div className="print:hidden">
                 <SectionCard
                   title="קבצים ומדיה"
@@ -329,7 +330,7 @@ export const LessonPlanDetails = () => {
                         </div>
 
                         <a
-                          href={`${import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"}/api/lessons/attachments/${file.id}/download`}
+                          href={`${(import.meta.env as Record<string, string | undefined>).VITE_API_BASE_URL ?? "http://localhost:8080"}/api/lessons/attachments/${file.id}/download`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors shrink-0"

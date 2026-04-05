@@ -1,21 +1,22 @@
 import { saveAs } from "file-saver";
+import type { LessonFlowStep } from "@repo/types";
 import type { LessonPlanWithAttachments } from "../features/lessonPlan/api/useLessonPlan";
 
 export const exportLessonPlanToWord = (plan: LessonPlanWithAttachments) => {
   // עיבוד נתונים לפורמט התצוגה
   const dateStr = new Date(plan.createdAt).toLocaleDateString("he-IL");
-  const frameStr = plan.frame === "plenary" ? "מליאה" : "קבוצה קטנה";
+  const frameStr = plan.frame === "PLENARY" ? "מליאה" : "קבוצה קטנה";
 
   // יצירת שורות הטבלה (מהלך השיחה)
-  const lessonRows = plan.lessonFlow
+  const lessonRows = (plan.lessonFlow as unknown as LessonFlowStep[])
     .map(
       (step) => `
     <tr>
       <td style="width: 15%; padding: 5px 10px; border: 1px solid #000; vertical-align: top; font-weight: bold;">
-        ${step.name}
+        ${step.stage}
       </td>
       <td style="width: 10%; padding: 5px 10px; border: 1px solid #000; vertical-align: top; text-align: center;">
-        ${step.durationMinutes ? `${step.durationMinutes} דק'` : "-"}
+        ${step.durationMinutes > 0 ? `${step.durationMinutes} דק'` : "-"}
       </td>
       <td style="width: 75%; padding: 5px 10px; border: 1px solid #000; vertical-align: top;">
         ${step.description.replace(/\n/g, "<br>")}
@@ -115,7 +116,7 @@ export const exportLessonPlanToWord = (plan: LessonPlanWithAttachments) => {
       </ol>
 
       ${
-        plan.priorKnowledge
+        plan.priorKnowledge != null && plan.priorKnowledge !== ""
           ? `
         <p><span class="label">ידע קודם:</span> ${plan.priorKnowledge}</p>
       `

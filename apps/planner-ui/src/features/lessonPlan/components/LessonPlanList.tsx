@@ -1,8 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import type { LessonFilters } from "@repo/types";
-// TODO
-// import { useAuth } from "../../auth/context/AuthContext";
+import { useAuth } from "../../auth/context/AuthContext";
 import { useLessonPlans } from "../api/useLessonPlans";
 import { useDeleteLessonPlan } from "../api/useDeleteLessonPlan";
 import { FilterBar } from "./FilterBar";
@@ -42,8 +41,7 @@ const HighlightText = ({
 };
 
 export const LessonPlanList = () => {
-  // TODO
-  // const { user } = useAuth();
+  const { user } = useAuth();
   const listTopRef = useRef<HTMLDivElement>(null);
 
   // Initialize state including authorId for "My Plans" logic
@@ -101,11 +99,9 @@ export const LessonPlanList = () => {
   };
 
   const canDelete = (planAuthorId: string) => {
-    // TODO
-    // if (user?.role === "OWNER") return true;
-    // if (user?.role === "ADMIN" && user.id === planAuthorId) return true;
+    if (user.role === "OWNER") return true;
+    if (user.role === "ADMIN" && user.id === planAuthorId) return true;
     return false;
-    return true;
   };
 
   const handleDelete = (e: React.MouseEvent, id: string) => {
@@ -250,15 +246,15 @@ export const LessonPlanList = () => {
                       clipRule="evenodd"
                     />
                   </svg>
-                  {plan.lessonFlow?.length ?? 0} שלבים
+                  {Array.isArray(plan.lessonFlow) ? plan.lessonFlow.length : 0} שלבים
                 </span>
 
                 <div className="flex items-center gap-1.5 px-2 overflow-hidden">
                   <div className="h-5 w-5 rounded-full bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-700 shrink-0 border border-indigo-200">
-                    {plan.author?.fullName?.charAt(0) || "U"}
+                    {plan.author?.fullName != null && plan.author.fullName.length > 0 ? plan.author.fullName.charAt(0) : "U"}
                   </div>
                   <span className="text-[11px] text-gray-600 truncate font-medium">
-                    {plan.author?.fullName || "משתמש"}
+                    {plan.author?.fullName != null && plan.author.fullName.length > 0 ? plan.author.fullName : "משתמש"}
                   </span>
                 </div>
 

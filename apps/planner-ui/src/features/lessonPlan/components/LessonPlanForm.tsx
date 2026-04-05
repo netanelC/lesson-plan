@@ -19,23 +19,17 @@ const FRAME_LABELS: Record<string, string> = { PLENARY: "מליאה", SMALL_GROU
 const AGE_LABELS: Record<string, string> = { THREE_TO_FOUR: "גילאי 3-4", FOUR_TO_FIVE: "גילאי 4-5" };
 
 interface Props {
+  initialData?: CreateLessonPlanInput;
   onSubmit: (data: CreateLessonPlanBody) => Promise<void>;
   isSubmitting: boolean;
   title: string;
   submitLabel: string;
 }
 
-interface Props {
-  onSubmit: (data: CreateLessonPlanBody) => Promise<void>;
-  isSubmitting: boolean;
-  title: string;
-  submitLabel: string;
-}
-
-export const LessonPlanForm = ({ onSubmit, isSubmitting, title, submitLabel }: Props) => {
+export const LessonPlanForm = ({ initialData, onSubmit, isSubmitting, title, submitLabel }: Props) => {
   const { register, control, handleSubmit, formState: { errors }, watch, setValue } = useForm<CreateLessonPlanInput>({
     resolver: zodResolver(CreateLessonPlanSchema),
-    defaultValues: {
+    defaultValues: initialData ?? {
       topic: "",
       unit: "",
       ageGroup: "THREE_TO_FOUR",
