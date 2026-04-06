@@ -8,6 +8,7 @@ const BaseHttpCreateSchema = LessonPlanSchema.omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+  authorId: true,
 });
 
 export const LessonFlowStepSchema = z.object({
@@ -22,8 +23,8 @@ export * from "./generated";
 // Now we can extend the base schema with our custom validation for the HTTP layer
 export const CreateLessonPlanSchema = BaseHttpCreateSchema.extend({
   operativeGoals: z
-    .array(z.string())
-    .min(3, { message: "חובה להזין לפחות 3 מטרות אופרטיביות" }),
+    .array(z.string().min(2, { message: "נא להזין מטרה אופרטיבית (לפחות 2 תווים)" }))
+    .min(3, { message: "חובה להזין לפחות 3 מטרות אופרטיביות מלאות" }),
   lessonFlow: z
     .array(LessonFlowStepSchema)
     .min(1, { message: "חובה להזין לפחות שלב אחד במהלך השיעור" }),

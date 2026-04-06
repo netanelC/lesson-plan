@@ -13,7 +13,10 @@ export async function createLessonPlanController(
   reply: FastifyReply,
 ): Promise<FastifyReply> {
   try {
-    const newLessonPlan = await createLessonPlan(request.body);
+    const newLessonPlan = await createLessonPlan({
+      ...request.body,
+      authorId: request.user.id,
+    });
 
     return await reply.status(status.CREATED).send({
       success: true,

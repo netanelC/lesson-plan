@@ -70,8 +70,6 @@ model LessonPlan {
   teachingAids   String[]
   references     String[]
 
-  isPublished    Boolean  @default(true)
-
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
