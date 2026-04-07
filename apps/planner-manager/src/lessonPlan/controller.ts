@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { status } from "http-status";
 import { CreateLessonPlanBody, LessonFilters } from "@repo/types";
-import { createLessonPlan, getAll } from "./DAL";
+import { createLessonPlan, getAll, getById } from "./DAL";
 
 type CreateLessonPlanRequest = FastifyRequest<{
   // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -65,5 +65,35 @@ export async function getLessonPlansController(
     return reply
       .status(status.INTERNAL_SERVER_ERROR)
       .send({ success: false, error: "Internal Server Error" });
+  }
+}
+
+export async function getLessonPlanByIdController(
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  request: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+): Promise<FastifyReply> {
+  try {
+    const { id } = request.params;
+    const lessonPlan = await getById(id);
+    
+    if (!lessonPlan) {
+      return await reply.status(status.NOT_FOUND).send({
+        success: false,
+        error: "Lesson plan not found",
+      });
+    }
+
+    return await reply.status(status.OK).send({
+      success: true,
+      data: lessonPlan,
+    });
+  } catch (error) {
+    request.log.error({ err: error }, "Failed to fetch lesson plan by ID");
+
+    return reply.status(status.INTERNAL_SERVER_ERROR).send({
+      success: false,
+      error: "Internal Server Error",
+    });
   }
 }

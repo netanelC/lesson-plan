@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { CreateLessonPlanSchema, LessonFiltersSchema } from "@repo/types";
 import { authenticate } from "../middleware/auth";
-import { createLessonPlanController, getLessonPlansController } from "./controller";
+import { createLessonPlanController, getLessonPlanByIdController, getLessonPlansController } from "./controller";
 
 export function lessonPlanRoutes(fastify: FastifyInstance): void {
   fastify.addHook("onRequest", authenticate);
@@ -20,4 +20,16 @@ export function lessonPlanRoutes(fastify: FastifyInstance): void {
       { schema: { querystring: LessonFiltersSchema } },
       getLessonPlansController
     );
+
+  fastify.get("/:id", getLessonPlanByIdController);
+  // fastify.put("/:id", lessonPlanController.update);
+  // fastify.delete("/:id", lessonPlanController.delete);
+
+  // // Attachment Routes
+  // fastify.get(
+  //   "/attachments/:id/download",
+  //   lessonPlanController.downloadAttachment,
+  // );
+  // fastify.post("/:id/attachments", lessonPlanController.uploadAttachment);
+  // fastify.delete("/attachments/:fileId", lessonPlanController.removeAttachment);
 }

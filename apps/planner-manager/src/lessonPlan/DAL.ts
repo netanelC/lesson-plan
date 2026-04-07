@@ -52,3 +52,26 @@ export async function getAll(filters: LessonFilters, skip: number, limit: number
 
   return plans;
 }
+
+/**
+ * Fetches a single lesson plan and "Joins" all its attachments
+ * @param id The ID of the lesson plan to fetch
+ * @returns The fetched LessonPlan record or null if not found
+ */
+export async function getById(id: string): Promise<LessonPlan | null> {
+  return prisma.lessonPlan.findUnique({
+    where: { id },
+      include: {
+        author: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            role: true,
+            avatarUrl: true,
+          },
+        },
+        attachments: true,
+      },
+  });
+}
