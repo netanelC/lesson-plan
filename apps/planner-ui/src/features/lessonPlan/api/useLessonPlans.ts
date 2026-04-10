@@ -14,7 +14,7 @@ export const useLessonPlans = (filters: LessonFilters) => {
       );
       return data;
     },
-    // Keep previous data on the screen while fetching the next page 
+    // Keep previous data on the screen while fetching the next page
     // to prevent jarring UI flashes
     placeholderData: (previousData) => previousData,
   });

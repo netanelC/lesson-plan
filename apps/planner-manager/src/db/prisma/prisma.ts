@@ -19,7 +19,10 @@ const adapter = new PrismaPg(pool);
 // 3. Instantiate the Prisma Client with conditional logging based on the environment
 const prisma = new PrismaClient({
   adapter,
-  log: process.env.NODE_ENV === "production" ? ["error"] : ["query", "error", "warn"],
+  log:
+    process.env.NODE_ENV === "production"
+      ? ["error"]
+      : ["query", "error", "warn"],
 });
 
 export { prisma };

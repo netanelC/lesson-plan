@@ -1,7 +1,7 @@
 import { useRef, type ChangeEvent } from "react";
 import { clsx } from "clsx";
 
-const KB_SIZE = 1024 // 1KB in bytes
+const KB_SIZE = 1024; // 1KB in bytes
 
 interface FileUploaderProps {
   files: File[];

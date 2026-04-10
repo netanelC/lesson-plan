@@ -30,5 +30,4 @@ export const Can = ({ perform, data, children }: CanProps) => {
 
   // Admins can only edit or delete if they are the original author
   return data?.authorId === user.id ? <>{children}</> : null;
-
 };

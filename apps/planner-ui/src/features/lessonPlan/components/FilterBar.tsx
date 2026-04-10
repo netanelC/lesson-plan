@@ -2,9 +2,14 @@ import { useState, useEffect } from "react";
 import { useDebounce } from "use-debounce";
 import {
   type LessonFilters,
+  AGE_GROUPS,
+  ACTIVITY_FRAMES,
+  FRAME_LABELS,
+  AGE_LABELS,
+  type AgeGroupType,
+  type FrameType,
 } from "@repo/types";
 
-const AGE_GROUPS = ["THREE_TO_FOUR", "FOUR_TO_FIVE"] as const;
 const SEARCH_DEBOUNCE_MS = 400;
 
 interface FilterBarProps {
@@ -42,11 +47,11 @@ export const FilterBar = ({
   }, [debouncedSearch]);
 
   const handleAgeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onFilterChange({ ageGroup: e.target.value as "THREE_TO_FOUR" | "FOUR_TO_FIVE" });
+    onFilterChange({ ageGroup: e.target.value as AgeGroupType });
   };
 
   const handleFrameChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onFilterChange({ frame: e.target.value as "PLENARY" | "SMALL_GROUP" });
+    onFilterChange({ frame: e.target.value as FrameType });
   };
 
   const handleMyPlansChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,14 +99,14 @@ export const FilterBar = ({
           קבוצת גיל
         </label>
         <select
-          value={filters.ageGroup ?? ""}
+          value={filters.ageGroup ?? AGE_GROUPS[0]}
           onChange={handleAgeChange}
           className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
         >
           <option value="">כל הגילאים</option>
           {AGE_GROUPS.map((group) => (
             <option key={group} value={group}>
-              {group}
+              {AGE_LABELS[group]}
             </option>
           ))}
         </select>
@@ -118,8 +123,11 @@ export const FilterBar = ({
           className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
         >
           <option value="">כל המסגרות</option>
-          <option value="plenary">מליאה</option>
-          <option value="small-group">קבוצה קטנה</option>
+          {ACTIVITY_FRAMES.map((frame) => (
+            <option key={frame} value={frame}>
+              {FRAME_LABELS[frame]}
+            </option>
+          ))}
         </select>
       </div>
 

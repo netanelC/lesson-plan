@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useReactToPrint } from "react-to-print";
-import { type LessonFlowStep } from "@repo/types";
+import { type LessonFlowStep, AGE_LABELS, FRAME_LABELS } from "@repo/types";
 import { useLessonPlan } from "../api/useLessonPlan";
 import { SectionCard } from "../../../components/ui/SectionCard";
 import { exportLessonPlanToWord } from "../../../utils/exportToWord";
@@ -9,7 +9,7 @@ import { Can } from "../../../components/auth/Can"; // <--- Import the new Can c
 
 export const LessonPlanDetails = () => {
   const { id } = useParams<{ id: string }>();
-  const { data: plan, isLoading, isError } = useLessonPlan(id ?? "");
+  const { data: plan, isLoading, isError } = useLessonPlan(id!);
 
   const componentRef = useRef<HTMLDivElement>(null);
 
@@ -125,15 +125,19 @@ export const LessonPlanDetails = () => {
           <div className="flex flex-col items-end gap-2 text-left">
             <div className="flex gap-2 print:hidden">
               <span className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm font-bold border border-indigo-100">
-                גיל {plan.ageGroup}
+                {AGE_LABELS[plan.ageGroup]}
               </span>
               <span className="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-sm font-bold border border-purple-100">
+                {" "}
                 {plan.unit}
               </span>
             </div>
             {/* Author Name Display - Relies on Backend include: { author: true } */}
             <span className="text-sm text-gray-400">
-              נוצר ע״י: {plan.author?.fullName != null && plan.author.fullName.length > 0 ? plan.author.fullName : "משתמש לא ידוע"}
+              נוצר ע״י:{" "}
+              {plan.author?.fullName != null && plan.author.fullName.length > 0
+                ? plan.author.fullName
+                : "משתמש לא ידוע"}
             </span>
           </div>
 
@@ -198,28 +202,30 @@ export const LessonPlanDetails = () => {
               }
             >
               <div className="relative border-r-2 border-green-100 mr-3 space-y-8 pr-6 print:border-none print:mr-0 print:pr-0 print:space-y-4">
-                {(plan.lessonFlow as unknown as LessonFlowStep[]).map((step, idx) => (
-                  <div
-                    key={idx}
-                    className="relative print:border-b print:border-gray-100 print:pb-4"
-                  >
-                    <div className="absolute -right-[33px] top-1 h-4 w-4 rounded-full bg-green-500 ring-4 ring-green-100 print:hidden"></div>
+                {(plan.lessonFlow as unknown as LessonFlowStep[]).map(
+                  (step, idx) => (
+                    <div
+                      key={idx}
+                      className="relative print:border-b print:border-gray-100 print:pb-4"
+                    >
+                      <div className="absolute -right-[33px] top-1 h-4 w-4 rounded-full bg-green-500 ring-4 ring-green-100 print:hidden"></div>
 
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-lg font-bold text-gray-900">
-                        {step.stage}
-                      </h3>
-                      {step.durationMinutes > 0 && (
-                        <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded text-gray-600 print:border print:border-gray-200">
-                          {step.durationMinutes} דק׳
-                        </span>
-                      )}
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="text-lg font-bold text-gray-900">
+                          {step.stage}
+                        </h3>
+                        {step.durationMinutes > 0 && (
+                          <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded text-gray-600 print:border print:border-gray-200">
+                            {step.durationMinutes} דק׳
+                          </span>
+                        )}
+                      </div>
+                      <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm text-gray-700 whitespace-pre-line leading-relaxed print:border-none print:shadow-none print:p-0">
+                        {step.description}
+                      </div>
                     </div>
-                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm text-gray-700 whitespace-pre-line leading-relaxed print:border-none print:shadow-none print:p-0">
-                      {step.description}
-                    </div>
-                  </div>
-                ))}
+                  ),
+                )}
               </div>
             </SectionCard>
           </div>
@@ -234,7 +240,7 @@ export const LessonPlanDetails = () => {
                 <div>
                   <dt className="text-sm text-gray-500">מסגרת הוראה</dt>
                   <dd className="font-medium text-gray-900">
-                    {plan.frame === "PLENARY" ? "מליאה" : "קבוצה קטנה"}
+                    {FRAME_LABELS[plan.frame]}
                   </dd>
                 </div>
                 {plan.priorKnowledge != null && plan.priorKnowledge !== "" && (

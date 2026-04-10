@@ -12,7 +12,7 @@ export const CreateLessonPlanForm = () => {
       await createPlanMutation.mutateAsync(data);
       alert("המערך נוצר בהצלחה!");
       // We'll navigate to the home page, but right now it's just a placeholder!
-      void navigate("/"); 
+      void navigate("/");
     } catch (error) {
       console.error("Failed to create lesson plan:", error);
       alert("אירעה שגיאה ביצירת המערך.");

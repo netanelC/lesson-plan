@@ -16,8 +16,11 @@ export function useCreateLessonPlan() {
   return useMutation({
     mutationFn: async (data: CreateLessonPlanBody) => {
       // 2. Pass the interface to Axios so 'response' is strongly typed
-      const { data: response } = await api.post<CreateLessonResponse>("/lessons", data);
-      
+      const { data: response } = await api.post<CreateLessonResponse>(
+        "/lessons",
+        data,
+      );
+
       // Now TypeScript knows that response.data is exactly a LessonPlan object
       return response.data;
     },

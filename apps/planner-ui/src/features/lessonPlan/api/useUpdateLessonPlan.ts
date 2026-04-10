@@ -7,7 +7,10 @@ export const useUpdateLessonPlan = (id: string) => {
 
   return useMutation({
     mutationFn: async (data: CreateLessonPlanBody) => {
-      const result = await api.put<{ data: LessonPlan }>(`/lessons/${id}`, data);
+      const result = await api.put<{ data: LessonPlan }>(
+        `/lessons/${id}`,
+        data,
+      );
       return result.data.data;
     },
     onSuccess: () => {

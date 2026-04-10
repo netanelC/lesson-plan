@@ -1,7 +1,11 @@
 import { FastifyInstance } from "fastify";
 import { CreateLessonPlanSchema, LessonFiltersSchema } from "@repo/types";
 import { authenticate } from "../middleware/auth";
-import { createLessonPlanController, getLessonPlanByIdController, getLessonPlansController } from "./controller";
+import {
+  createLessonPlanController,
+  getLessonPlanByIdController,
+  getLessonPlansController,
+} from "./controller";
 
 export function lessonPlanRoutes(fastify: FastifyInstance): void {
   fastify.addHook("onRequest", authenticate);
@@ -12,14 +16,14 @@ export function lessonPlanRoutes(fastify: FastifyInstance): void {
         body: CreateLessonPlanSchema,
       },
     },
-    createLessonPlanController
+    createLessonPlanController,
   );
 
   fastify.get(
-      "/",
-      { schema: { querystring: LessonFiltersSchema } },
-      getLessonPlansController
-    );
+    "/",
+    { schema: { querystring: LessonFiltersSchema } },
+    getLessonPlansController,
+  );
 
   fastify.get("/:id", getLessonPlanByIdController);
   // fastify.put("/:id", lessonPlanController.update);

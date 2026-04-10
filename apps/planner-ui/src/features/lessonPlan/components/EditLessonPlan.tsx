@@ -16,7 +16,10 @@ export const EditLessonPlan = () => {
   const updateMutation = useUpdateLessonPlan(id ?? "");
   const uploadMutation = useUploadAttachment();
 
-  const handleUpdate = async (data: CreateLessonPlanBody, newFiles: File[] = []) => {
+  const handleUpdate = async (
+    data: CreateLessonPlanBody,
+    newFiles: File[] = [],
+  ) => {
     try {
       // Step 1: Update the textual content via the PUT route
       await updateMutation.mutateAsync(data);
@@ -67,7 +70,8 @@ export const EditLessonPlan = () => {
       initialData={{
         ...plan,
         lessonFlow: plan.lessonFlow as CreateLessonPlanInput["lessonFlow"],
-        teachingAids: plan.teachingAids as CreateLessonPlanInput["teachingAids"],
+        teachingAids:
+          plan.teachingAids as CreateLessonPlanInput["teachingAids"],
         references: plan.references as CreateLessonPlanInput["references"],
       }}
       onSubmit={handleUpdate}

@@ -6,7 +6,10 @@ export default defineConfig({
   plugins: [react()],
   build: {
     commonjsOptions: {
-      include: [/node_modules/, /apps\/planner-manager\/src\/db\/prisma\/generated/],
+      include: [
+        /node_modules/,
+        /apps\/planner-manager\/src\/db\/prisma\/generated/,
+      ],
     },
   },
   optimizeDeps: {
@@ -23,5 +26,3 @@ export default defineConfig({
     },
   },
 });
-
-

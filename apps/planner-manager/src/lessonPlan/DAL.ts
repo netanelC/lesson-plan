@@ -1,6 +1,6 @@
 import { LessonFilters } from "@repo/types";
 import { Prisma, LessonPlan } from "../db/prisma/generated/client";
-import { prisma } from "../db/prisma/prisma"; 
+import { prisma } from "../db/prisma/prisma";
 
 /**
  * Creates a new Lesson Plan in the database.
@@ -8,14 +8,18 @@ import { prisma } from "../db/prisma/prisma";
  * @returns The created LessonPlan record
  */
 export async function createLessonPlan(
-  data: Prisma.LessonPlanUncheckedCreateInput
+  data: Prisma.LessonPlanUncheckedCreateInput,
 ): Promise<LessonPlan> {
   return prisma.lessonPlan.create({
     data,
   });
 }
 
-export async function getAll(filters: LessonFilters, skip: number, limit: number): Promise<[number, LessonPlan[]]> {
+export async function getAll(
+  filters: LessonFilters,
+  skip: number,
+  limit: number,
+): Promise<[number, LessonPlan[]]> {
   const whereClause: Prisma.LessonPlanWhereInput = {};
 
   if (filters.ageGroup) whereClause.ageGroup = filters.ageGroup;
@@ -61,17 +65,17 @@ export async function getAll(filters: LessonFilters, skip: number, limit: number
 export async function getById(id: string): Promise<LessonPlan | null> {
   return prisma.lessonPlan.findUnique({
     where: { id },
-      include: {
-        author: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-            role: true,
-            avatarUrl: true,
-          },
+    include: {
+      author: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          role: true,
+          avatarUrl: true,
         },
-        attachments: true,
       },
+      attachments: true,
+    },
   });
 }

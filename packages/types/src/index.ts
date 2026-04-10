@@ -1,7 +1,14 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
 /* eslint-disable @typescript-eslint/naming-convention */
 import { z } from "zod";
-import { AgeGroupSchema, FrameSchema, LessonPlanSchema, UserSchema } from "./generated";
+import {
+  AgeGroupSchema,
+  type AgeGroupType,
+  FrameSchema,
+  type FrameType,
+  LessonPlanSchema,
+  UserSchema,
+} from "./generated";
 
 // Omit the fields the database handles automatically
 const BaseHttpCreateSchema = LessonPlanSchema.omit({
@@ -13,7 +20,9 @@ const BaseHttpCreateSchema = LessonPlanSchema.omit({
 
 export const LessonFlowStepSchema = z.object({
   stage: z.string().min(2, { message: "נא להזין את שם השלב (למשל: פתיחה)" }),
-  durationMinutes: z.number().positive({ message: "משך הזמן חייב להיות חיובי" }),
+  durationMinutes: z
+    .number()
+    .positive({ message: "משך הזמן חייב להיות חיובי" }),
   description: z.string().min(5, { message: "נא להזין תיאור מפורט לשלב זה" }),
 });
 
@@ -23,7 +32,9 @@ export * from "./generated";
 // Now we can extend the base schema with our custom validation for the HTTP layer
 export const CreateLessonPlanSchema = BaseHttpCreateSchema.extend({
   operativeGoals: z
-    .array(z.string().min(2, { message: "נא להזין מטרה אופרטיבית (לפחות 2 תווים)" }))
+    .array(
+      z.string().min(2, { message: "נא להזין מטרה אופרטיבית (לפחות 2 תווים)" }),
+    )
     .min(3, { message: "חובה להזין לפחות 3 מטרות אופרטיביות מלאות" }),
   lessonFlow: z
     .array(LessonFlowStepSchema)
@@ -36,7 +47,7 @@ export const LessonFiltersSchema = z.object({
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(12),
   search: z.string().optional(),
-  ageGroup: AgeGroupSchema.optional(), 
+  ageGroup: AgeGroupSchema.optional(),
   frame: FrameSchema.optional(),
   authorId: z.string().optional(),
 });
@@ -75,3 +86,29 @@ export interface AuthResponse {
   token: string;
   user: User;
 }
+
+// Common constants/labels for UI and Backend consistency
+export const AGE_LABELS = {
+  THREE_TO_FOUR: "גילאי 3-4",
+  FOUR_TO_FIVE: "גילאי 4-5",
+} as const satisfies Record<AgeGroupType, string>;
+export const AGE_GROUPS = Object.keys(AGE_LABELS) as AgeGroupType[];
+
+export const FRAME_LABELS = {
+  PLENARY: "מליאה",
+  SMALL_GROUP: "קבוצה קטנה",
+} as const satisfies Record<FrameType, string>;
+export const ACTIVITY_FRAMES = Object.keys(FRAME_LABELS) as FrameType[];
+
+export const FIELD_LABELS: Record<string, string> = {
+  topic: "נושא",
+  unit: "יחידה",
+  ageGroup: "קבוצת גיל",
+  frame: "מסגרת הוראה",
+  superGoal: "מטרת על",
+  operativeGoals: "מטרות אופרטיביות",
+  priorKnowledge: "ידע קודם",
+  teachingAids: "עזרי הוראה",
+  references: "מקורות",
+  lessonFlow: "חלקי השיעור",
+};

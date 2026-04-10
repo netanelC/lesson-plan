@@ -41,7 +41,10 @@ export const LoginPage = () => {
   ) => {
     try {
       // credentialResponse.credential is the JWT string from Google
-      if (credentialResponse.credential == null || credentialResponse.credential === "") {
+      if (
+        credentialResponse.credential == null ||
+        credentialResponse.credential === ""
+      ) {
         throw new Error("No credential received from Google");
       }
 

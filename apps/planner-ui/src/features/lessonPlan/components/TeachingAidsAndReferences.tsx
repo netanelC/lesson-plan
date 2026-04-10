@@ -1,4 +1,8 @@
-import type { UseFormSetValue, UseFormWatch, UseFormRegister } from "react-hook-form";
+import type {
+  UseFormSetValue,
+  UseFormWatch,
+  UseFormRegister,
+} from "react-hook-form";
 import type { CreateLessonPlanInput } from "@repo/types";
 import { TextInput } from "../../../components/ui/TextInput";
 
@@ -18,12 +22,18 @@ export const TeachingAidsAndReferences = ({
   const references = watch("references") ?? [];
 
   const handleAddAid = () => setValue("teachingAids", [...teachingAids, ""]);
-  const handleRemoveAid = (index: number) => 
-    setValue("teachingAids", teachingAids.filter((_, i) => i !== index));
+  const handleRemoveAid = (index: number) =>
+    setValue(
+      "teachingAids",
+      teachingAids.filter((_, i) => i !== index),
+    );
 
   const handleAddReference = () => setValue("references", [...references, ""]);
-  const handleRemoveReference = (index: number) => 
-    setValue("references", references.filter((_, i) => i !== index));
+  const handleRemoveReference = (index: number) =>
+    setValue(
+      "references",
+      references.filter((_, i) => i !== index),
+    );
 
   return (
     <div className="space-y-6">
@@ -39,7 +49,9 @@ export const TeachingAidsAndReferences = ({
 
       {/* --- Teaching Aids Section --- */}
       <div className="space-y-3 border-b border-gray-100 pb-4">
-        <label className="block text-sm font-semibold text-gray-800">אמצעי הוראה</label>
+        <label className="block text-sm font-semibold text-gray-800">
+          אמצעי הוראה
+        </label>
         {teachingAids.map((_, i) => (
           <div key={`aid-${i}`} className="flex gap-2">
             <div className="flex-1">
@@ -55,8 +67,18 @@ export const TeachingAidsAndReferences = ({
               className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
               aria-label="מחק אמצעי הוראה"
             >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
               </svg>
             </button>
           </div>
@@ -72,7 +94,9 @@ export const TeachingAidsAndReferences = ({
 
       {/* --- References Section --- */}
       <div className="space-y-3">
-        <label className="block text-sm font-semibold text-gray-800">מקורות מידע</label>
+        <label className="block text-sm font-semibold text-gray-800">
+          מקורות מידע
+        </label>
         {references.map((_, i) => (
           <div key={`ref-${i}`} className="flex gap-2">
             <div className="flex-1">
@@ -88,8 +112,18 @@ export const TeachingAidsAndReferences = ({
               className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
               aria-label="מחק מקור מידע"
             >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
               </svg>
             </button>
           </div>

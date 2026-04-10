@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
-import type { LessonFilters } from "@repo/types";
+import { type LessonFilters, AGE_LABELS } from "@repo/types";
 import { useAuth } from "../../auth/context/AuthContext";
 import { useLessonPlans } from "../api/useLessonPlans";
 import { useDeleteLessonPlan } from "../api/useDeleteLessonPlan";
@@ -14,7 +14,7 @@ const HighlightText = ({
   highlight?: string;
 }) => {
   if (text == null) return null;
-  if ((highlight?.trim()) == null) return <>{text}</>;
+  if (highlight == null || highlight.trim() === "") return <>{text}</>;
 
   const escapeRegExp = (string: string) =>
     string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -216,7 +216,7 @@ export const LessonPlanList = () => {
 
                 <div className="flex flex-wrap gap-2 mt-auto">
                   <span className="inline-flex items-center rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">
-                    גיל: {plan.ageGroup}
+                    גיל: {AGE_LABELS[plan.ageGroup]}
                   </span>
                   <span className="inline-flex items-center rounded-md bg-purple-50 px-2.5 py-1 text-xs font-medium text-purple-700 ring-1 ring-inset ring-purple-700/10">
                     <HighlightText
@@ -246,15 +246,22 @@ export const LessonPlanList = () => {
                       clipRule="evenodd"
                     />
                   </svg>
-                  {Array.isArray(plan.lessonFlow) ? plan.lessonFlow.length : 0} שלבים
+                  {Array.isArray(plan.lessonFlow) ? plan.lessonFlow.length : 0}{" "}
+                  שלבים
                 </span>
 
                 <div className="flex items-center gap-1.5 px-2 overflow-hidden">
                   <div className="h-5 w-5 rounded-full bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-700 shrink-0 border border-indigo-200">
-                    {plan.author?.fullName != null && plan.author.fullName.length > 0 ? plan.author.fullName.charAt(0) : "U"}
+                    {plan.author?.fullName != null &&
+                    plan.author.fullName.length > 0
+                      ? plan.author.fullName.charAt(0)
+                      : "U"}
                   </div>
                   <span className="text-[11px] text-gray-600 truncate font-medium">
-                    {plan.author?.fullName != null && plan.author.fullName.length > 0 ? plan.author.fullName : "משתמש"}
+                    {plan.author?.fullName != null &&
+                    plan.author.fullName.length > 0
+                      ? plan.author.fullName
+                      : "משתמש"}
                   </span>
                 </div>
 
@@ -386,7 +393,12 @@ export const LessonPlanList = () => {
           to="/create"
           className="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors"
         >
-          <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <svg
+            className="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+          >
             <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
           </svg>
           צור מערך חדש

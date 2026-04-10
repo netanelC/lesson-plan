@@ -76,7 +76,7 @@ export async function getLessonPlanByIdController(
   try {
     const { id } = request.params;
     const lessonPlan = await getById(id);
-    
+
     if (!lessonPlan) {
       return await reply.status(status.NOT_FOUND).send({
         success: false,
