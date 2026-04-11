@@ -7,7 +7,7 @@ import {
   FrameSchema,
   type FrameType,
   LessonPlanSchema,
-  UserSchema,
+  type User,
 } from "./generated";
 
 // Omit the fields the database handles automatically
@@ -64,7 +64,6 @@ export type CreateLessonPlanBody = z.infer<typeof CreateLessonPlanSchema>;
 export type LessonFlowStep = z.infer<typeof LessonFlowStepSchema>;
 export type CreateLessonPlanInput = z.input<typeof CreateLessonPlanSchema>;
 export type LessonFilters = z.infer<typeof LessonFiltersSchema>;
-export type User = z.infer<typeof UserSchema>;
 export type Login = z.infer<typeof LoginSchema>;
 export type Register = z.infer<typeof RegisterSchema>;
 
@@ -79,7 +78,7 @@ export interface PaginatedResponse<T> {
 }
 
 export type LessonPlan = z.infer<typeof LessonPlanSchema> & {
-  author?: Pick<User, "id" | "fullName" | "role" | "email">;
+  author: User;
 };
 
 export interface AuthResponse {
