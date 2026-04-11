@@ -3,8 +3,13 @@ import { CreateLessonPlanSchema, LessonFiltersSchema } from "@repo/types";
 import { authenticate } from "../middleware/auth";
 import {
   createLessonPlanController,
+  deleteLessonPlanController,
+  downloadAttachmentController,
   getLessonPlanByIdController,
   getLessonPlansController,
+  removeAttachmentController,
+  updateLessonPlanController,
+  uploadAttachmentController,
 } from "./controller";
 
 export function lessonPlanRoutes(fastify: FastifyInstance): void {
@@ -26,14 +31,11 @@ export function lessonPlanRoutes(fastify: FastifyInstance): void {
   );
 
   fastify.get("/:id", getLessonPlanByIdController);
-  // fastify.put("/:id", lessonPlanController.update);
-  // fastify.delete("/:id", lessonPlanController.delete);
+  fastify.put("/:id", updateLessonPlanController);
+  fastify.delete("/:id", deleteLessonPlanController);
 
-  // // Attachment Routes
-  // fastify.get(
-  //   "/attachments/:id/download",
-  //   lessonPlanController.downloadAttachment,
-  // );
-  // fastify.post("/:id/attachments", lessonPlanController.uploadAttachment);
-  // fastify.delete("/attachments/:fileId", lessonPlanController.removeAttachment);
+  // Attachment Routes
+  fastify.get("/attachments/:id/download", downloadAttachmentController);
+  fastify.post("/:id/attachments", uploadAttachmentController);
+  fastify.delete("/attachments/:fileId", removeAttachmentController);
 }

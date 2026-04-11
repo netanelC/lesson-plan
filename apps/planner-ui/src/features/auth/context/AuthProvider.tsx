@@ -10,7 +10,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const [token, setToken] = useState<string | null>(() => {
-    return localStorage.getItem("token");
+    const savedToken = localStorage.getItem("token");
+    if (savedToken !== null) {
+      api.defaults.headers.common["Authorization"] = `Bearer ${savedToken}`;
+    }
+    return savedToken;
   });
 
   const login = (newToken: string, newUser: User) => {

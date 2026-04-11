@@ -1,5 +1,5 @@
 import { LessonFilters } from "@repo/types";
-import { Prisma, LessonPlan } from "../db/prisma/generated/client";
+import { Prisma, LessonPlan, Attachment } from "../db/prisma/generated/client";
 import { prisma } from "../db/prisma/prisma";
 
 /**
@@ -15,6 +15,13 @@ export async function createLessonPlan(
   });
 }
 
+/**
+ * Fetches a paginated list of lesson plans based on the provided filters.
+ * @param filters An object containing filter criteria and pagination options
+ * @param skip Number of records to skip (for pagination)
+ * @param limit Number of records to return (for pagination)
+ * @returns A tuple containing the total count of matching records and the array of fetched LessonPlan records
+ */
 export async function getAll(
   filters: LessonFilters,
   skip: number,
@@ -77,5 +84,84 @@ export async function getById(id: string): Promise<LessonPlan | null> {
       },
       attachments: true,
     },
+  });
+}
+
+/**
+ * Updates an existing lesson plan.
+ * @param id The ID of the lesson plan to update
+ * @param data The partial data to update the lesson plan with
+ * @returns The updated LessonPlan record
+ */
+export async function updateLessonPlan(
+  id: string,
+  data: Prisma.LessonPlanUncheckedUpdateInput,
+): Promise<LessonPlan> {
+  return prisma.lessonPlan.update({
+    where: { id },
+    data: {
+      ...data,
+      lessonFlow: JSON.parse(
+        JSON.stringify(data.lessonFlow),
+      ) as Prisma.InputJsonValue,
+    },
+  });
+}
+
+/**
+ * Deletes a specific lesson plan from the database.
+ * @param id The ID of the lesson plan to delete
+ * @returns The deleted LessonPlan record
+ */
+export async function deleteLessonPlan(id: string): Promise<LessonPlan> {
+  return prisma.lessonPlan.delete({
+    where: { id },
+  });
+}
+
+/**
+ * Creates and attaches a new file record to a lesson plan.
+ * @param lessonPlanId The ID of the parent lesson plan
+ * @param fileInfo An object containing the file's metadata and URL
+ * @returns The created Attachment record
+ */
+export async function addAttachment(
+  lessonPlanId: string,
+  fileInfo: {
+    filename: string;
+    url: string;
+    fileType: string;
+    sizeBytes: number;
+  },
+): Promise<Attachment> {
+  return prisma.attachment.create({
+    data: {
+      ...fileInfo,
+      lessonPlanId,
+    },
+  });
+}
+
+/**
+ * Fetches a specific attachment by its ID.
+ * @param id The ID of the attachment
+ * @returns The Attachment record or null if not found
+ */
+export async function getAttachmentById(
+  id: string,
+): Promise<Attachment | null> {
+  return prisma.attachment.findUnique({
+    where: { id },
+  });
+}
+
+/**
+ * Deletes a specific attachment from the database.
+ * @param id The ID of the attachment to delete
+ * @returns The deleted Attachment record
+ */
+export async function deleteAttachment(id: string): Promise<Attachment> {
+  return prisma.attachment.delete({
+    where: { id },
   });
 }

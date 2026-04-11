@@ -1,4 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
+import { status } from "http-status";
 
 export async function authenticate(
   req: FastifyRequest,
@@ -10,6 +11,12 @@ export async function authenticate(
     // 3. Attach payload to req.user
     await req.jwtVerify();
   } catch (err: unknown) {
-    await reply.send(err); // Sends 401 Unauthorized automatically
+    req.log.error({ err }, "Authentication failed");
+    const message = err instanceof Error ? err.message : "Unauthorized";
+    await reply.status(status.UNAUTHORIZED).send({
+      success: false,
+      error: "Unauthorized",
+      message,
+    });
   }
 }

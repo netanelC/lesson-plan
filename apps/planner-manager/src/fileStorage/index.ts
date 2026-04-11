@@ -5,7 +5,9 @@ import {
   S3ClientConfig,
   DeleteObjectCommand,
   DeleteObjectCommandOutput,
+  GetObjectCommand,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import config from "config";
 
 interface UploadFileResult {
@@ -73,5 +75,22 @@ export const fileStorageService = {
     });
 
     return s3Client.send(command);
+  },
+
+  /**
+   * Generates a signed URL to download a file from MinIO.
+   */
+  async getDownloadUrl(key: string, filename?: string): Promise<string> {
+    const command = new GetObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: key,
+      ResponseContentDisposition:
+        filename != null
+          ? `attachment; filename="${encodeURIComponent(filename)}"`
+          : undefined,
+    });
+    // Link valid for 1 hour
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+    return getSignedUrl(s3Client as any, command as any, { expiresIn: 3600 });
   },
 };

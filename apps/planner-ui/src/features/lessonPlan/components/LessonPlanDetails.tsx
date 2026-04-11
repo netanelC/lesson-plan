@@ -1,11 +1,50 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useReactToPrint } from "react-to-print";
-import { type LessonFlowStep, AGE_LABELS, FRAME_LABELS } from "@repo/types";
+import {
+  type LessonFlowStep,
+  AGE_LABELS,
+  FRAME_LABELS,
+  FIELD_LABELS,
+} from "@repo/types";
 import { useLessonPlan } from "../api/useLessonPlan";
 import { SectionCard } from "../../../components/ui/SectionCard";
 import { exportLessonPlanToWord } from "../../../utils/exportToWord";
-import { Can } from "../../../components/auth/Can"; // <--- Import the new Can component
+import { Can } from "../../../components/auth/Can";
+import { api } from "../../../lib/axios";
+
+const AudioPlayer = ({ fileId }: { fileId: string }) => {
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    api
+      .get<{ url: string }>(`/lessons/attachments/${fileId}/download`)
+      .then((res) => {
+        if (isMounted) setUrl(res.data.url);
+      })
+      .catch((err) => {
+        console.error("Failed to load audio URL:", err);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [fileId]);
+
+  if (url == null) {
+    return (
+      <div className="text-xs text-gray-400 mt-1.5 h-8 flex items-center">
+        טוען נגן אודיו...
+      </div>
+    );
+  }
+
+  return (
+    <audio controls className="w-full h-8 mt-1.5" src={url}>
+      הדפדפן שלך לא תומך בניגון אודיו.
+    </audio>
+  );
+};
 
 export const LessonPlanDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +56,29 @@ export const LessonPlanDetails = () => {
     contentRef: componentRef,
     documentTitle: plan ? `מערך שיעור - ${plan.topic}` : "Lesson Plan",
   });
+
+  const handleDownload = async (fileId: string) => {
+    try {
+      // Securely fetch the signed URL using Axios (which attaches the JWT token)
+      const { data } = await api.get<{ url: string }>(
+        `/lessons/attachments/${fileId}/download`,
+      );
+
+      // Use the signed URL to download directly from MinIO
+      // Creating a hidden link to ensure the 'download' attribute forces a download prompt
+      const link = document.createElement("a");
+      link.href = data.url;
+      // We rely on the backend setting ResponseContentDisposition, but we can also set the download attribute
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Failed to get download URL", error);
+      alert("שגיאה בהורדת הקובץ");
+    }
+  };
 
   if (isLoading)
     return <div className="text-center py-20">טוען מערך שיעור...</div>;
@@ -142,7 +204,8 @@ export const LessonPlanDetails = () => {
           </div>
 
           <div className="hidden print:block text-sm text-gray-500">
-            גיל: {plan.ageGroup} | יחידה: {plan.unit} | תאריך:{" "}
+            {FIELD_LABELS.ageGroup}: {AGE_LABELS[plan.ageGroup]} |{" "}
+            {FIELD_LABELS.unit}: {plan.unit} | תאריך:{" "}
             {new Date(plan.createdAt).toLocaleDateString("he-IL")}
           </div>
         </div>
@@ -151,7 +214,7 @@ export const LessonPlanDetails = () => {
           {/* --- Right Column: Main Content (Wide) --- */}
           <div className="lg:col-span-2 space-y-8 print:space-y-6">
             <SectionCard
-              title="מטרות אופרטיביות"
+              title={FIELD_LABELS.operativeGoals}
               theme="orange"
               icon={
                 <svg
@@ -183,7 +246,7 @@ export const LessonPlanDetails = () => {
             </SectionCard>
 
             <SectionCard
-              title="מהלך השיעור"
+              title={FIELD_LABELS.lessonFlow}
               theme="green"
               icon={
                 <svg
@@ -202,30 +265,28 @@ export const LessonPlanDetails = () => {
               }
             >
               <div className="relative border-r-2 border-green-100 mr-3 space-y-8 pr-6 print:border-none print:mr-0 print:pr-0 print:space-y-4">
-                {(plan.lessonFlow as unknown as LessonFlowStep[]).map(
-                  (step, idx) => (
-                    <div
-                      key={idx}
-                      className="relative print:border-b print:border-gray-100 print:pb-4"
-                    >
-                      <div className="absolute -right-[33px] top-1 h-4 w-4 rounded-full bg-green-500 ring-4 ring-green-100 print:hidden"></div>
+                {(plan.lessonFlow as LessonFlowStep[]).map((step, idx) => (
+                  <div
+                    key={idx}
+                    className="relative print:border-b print:border-gray-100 print:pb-4"
+                  >
+                    <div className="absolute -right-[33px] top-1 h-4 w-4 rounded-full bg-green-500 ring-4 ring-green-100 print:hidden"></div>
 
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="text-lg font-bold text-gray-900">
-                          {step.stage}
-                        </h3>
-                        {step.durationMinutes > 0 && (
-                          <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded text-gray-600 print:border print:border-gray-200">
-                            {step.durationMinutes} דק׳
-                          </span>
-                        )}
-                      </div>
-                      <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm text-gray-700 whitespace-pre-line leading-relaxed print:border-none print:shadow-none print:p-0">
-                        {step.description}
-                      </div>
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="text-lg font-bold text-gray-900">
+                        {step.stage}
+                      </h3>
+                      {step.durationMinutes > 0 && (
+                        <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded text-gray-600 print:border print:border-gray-200">
+                          {step.durationMinutes} דק׳
+                        </span>
+                      )}
                     </div>
-                  ),
-                )}
+                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm text-gray-700 whitespace-pre-line leading-relaxed print:border-none print:shadow-none print:p-0">
+                      {step.description}
+                    </div>
+                  </div>
+                ))}
               </div>
             </SectionCard>
           </div>
@@ -245,7 +306,9 @@ export const LessonPlanDetails = () => {
                 </div>
                 {plan.priorKnowledge != null && plan.priorKnowledge !== "" && (
                   <div>
-                    <dt className="text-sm text-gray-500">ידע קודם נדרש</dt>
+                    <dt className="text-sm text-gray-500">
+                      {FIELD_LABELS.priorKnowledge}
+                    </dt>
                     <dd className="font-medium text-gray-900">
                       {plan.priorKnowledge}
                     </dd>
@@ -276,7 +339,7 @@ export const LessonPlanDetails = () => {
                       d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                     />
                   </svg>
-                  ציוד נדרש
+                  {FIELD_LABELS.teachingAids}
                 </h3>
                 <ul className="list-disc list-inside text-indigo-800 space-y-1 print:text-gray-800">
                   {plan.teachingAids.map((aid, i) => (
@@ -321,13 +384,7 @@ export const LessonPlanDetails = () => {
                             {file.filename}
                           </p>
                           {file.fileType.startsWith("audio/") ? (
-                            <audio
-                              controls
-                              className="w-full h-8 mt-1.5"
-                              src={file.url}
-                            >
-                              הדפדפן שלך לא תומך בניגון אודיו.
-                            </audio>
+                            <AudioPlayer fileId={file.id} />
                           ) : (
                             <p className="text-[10px] text-gray-500 uppercase">
                               {file.fileType.split("/")[1]} FILE
@@ -335,10 +392,8 @@ export const LessonPlanDetails = () => {
                           )}
                         </div>
 
-                        <a
-                          href={`${(import.meta.env as Record<string, string | undefined>).VITE_API_BASE_URL ?? "http://localhost:8080"}/api/lessons/attachments/${file.id}/download`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          onClick={() => handleDownload(file.id)}
                           className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors shrink-0"
                           title="הורד קובץ"
                         >
@@ -355,7 +410,7 @@ export const LessonPlanDetails = () => {
                               d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                             />
                           </svg>
-                        </a>
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -379,7 +434,7 @@ export const LessonPlanDetails = () => {
                       d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
                     />
                   </svg>
-                  מקורות מידע
+                  {FIELD_LABELS.references}
                 </h3>
                 <ul className="space-y-2">
                   {plan.references.map((ref, i) => (
