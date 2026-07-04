@@ -101,9 +101,11 @@ export async function updateLessonPlan(
     where: { id },
     data: {
       ...data,
-      lessonFlow: JSON.parse(
-        JSON.stringify(data.lessonFlow),
-      ) as Prisma.InputJsonValue,
+      ...(data.lessonFlow !== undefined && {
+        lessonFlow: JSON.parse(
+          JSON.stringify(data.lessonFlow),
+        ) as Prisma.InputJsonValue,
+      }),
     },
   });
 }

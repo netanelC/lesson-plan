@@ -1,0 +1,29 @@
+{
+  "server": {
+    "port": 0
+  },
+  "db": {
+    "host": "localhost",
+    "port": 5434,
+    "username": "postgres",
+    "password": "postgres",
+    "database": "lesson_plan_test",
+    "schema": "public"
+  },
+  "minio": {
+    "endpoint": "http://localhost:9002",
+    "region": "us-east-1",
+    "credentials": {
+      "accessKeyId": "minioadmin",
+      "secretAccessKey": "minioadmin"
+    },
+    "forcePathStyle": true
+  },
+  "jwt": {
+    "secret": "test-secret-key-for-jwt-signing"
+  },
+  "google": {
+    "clientId": "test",
+    "clientSecret": "test"
+  }
+}

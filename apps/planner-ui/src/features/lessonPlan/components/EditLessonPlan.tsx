@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import type { CreateLessonPlanBody, CreateLessonPlanInput } from "@repo/types";
 import { toast } from "react-hot-toast";
@@ -6,11 +7,13 @@ import { useUpdateLessonPlan } from "../api/useUpdateLessonPlan";
 import { useUploadAttachment } from "../api/useUploadAttachment";
 import { useRemoveAttachment } from "../api/useRemoveAttachment";
 import { extractApiError } from "../../../lib/axios";
+import { ConfirmModal } from "../../../components/ui/ConfirmModal";
 import { LessonPlanForm } from "./LessonPlanForm";
 
 export const EditLessonPlan = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [attachmentToDelete, setAttachmentToDelete] = useState<string | null>(null);
 
   // 1. Fetch existing data (Ensure ID exists)
   const { data: plan, isLoading, isError } = useLessonPlan(id ?? "");
@@ -46,15 +49,19 @@ export const EditLessonPlan = () => {
     }
   };
 
-  const handleRemoveExistingAttachment = async (attachmentId: string) => {
-    if (window.confirm("האם למחוק קובץ זה? (פעולה זו לא ניתנת לביטול)")) {
-      try {
-        await removeAttachmentMutation.mutateAsync(attachmentId);
-        toast.success("הקובץ נמחק בהצלחה!");
-        // Note: useLessonPlan query might need invalidation to refresh the list of attachments
-      } catch (error) {
-        toast.error(extractApiError(error));
-      }
+  const handleRemoveExistingAttachment = (attachmentId: string) => {
+    setAttachmentToDelete(attachmentId);
+  };
+
+  const confirmRemoveAttachment = async () => {
+    if (attachmentToDelete === null) return;
+    try {
+      await removeAttachmentMutation.mutateAsync(attachmentToDelete);
+      toast.success("הקובץ נמחק בהצלחה!");
+    } catch (error) {
+      toast.error(extractApiError(error));
+    } finally {
+      setAttachmentToDelete(null);
     }
   };
 
@@ -80,24 +87,35 @@ export const EditLessonPlan = () => {
   }
 
   return (
-    <LessonPlanForm
-      initialData={{
-        ...plan,
-        lessonFlow: plan.lessonFlow as CreateLessonPlanInput["lessonFlow"],
-        teachingAids:
-          plan.teachingAids as CreateLessonPlanInput["teachingAids"],
-        references: plan.references as CreateLessonPlanInput["references"],
-      }}
-      existingAttachments={plan.attachments}
-      onRemoveExistingAttachment={handleRemoveExistingAttachment}
-      onSubmit={handleUpdate}
-      isSubmitting={
-        updateMutation.isPending ||
-        uploadMutation.isPending ||
-        removeAttachmentMutation.isPending
-      }
-      title="עריכת מערך שיעור"
-      submitLabel="שמור שינויים"
-    />
+    <>
+      <LessonPlanForm
+        initialData={{
+          ...plan,
+          lessonFlow: plan.lessonFlow as CreateLessonPlanInput["lessonFlow"],
+          teachingAids:
+            plan.teachingAids as CreateLessonPlanInput["teachingAids"],
+          references: plan.references as CreateLessonPlanInput["references"],
+        }}
+        existingAttachments={plan.attachments}
+        onRemoveExistingAttachment={handleRemoveExistingAttachment}
+        onSubmit={handleUpdate}
+        isSubmitting={
+          updateMutation.isPending ||
+          uploadMutation.isPending ||
+          removeAttachmentMutation.isPending
+        }
+        title="עריכת מערך שיעור"
+        submitLabel="שמור שינויים"
+      />
+      <ConfirmModal
+        isOpen={attachmentToDelete !== null}
+        onClose={() => setAttachmentToDelete(null)}
+        onConfirm={confirmRemoveAttachment}
+        title="מחיקת קובץ"
+        message="האם למחוק קובץ זה? (פעולה זו לא ניתנת לביטול)"
+        confirmText="מחק קובץ"
+        isDestructive={true}
+      />
+    </>
   );
 };

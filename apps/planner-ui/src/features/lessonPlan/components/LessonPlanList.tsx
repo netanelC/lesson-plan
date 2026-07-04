@@ -6,6 +6,7 @@ import { useAuth } from "../../auth/context/AuthContext";
 import { useLessonPlans } from "../api/useLessonPlans";
 import { useDeleteLessonPlan } from "../api/useDeleteLessonPlan";
 import { extractApiError } from "../../../lib/axios";
+import { ConfirmModal } from "../../../components/ui/ConfirmModal";
 import { FilterBar } from "./FilterBar";
 
 const HighlightText = ({
@@ -55,6 +56,8 @@ export const LessonPlanList = () => {
     ageGroup: undefined,
     frame: undefined,
   });
+  
+  const [planToDelete, setPlanToDelete] = useState<string | null>(null);
 
   const {
     data: response,
@@ -110,15 +113,20 @@ export const LessonPlanList = () => {
     return false;
   };
 
-  const handleDelete = async (e: React.MouseEvent, id: string) => {
+  const handleDeleteClick = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
-    if (window.confirm("האם את בטוחה שברצונך למחוק מערך זה?")) {
-      try {
-        await deleteMutation.mutateAsync(id);
-        toast.success("המערך נמחק בהצלחה!");
-      } catch (error) {
-        toast.error(extractApiError(error) || "שגיאה במחיקת המערך");
-      }
+    setPlanToDelete(id);
+  };
+
+  const confirmDelete = async () => {
+    if (planToDelete === null) return;
+    try {
+      await deleteMutation.mutateAsync(planToDelete);
+      toast.success("המערך נמחק בהצלחה!");
+    } catch (error) {
+      toast.error(extractApiError(error) || "שגיאה במחיקת המערך");
+    } finally {
+      setPlanToDelete(null);
     }
   };
 
@@ -174,7 +182,7 @@ export const LessonPlanList = () => {
             >
               {canDelete(plan.authorId) && (
                 <button
-                  onClick={(e) => handleDelete(e, plan.id)}
+                  onClick={(e) => handleDeleteClick(e, plan.id)}
                   disabled={deleteMutation.isPending}
                   className="absolute top-4 left-4 p-2 bg-white/90 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded-full transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 shadow-sm border border-transparent hover:border-red-100 z-10"
                   title="מחק מערך"
@@ -424,6 +432,16 @@ export const LessonPlanList = () => {
       />
 
       {renderContent()}
+
+      <ConfirmModal
+        isOpen={planToDelete !== null}
+        onClose={() => setPlanToDelete(null)}
+        onConfirm={confirmDelete}
+        title="מחיקת מערך"
+        message="האם את בטוחה שברצונך למחוק מערך זה? פעולה זו לא ניתנת לביטול."
+        confirmText="מחק מערך"
+        isDestructive={true}
+      />
     </div>
   );
 };
