@@ -1,24 +1,14 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { status } from "http-status";
 import { Role } from "../db/prisma/generated/client";
-import { getAllUsers, updateUserRole } from "./DAL";
+import { usersService } from "./service";
 
 export async function getAllUsersController(
   request: FastifyRequest,
   reply: FastifyReply,
 ): Promise<FastifyReply> {
-  try {
-    const users = await getAllUsers();
-
-    return await reply.status(status.OK).send(users);
-  } catch (error) {
-    request.log.error({ err: error }, "Failed to get users");
-
-    return reply.status(status.INTERNAL_SERVER_ERROR).send({
-      success: false,
-      error: "Internal Server Error",
-    });
-  }
+  const users = await usersService.getAll();
+  return reply.status(status.OK).send(users);
 }
 
 export async function updateUserRoleController(
@@ -30,19 +20,9 @@ export async function updateUserRoleController(
   }>,
   reply: FastifyReply,
 ): Promise<FastifyReply> {
-  try {
-    const { id } = request.params;
-    const { role } = request.body;
+  const { id } = request.params;
+  const { role } = request.body;
 
-    const updated = await updateUserRole(id, role);
-
-    return await reply.status(status.OK).send(updated);
-  } catch (error) {
-    request.log.error({ err: error }, "Failed to update user role");
-
-    return reply.status(status.INTERNAL_SERVER_ERROR).send({
-      success: false,
-      error: "Internal Server Error",
-    });
-  }
+  const updated = await usersService.updateRole(id, role);
+  return reply.status(status.OK).send(updated);
 }

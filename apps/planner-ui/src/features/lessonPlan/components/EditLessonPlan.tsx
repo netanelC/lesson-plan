@@ -1,8 +1,11 @@
 import { useParams, useNavigate } from "react-router-dom";
 import type { CreateLessonPlanBody, CreateLessonPlanInput } from "@repo/types";
+import { toast } from "react-hot-toast";
 import { useLessonPlan } from "../api/useLessonPlan";
 import { useUpdateLessonPlan } from "../api/useUpdateLessonPlan";
 import { useUploadAttachment } from "../api/useUploadAttachment";
+import { useRemoveAttachment } from "../api/useRemoveAttachment";
+import { extractApiError } from "../../../lib/axios";
 import { LessonPlanForm } from "./LessonPlanForm";
 
 export const EditLessonPlan = () => {
@@ -15,6 +18,7 @@ export const EditLessonPlan = () => {
   // 2. Mutations for Updating
   const updateMutation = useUpdateLessonPlan(id ?? "");
   const uploadMutation = useUploadAttachment();
+  const removeAttachmentMutation = useRemoveAttachment();
 
   const handleUpdate = async (
     data: CreateLessonPlanBody,
@@ -35,12 +39,22 @@ export const EditLessonPlan = () => {
           ),
         );
       }
-
-      alert("המערך עודכן בהצלחה!");
+      toast.success("המערך עודכן בהצלחה!");
       void navigate(`/plan/${id}`); // Navigate back to the details view
     } catch (error) {
-      console.error("Update failed:", error);
-      alert("אירעה שגיאה בעדכון המערך. נסה שנית.");
+      toast.error(extractApiError(error));
+    }
+  };
+
+  const handleRemoveExistingAttachment = async (attachmentId: string) => {
+    if (window.confirm("האם למחוק קובץ זה? (פעולה זו לא ניתנת לביטול)")) {
+      try {
+        await removeAttachmentMutation.mutateAsync(attachmentId);
+        toast.success("הקובץ נמחק בהצלחה!");
+        // Note: useLessonPlan query might need invalidation to refresh the list of attachments
+      } catch (error) {
+        toast.error(extractApiError(error));
+      }
     }
   };
 
@@ -74,8 +88,14 @@ export const EditLessonPlan = () => {
           plan.teachingAids as CreateLessonPlanInput["teachingAids"],
         references: plan.references as CreateLessonPlanInput["references"],
       }}
+      existingAttachments={plan.attachments}
+      onRemoveExistingAttachment={handleRemoveExistingAttachment}
       onSubmit={handleUpdate}
-      isSubmitting={updateMutation.isPending || uploadMutation.isPending}
+      isSubmitting={
+        updateMutation.isPending ||
+        uploadMutation.isPending ||
+        removeAttachmentMutation.isPending
+      }
       title="עריכת מערך שיעור"
       submitLabel="שמור שינויים"
     />

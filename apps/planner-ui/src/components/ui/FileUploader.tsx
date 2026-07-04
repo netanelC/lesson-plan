@@ -6,12 +6,16 @@ const KB_SIZE = 1024; // 1KB in bytes
 interface FileUploaderProps {
   files: File[];
   onFilesChange: (files: File[]) => void;
+  existingAttachments?: { id: string; filename: string; sizeBytes: number }[];
+  onRemoveExisting?: (id: string) => void;
   disabled?: boolean;
 }
 
 export const FileUploader = ({
   files,
   onFilesChange,
+  existingAttachments = [],
+  onRemoveExisting,
   disabled,
 }: FileUploaderProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -67,9 +71,62 @@ export const FileUploader = ({
         </div>
       </div>
 
-      {/* רשימת הקבצים שנבחרו */}
-      {files.length > 0 && (
+      {/* רשימת הקבצים שנבחרו / קיימים */}
+      {(files.length > 0 || existingAttachments.length > 0) && (
         <ul className="space-y-2">
+          {existingAttachments.map((file) => (
+            <li
+              key={file.id}
+              className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-md shadow-sm"
+            >
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className="bg-indigo-100 p-2 rounded">
+                  <svg
+                    className="h-5 w-5 text-indigo-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                </div>
+                <div className="truncate">
+                  <p className="text-sm font-medium text-gray-700 truncate">
+                    {file.filename}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {(file.sizeBytes / KB_SIZE).toFixed(1)} KB (קיים)
+                  </p>
+                </div>
+              </div>
+              {onRemoveExisting && (
+                <button
+                  type="button"
+                  onClick={() => onRemoveExisting(file.id)}
+                  disabled={disabled}
+                  className="text-gray-400 hover:text-red-500 p-1"
+                  title="מחק קובץ"
+                >
+                  <svg
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              )}
+            </li>
+          ))}
           {files.map((file, index) => (
             <li
               key={`${file.name}-${index}`}

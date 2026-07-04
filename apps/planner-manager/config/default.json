@@ -23,6 +23,9 @@
     "clientId": "client-id.google.com",
     "clientSecret": "google-client-secret"
   },
+  "jwt": {
+    "secret": "supersecret"
+  },
   "page": {
     "size": 10,
     "limit": 12

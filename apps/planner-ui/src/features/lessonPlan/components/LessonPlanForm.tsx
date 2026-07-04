@@ -27,6 +27,8 @@ import { LessonFlowSection } from "./LessonFlowSection";
 
 interface Props {
   initialData?: CreateLessonPlanInput;
+  existingAttachments?: { id: string; filename: string; sizeBytes: number }[];
+  onRemoveExistingAttachment?: (id: string) => void;
   onSubmit: (data: CreateLessonPlanBody, files?: File[]) => Promise<void>;
   isSubmitting: boolean;
   title: string;
@@ -35,6 +37,8 @@ interface Props {
 
 export const LessonPlanForm = ({
   initialData,
+  existingAttachments = [],
+  onRemoveExistingAttachment,
   onSubmit,
   isSubmitting,
   title,
@@ -239,6 +243,8 @@ export const LessonPlanForm = ({
         <FileUploader
           files={files}
           onFilesChange={setFiles}
+          existingAttachments={existingAttachments}
+          onRemoveExisting={onRemoveExistingAttachment}
           disabled={isSubmitting}
         />
       </SectionCard>

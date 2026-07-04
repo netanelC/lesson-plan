@@ -3,7 +3,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import { type User, type Login, LoginSchema } from "@repo/types";
-import { api } from "../../../lib/axios";
+import { toast } from "react-hot-toast";
+import { api, extractApiError } from "../../../lib/axios";
 import { useAuth } from "../context/AuthContext";
 import { TextInput } from "../../../components/ui/TextInput";
 
@@ -29,9 +30,10 @@ export const LoginPage = () => {
       login(res.data.token, res.data.user);
       void navigate("/");
     } catch (error) {
-      console.error("Login failed", error);
+      const message = extractApiError(error);
+      toast.error(message);
       setError("root", {
-        message: "האימייל או הסיסמה שגויים. נסה שנית.",
+        message,
       });
     }
   };
@@ -58,8 +60,9 @@ export const LoginPage = () => {
       login(res.data.token, res.data.user);
       void navigate("/");
     } catch (error) {
-      console.error("Google login failed", error);
-      setError("root", { message: "ההתחברות עם גוגל נכשלה" });
+      const message = extractApiError(error);
+      toast.error("התחברות עם גוגל נכשלה");
+      setError("root", { message });
     }
   };
 

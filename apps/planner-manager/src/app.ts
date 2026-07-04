@@ -1,14 +1,17 @@
 import { fastify, FastifyInstance } from "fastify";
 import { fastifyMultipart } from "@fastify/multipart";
+import { status } from "http-status";
 import {
   serializerCompiler,
   validatorCompiler,
 } from "fastify-type-provider-zod";
 import cors from "@fastify/cors";
 import { fastifyJwt } from "@fastify/jwt";
+import config from "config";
 import { lessonPlanRoutes } from "./lessonPlan/routes";
 import { userRoutes } from "./users/routes";
 import { authRoutes } from "./auth/routes";
+import { AppError } from "./utils/errors";
 
 export function buildApp(): FastifyInstance {
   const app = fastify({ logger: true });
@@ -39,14 +42,46 @@ export function buildApp(): FastifyInstance {
   app.register(lessonPlanRoutes, { prefix: "/api/lessons" });
 
   // Auth
-  // Register JWT (TODO: Move secret to .env later)
   app.register(fastifyJwt, {
-    secret: process.env.JWT_SECRET ?? "supersecret",
+    secret: config.get<string>("jwt.secret"),
   });
   app.register(authRoutes, { prefix: "/api/auth" });
 
   // Users
   app.register(userRoutes, { prefix: "/api/users" });
+
+  // Global Error Handler
+  app.setErrorHandler((error: unknown, request, reply) => {
+    if (error instanceof AppError) {
+      if (!error.isOperational) {
+        request.log.error({ err: error }, "Operational error");
+      }
+      return reply.status(error.statusCode).send({
+        success: false,
+        error: error.message,
+      });
+    }
+
+    // Handle Fastify Validation Errors (Zod)
+    const fastifyError = error as { validation?: unknown };
+    if (
+      fastifyError.validation !== undefined &&
+      fastifyError.validation !== null
+    ) {
+      return reply.status(status.BAD_REQUEST).send({
+        success: false,
+        error: "Validation Error",
+        details: fastifyError.validation,
+      });
+    }
+
+    // Unhandled errors
+    request.log.error({ err: error }, "Unhandled internal error");
+    return reply.status(status.INTERNAL_SERVER_ERROR).send({
+      success: false,
+      error: "Internal Server Error",
+    });
+  });
 
   return app;
 }

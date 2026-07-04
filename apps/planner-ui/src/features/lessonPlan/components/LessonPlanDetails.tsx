@@ -7,11 +7,12 @@ import {
   FRAME_LABELS,
   FIELD_LABELS,
 } from "@repo/types";
+import { toast } from "react-hot-toast";
 import { useLessonPlan } from "../api/useLessonPlan";
 import { SectionCard } from "../../../components/ui/SectionCard";
 import { exportLessonPlanToWord } from "../../../utils/exportToWord";
 import { Can } from "../../../components/auth/Can";
-import { api } from "../../../lib/axios";
+import { api, extractApiError } from "../../../lib/axios";
 
 const AudioPlayer = ({ fileId }: { fileId: string }) => {
   const [url, setUrl] = useState<string | null>(null);
@@ -75,8 +76,7 @@ export const LessonPlanDetails = () => {
       link.click();
       link.remove();
     } catch (error) {
-      console.error("Failed to get download URL", error);
-      alert("שגיאה בהורדת הקובץ");
+      toast.error(extractApiError(error) || "שגיאה בהורדת הקובץ");
     }
   };
 
@@ -197,7 +197,7 @@ export const LessonPlanDetails = () => {
             {/* Author Name Display - Relies on Backend include: { author: true } */}
             <span className="text-sm text-gray-400">
               נוצר ע״י:{" "}
-              {plan.author?.fullName != null && plan.author.fullName.length > 0
+              {plan.author.fullName.length > 0
                 ? plan.author.fullName
                 : "משתמש לא ידוע"}
             </span>

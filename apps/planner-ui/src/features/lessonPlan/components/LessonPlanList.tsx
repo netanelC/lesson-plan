@@ -1,9 +1,11 @@
 import { useState, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import { type LessonFilters, AGE_LABELS } from "@repo/types";
+import { toast } from "react-hot-toast";
 import { useAuth } from "../../auth/context/AuthContext";
 import { useLessonPlans } from "../api/useLessonPlans";
 import { useDeleteLessonPlan } from "../api/useDeleteLessonPlan";
+import { extractApiError } from "../../../lib/axios";
 import { FilterBar } from "./FilterBar";
 
 const HighlightText = ({
@@ -48,8 +50,10 @@ export const LessonPlanList = () => {
   const [filters, setFilters] = useState<LessonFilters>({
     page: 1,
     limit: 12,
-    search: "",
-    authorId: "",
+    search: undefined,
+    authorId: undefined,
+    ageGroup: undefined,
+    frame: undefined,
   });
 
   const {
@@ -82,8 +86,10 @@ export const LessonPlanList = () => {
     setFilters({
       page: 1,
       limit: 12,
-      search: "",
-      authorId: "",
+      search: undefined,
+      authorId: undefined,
+      ageGroup: undefined,
+      frame: undefined,
     });
   }, []);
 
@@ -104,10 +110,15 @@ export const LessonPlanList = () => {
     return false;
   };
 
-  const handleDelete = (e: React.MouseEvent, id: string) => {
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     if (window.confirm("האם את בטוחה שברצונך למחוק מערך זה?")) {
-      deleteMutation.mutate(id);
+      try {
+        await deleteMutation.mutateAsync(id);
+        toast.success("המערך נמחק בהצלחה!");
+      } catch (error) {
+        toast.error(extractApiError(error) || "שגיאה במחיקת המערך");
+      }
     }
   };
 
@@ -149,9 +160,12 @@ export const LessonPlanList = () => {
     }
 
     return (
-      <div
-        className={`transition-opacity duration-200 ${isBackgroundLoading ? "opacity-50 pointer-events-none" : "opacity-100"}`}
-      >
+      <div className="relative transition-opacity duration-200">
+        {isBackgroundLoading && (
+          <div className="absolute top-[-24px] left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-none">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-600"></div>
+          </div>
+        )}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {response.data.map((plan) => (
             <div
@@ -252,14 +266,12 @@ export const LessonPlanList = () => {
 
                 <div className="flex items-center gap-1.5 px-2 overflow-hidden">
                   <div className="h-5 w-5 rounded-full bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-700 shrink-0 border border-indigo-200">
-                    {plan.author?.fullName != null &&
-                    plan.author.fullName.length > 0
+                    {plan.author.fullName.length > 0
                       ? plan.author.fullName.charAt(0)
                       : "U"}
                   </div>
                   <span className="text-[11px] text-gray-600 truncate font-medium">
-                    {plan.author?.fullName != null &&
-                    plan.author.fullName.length > 0
+                    {plan.author.fullName.length > 0
                       ? plan.author.fullName
                       : "משתמש"}
                   </span>

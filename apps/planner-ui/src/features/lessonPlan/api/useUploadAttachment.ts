@@ -14,16 +14,11 @@ export const useUploadAttachment = () => {
       formData.append("file", file);
 
       // שליחת הקובץ ל-Endpoint שיצרנו ב-Backend
-      const result = await api.post<{ data: unknown }>(
+      const result = await api.post<{ success: boolean; data: unknown }>(
         `/lessons/${lessonPlanId}/attachments`,
         formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        },
       );
-      return result.data;
+      return result.data.data;
     },
   });
 };

@@ -16,8 +16,11 @@ interface UploadFileResult {
   filename: string;
 }
 
-// 1. Initialize S3 Client (Same as before)
-const s3Config = config.get<S3ClientConfig>("minio");
+// 1. Initialize S3 Client (Deep clone to prevent config mutations error)
+const s3Config = JSON.parse(
+  JSON.stringify(config.get<S3ClientConfig>("minio")),
+) as S3ClientConfig;
+
 const s3Client = new S3Client({
   ...s3Config,
   customUserAgent: "PlannerApp/1.0",
@@ -90,7 +93,6 @@ export const fileStorageService = {
           : undefined,
     });
     // Link valid for 1 hour
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
-    return getSignedUrl(s3Client as any, command as any, { expiresIn: 3600 });
+    return getSignedUrl(s3Client, command, { expiresIn: 3600 });
   },
 };

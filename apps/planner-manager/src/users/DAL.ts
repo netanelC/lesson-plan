@@ -23,3 +23,46 @@ export async function updateUserRole(id: string, role: Role): Promise<User> {
   });
   return updated;
 }
+
+export async function getUserByEmail(email: string): Promise<User | null> {
+  return prisma.user.findUnique({ where: { email } });
+}
+
+export async function createUser(data: {
+  email: string;
+  passwordHash: string;
+  fullName: string;
+  role: Role;
+}): Promise<Partial<User>> {
+  return prisma.user.create({
+    data,
+    select: {
+      id: true,
+      email: true,
+      fullName: true,
+      role: true,
+    },
+  });
+}
+
+export async function upsertGoogleUser(
+  email: string,
+  googleId: string,
+  fullName: string,
+  avatarUrl?: string | null,
+): Promise<User> {
+  return prisma.user.upsert({
+    where: { email },
+    update: {
+      googleId,
+      avatarUrl,
+    },
+    create: {
+      email,
+      fullName,
+      googleId,
+      avatarUrl,
+      role: Role.KINDERGARTEN,
+    },
+  });
+}

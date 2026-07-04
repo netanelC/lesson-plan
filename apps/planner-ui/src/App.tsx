@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AuthProvider } from "./features/auth/context/AuthProvider";
@@ -27,8 +28,9 @@ function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID ?? ""}>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <BrowserRouter>
+        <BrowserRouter>
+          <AuthProvider>
+            <Toaster position="top-center" />
             <Routes>
               {/* --- Public Routes (No Layout) --- */}
               <Route path="/login" element={<LoginPage />} />
@@ -77,8 +79,8 @@ function App() {
                 />
               </Route>
             </Routes>
-          </BrowserRouter>
-        </AuthProvider>
+          </AuthProvider>
+        </BrowserRouter>
       </QueryClientProvider>
     </GoogleOAuthProvider>
   );

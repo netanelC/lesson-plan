@@ -2,7 +2,8 @@ import bcrypt from "bcryptjs";
 import { OAuth2Client } from "google-auth-library";
 import config from "config";
 import { Role, User } from "../db/prisma/generated/client";
-import { prisma } from "../db/prisma/prisma";
+import { getUserByEmail, createUser, upsertGoogleUser } from "../users/DAL";
+import { ConflictError, UnauthorizedError } from "../utils/errors";
 import { LoginResult } from "./types";
 
 const saltRounds = 10;
@@ -16,34 +17,26 @@ export const authService = {
     fullName: string,
   ): Promise<Partial<User>> {
     // 1. Check if user exists
-    const existing = await prisma.user.findUnique({ where: { email } });
+    const existing = await getUserByEmail(email);
     if (existing) {
-      throw new Error("User already exists");
+      throw new ConflictError("User already exists");
     }
 
     // 2. Hash the password
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // 3. Create the user
-    return prisma.user.create({
-      data: {
-        email,
-        passwordHash: hashedPassword,
-        fullName,
-        role: Role.ADMIN, // Default to ADMIN so they can create content immediately
-      },
-      select: {
-        id: true,
-        email: true,
-        fullName: true,
-        role: true,
-      },
+    return createUser({
+      email,
+      passwordHash: hashedPassword,
+      fullName,
+      role: Role.ADMIN, // Default to ADMIN so they can create content immediately
     });
   },
 
   async validateUser(email: string, password: string): Promise<LoginResult> {
     // 1. Find user
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await getUserByEmail(email);
 
     // 2. Hybrid Check: If user exists but has no password (Google-only account)
     if (user?.passwordHash == null) {
@@ -71,23 +64,15 @@ export const authService = {
 
     const payload = ticket.getPayload();
     if (payload?.email == null) {
-      throw new Error("Invalid Google Token");
+      throw new UnauthorizedError("Invalid Google Token");
     }
 
     // Upsert: Find user by email, or create them if they don't exist
-    return prisma.user.upsert({
-      where: { email: payload.email },
-      update: {
-        googleId: payload.sub,
-        avatarUrl: payload.picture,
-      },
-      create: {
-        email: payload.email,
-        fullName: payload.name ?? "Google User",
-        googleId: payload.sub,
-        avatarUrl: payload.picture,
-        role: Role.KINDERGARTEN,
-      },
-    });
+    return upsertGoogleUser(
+      payload.email,
+      payload.sub,
+      payload.name ?? "Google User",
+      payload.picture,
+    );
   },
 };

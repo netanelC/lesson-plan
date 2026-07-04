@@ -47,16 +47,18 @@ export const FilterBar = ({
   }, [debouncedSearch]);
 
   const handleAgeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onFilterChange({ ageGroup: e.target.value as AgeGroupType });
+    const val = e.target.value;
+    onFilterChange({ ageGroup: val ? (val as AgeGroupType) : undefined });
   };
 
   const handleFrameChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onFilterChange({ frame: e.target.value as FrameType });
+    const val = e.target.value;
+    onFilterChange({ frame: val ? (val as FrameType) : undefined });
   };
 
   const handleMyPlansChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // If checked, filter by current userId. If unchecked, clear the authorId filter.
-    onFilterChange({ authorId: e.target.checked ? userId : "" });
+    // If checked, filter by current userId. If unchecked, clear the authorId filter by setting undefined.
+    onFilterChange({ authorId: e.target.checked ? userId : undefined });
   };
 
   return (
@@ -99,7 +101,7 @@ export const FilterBar = ({
           קבוצת גיל
         </label>
         <select
-          value={filters.ageGroup ?? AGE_GROUPS[0]}
+          value={filters.ageGroup ?? ""}
           onChange={handleAgeChange}
           className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
         >
