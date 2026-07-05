@@ -5,6 +5,8 @@ import { api } from "../../../lib/axios";
 // Update this interface to match your Backend & Prisma Schema exactly
 export type LessonPlanWithAttachments = LessonPlan & {
   attachments: Attachment[];
+  author: { fullName: string };
+  savedBy?: { userId: string }[];
 };
 
 export const useLessonPlan = (id: string) => {

@@ -10,6 +10,7 @@ import { LessonPlanList } from "./features/lessonPlan/components/LessonPlanList"
 import { CreateLessonPlanForm } from "./features/lessonPlan/components/CreateLessonPlanForm";
 import { LessonPlanDetails } from "./features/lessonPlan/components/LessonPlanDetails";
 import { EditLessonPlan } from "./features/lessonPlan/components/EditLessonPlan";
+import { SavedPlansList } from "./features/lessonPlan/components/SavedPlansList";
 import { UserManagement } from "./features/users/components/UserManagement";
 
 const queryClient = new QueryClient();
@@ -74,6 +75,14 @@ function App() {
                   element={
                     <Layout>
                       <UserManagement />
+                    </Layout>
+                  }
+                />
+                <Route
+                  path="/saved"
+                  element={
+                    <Layout>
+                      <SavedPlansList />
                     </Layout>
                   }
                 />

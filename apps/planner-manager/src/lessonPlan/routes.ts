@@ -10,6 +10,8 @@ import {
   removeAttachmentController,
   updateLessonPlanController,
   uploadAttachmentController,
+  toggleSaveLessonPlanController,
+  getSavedLessonPlansController,
 } from "./controller";
 
 export function lessonPlanRoutes(fastify: FastifyInstance): void {
@@ -38,4 +40,12 @@ export function lessonPlanRoutes(fastify: FastifyInstance): void {
   fastify.get("/attachments/:id/download", downloadAttachmentController);
   fastify.post("/:id/attachments", uploadAttachmentController);
   fastify.delete("/attachments/:fileId", removeAttachmentController);
+
+  // Bookmark Routes
+  fastify.post("/:id/save", toggleSaveLessonPlanController);
+  fastify.get(
+    "/saved",
+    { schema: { querystring: LessonFiltersSchema } },
+    getSavedLessonPlansController,
+  );
 }

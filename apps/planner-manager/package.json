@@ -8,6 +8,7 @@
     "build": "tsc --project tsconfig.build.json && pnpm run prisma:copy && tsc-alias -p tsconfig.build.json && pnpm run assets:copy",
     "start": "pnpm run build && cd dist && node ./server.js",
     "lint": "eslint .",
+    "check-types": "tsc --noEmit",
     "pretest": "pnpm run test:db:push",
     "test": "vitest run",
     "test:db:push": "pnpm prisma db push --schema ./src/db/prisma/schema.prisma",

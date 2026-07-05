@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import type { Prisma } from '../db/prisma/generated/client';
+import type { Prisma } from '../../db/prisma/generated/client';
 
 export const buildMockLessonPlan = (overrides?: Partial<Prisma.LessonPlanUncheckedCreateInput>): Prisma.LessonPlanUncheckedCreateInput => ({
   id: faker.string.uuid(),

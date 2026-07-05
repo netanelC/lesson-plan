@@ -1,12 +1,8 @@
 import { useState, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import { type LessonFilters, AGE_LABELS } from "@repo/types";
-import { toast } from "react-hot-toast";
 import { useAuth } from "../../auth/context/AuthContext";
-import { useLessonPlans } from "../api/useLessonPlans";
-import { useDeleteLessonPlan } from "../api/useDeleteLessonPlan";
-import { extractApiError } from "../../../lib/axios";
-import { ConfirmModal } from "../../../components/ui/ConfirmModal";
+import { useSavedPlans } from "../api/useSavedPlans";
 import { FilterBar } from "./FilterBar";
 import { BookmarkButton } from "./BookmarkButton";
 
@@ -44,29 +40,24 @@ const HighlightText = ({
   );
 };
 
-export const LessonPlanList = () => {
+export const SavedPlansList = () => {
   const { user } = useAuth();
   const listTopRef = useRef<HTMLDivElement>(null);
 
-  // Initialize state including authorId for "My Plans" logic
   const [filters, setFilters] = useState<LessonFilters>({
     page: 1,
     limit: 12,
     search: undefined,
-    authorId: undefined,
     ageGroup: undefined,
     frame: undefined,
   });
-  
-  const [planToDelete, setPlanToDelete] = useState<string | null>(null);
 
   const {
     data: response,
     isLoading,
     isError,
     isFetching,
-  } = useLessonPlans(filters);
-  const deleteMutation = useDeleteLessonPlan();
+  } = useSavedPlans(filters);
 
   const isFirstLoad = isLoading;
   const isBackgroundLoading = isFetching && !!response;
@@ -91,7 +82,6 @@ export const LessonPlanList = () => {
       page: 1,
       limit: 12,
       search: undefined,
-      authorId: undefined,
       ageGroup: undefined,
       frame: undefined,
     });
@@ -106,29 +96,6 @@ export const LessonPlanList = () => {
 
   const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     handleFilterChange({ limit: Number(e.target.value) });
-  };
-
-  const canDelete = (planAuthorId: string) => {
-    if (user.role === "OWNER") return true;
-    if (user.role === "ADMIN" && user.id === planAuthorId) return true;
-    return false;
-  };
-
-  const handleDeleteClick = (e: React.MouseEvent, id: string) => {
-    e.preventDefault();
-    setPlanToDelete(id);
-  };
-
-  const confirmDelete = async () => {
-    if (planToDelete === null) return;
-    try {
-      await deleteMutation.mutateAsync(planToDelete);
-      toast.success("המערך נמחק בהצלחה!");
-    } catch (error) {
-      toast.error(extractApiError(error) || "שגיאה במחיקת המערך");
-    } finally {
-      setPlanToDelete(null);
-    }
   };
 
   const renderContent = () => {
@@ -153,17 +120,17 @@ export const LessonPlanList = () => {
       return (
         <div className="text-center py-20 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
           <h3 className="text-lg font-bold text-gray-900">
-            לא נמצאו מערכי שיעור
+            אין מערכים שמורים
           </h3>
           <p className="mt-2 text-sm text-gray-500">
-            לא מצאנו תוצאות שתואמות את החיפוש שלך.
+            עדיין לא שמרת אף מערך שיעור. ניתן לשמור מערכים מתוך ספריית המערכים.
           </p>
-          <button
-            onClick={resetFilters}
-            className="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-bold rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 transition-colors"
+          <Link
+            to="/"
+            className="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-bold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
           >
-            נקה את כל המסננים
-          </button>
+            חזרה לספרייה
+          </Link>
         </div>
       );
     }
@@ -181,53 +148,8 @@ export const LessonPlanList = () => {
               key={plan.id}
               className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
             >
-              {canDelete(plan.authorId) && (
-                <button
-                  onClick={(e) => handleDeleteClick(e, plan.id)}
-                  disabled={deleteMutation.isPending}
-                  className="absolute top-4 left-4 p-2 bg-white/90 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded-full transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 shadow-sm border border-transparent hover:border-red-100 z-10"
-                  title="מחק מערך"
-                >
-                  {deleteMutation.isPending ? (
-                    <svg
-                      className="animate-spin h-5 w-5"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                  ) : (
-                    <svg
-                      className="h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                  )}
-                </button>
-              )}
-              
               {/* Bookmark Button */}
-              <div className="absolute top-4 left-14 z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+              <div className="absolute top-4 right-4 z-10 opacity-100 transition-opacity">
                 <BookmarkButton 
                   lessonPlanId={plan.id} 
                   initialIsSaved={Array.isArray(plan.savedBy) && plan.savedBy.some((s) => s.userId === user.id)} 
@@ -235,7 +157,7 @@ export const LessonPlanList = () => {
                 />
               </div>
 
-              <div className="p-6 flex-1">
+              <div className="p-6 flex-1 pt-12">
                 <h3 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors mb-2">
                   <HighlightText text={plan.topic} highlight={filters.search} />
                 </h3>
@@ -345,18 +267,6 @@ export const LessonPlanList = () => {
                     disabled={filters.page === 1}
                     className="relative inline-flex items-center rounded-r-md px-3 py-2 text-indigo-600 ring-1 ring-inset ring-gray-300 hover:bg-indigo-50 focus:z-20 focus:outline-offset-0 disabled:opacity-40 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
                   >
-                    <svg
-                      className="h-5 w-5"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
                     <span className="mr-1 text-sm font-bold">הקודם</span>
                   </button>
 
@@ -383,18 +293,6 @@ export const LessonPlanList = () => {
                     className="relative inline-flex items-center rounded-l-md px-3 py-2 text-indigo-600 ring-1 ring-inset ring-gray-300 hover:bg-indigo-50 focus:z-20 focus:outline-offset-0 disabled:opacity-40 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
                   >
                     <span className="ml-1 text-sm font-bold">הבא</span>
-                    <svg
-                      className="h-5 w-5"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
                   </button>
                 </nav>
                 <div className="mt-2 text-xs text-gray-500">
@@ -413,26 +311,19 @@ export const LessonPlanList = () => {
   return (
     <div className="space-y-8" dir="rtl" ref={listTopRef}>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 pb-5">
-        <div>
-          <h1 className="text-3xl font-extrabold text-gray-900">
-            ספריית המערכים
-          </h1>
-          <p className="text-gray-500 mt-1">מאגר הידע המשותף של מערכי השיעור</p>
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-red-100 text-red-500 rounded-full">
+             <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+             </svg>
+          </div>
+          <div>
+            <h1 className="text-3xl font-extrabold text-gray-900">
+              המערכים השמורים שלי
+            </h1>
+            <p className="text-gray-500 mt-1">הספרייה האישית שלך</p>
+          </div>
         </div>
-        <Link
-          to="/create"
-          className="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors"
-        >
-          <svg
-            className="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-          </svg>
-          צור מערך חדש
-        </Link>
       </div>
 
       <FilterBar
@@ -442,16 +333,6 @@ export const LessonPlanList = () => {
       />
 
       {renderContent()}
-
-      <ConfirmModal
-        isOpen={planToDelete !== null}
-        onClose={() => setPlanToDelete(null)}
-        onConfirm={confirmDelete}
-        title="מחיקת מערך"
-        message="האם את בטוחה שברצונך למחוק מערך זה? פעולה זו לא ניתנת לביטול."
-        confirmText="מחק מערך"
-        isDestructive={true}
-      />
     </div>
   );
 };

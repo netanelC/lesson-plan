@@ -12,7 +12,6 @@ export async function createLessonPlanController(
 ): Promise<FastifyReply> {
   const newLessonPlan = await lessonPlanService.createLessonPlan(
     request.body,
-    // @ts-expect-error - Assuming user is injected by authenticate middleware
     request.user.id,
   );
 
@@ -103,4 +102,26 @@ export async function removeAttachmentController(
 ): Promise<FastifyReply> {
   await lessonPlanService.removeAttachment(req.params.fileId);
   return reply.status(status.NO_CONTENT).send();
+}
+
+export async function toggleSaveLessonPlanController(
+  req: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+): Promise<FastifyReply> {
+  const result = await lessonPlanService.toggleSaveLessonPlan(
+    req.user.id,
+    req.params.id,
+  );
+  return reply.status(status.OK).send({
+    success: true,
+    data: result,
+  });
+}
+
+export async function getSavedLessonPlansController(
+  req: FastifyRequest<{ Querystring: LessonFilters }>,
+  reply: FastifyReply,
+): Promise<FastifyReply> {
+  const result = await lessonPlanService.getSavedLessonPlans(req.user.id, req.query);
+  return reply.status(status.OK).send(result);
 }

@@ -13,6 +13,8 @@ import { SectionCard } from "../../../components/ui/SectionCard";
 import { exportLessonPlanToWord } from "../../../utils/exportToWord";
 import { Can } from "../../../components/auth/Can";
 import { api, extractApiError } from "../../../lib/axios";
+import { useAuth } from "../../auth/context/AuthContext";
+import { BookmarkButton } from "./BookmarkButton";
 
 const AudioPlayer = ({ fileId }: { fileId: string }) => {
   const [url, setUrl] = useState<string | null>(null);
@@ -50,6 +52,7 @@ const AudioPlayer = ({ fileId }: { fileId: string }) => {
 export const LessonPlanDetails = () => {
   const { id } = useParams<{ id: string }>();
   const { data: plan, isLoading, isError } = useLessonPlan(id!);
+  const { user } = useAuth();
 
   const componentRef = useRef<HTMLDivElement>(null);
 
@@ -176,9 +179,16 @@ export const LessonPlanDetails = () => {
         {/* Header Card */}
         <div className="bg-white p-8 rounded-xl border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 print:border-none print:shadow-none print:p-0 print:mb-6">
           <div>
-            <h1 className="text-3xl font-extrabold text-gray-900">
-              {plan.topic}
-            </h1>
+            <div className="flex items-center gap-4">
+              <h1 className="text-3xl font-extrabold text-gray-900">
+                {plan.topic}
+              </h1>
+              <BookmarkButton 
+                lessonPlanId={plan.id} 
+                initialIsSaved={Array.isArray(plan.savedBy) && plan.savedBy.some((s) => s.userId === user.id)} 
+                className="print:hidden border border-gray-200"
+              />
+            </div>
             <p className="text-lg text-indigo-600 font-medium mt-1">
               {plan.superGoal}
             </p>

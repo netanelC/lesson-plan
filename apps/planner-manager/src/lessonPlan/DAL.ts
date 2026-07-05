@@ -57,6 +57,11 @@ export async function getAll(
             email: true,
           },
         },
+        savedBy: {
+          select: {
+            userId: true,
+          },
+        },
       },
     }),
   ]);
@@ -83,6 +88,11 @@ export async function getById(id: string): Promise<LessonPlan | null> {
         },
       },
       attachments: true,
+      savedBy: {
+        select: {
+          userId: true,
+        },
+      },
     },
   });
 }
@@ -167,3 +177,97 @@ export async function deleteAttachment(id: string): Promise<Attachment> {
     where: { id },
   });
 }
+
+export async function toggleSaveLessonPlan(userId: string, lessonPlanId: string): Promise<{ saved: boolean }> {
+  const existing = await prisma.savedLessonPlan.findUnique({
+    where: {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      userId_lessonPlanId: {
+        userId,
+        lessonPlanId,
+      },
+    },
+  });
+
+  if (existing) {
+    await prisma.savedLessonPlan.delete({
+      where: {
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        userId_lessonPlanId: {
+          userId,
+          lessonPlanId,
+        },
+      },
+    });
+    return { saved: false };
+  } else {
+    await prisma.savedLessonPlan.create({
+      data: {
+        userId,
+        lessonPlanId,
+      },
+    });
+    return { saved: true };
+  }
+}
+
+export async function getSavedLessonPlans(
+  userId: string,
+  filters: LessonFilters,
+  skip: number,
+  limit: number,
+): Promise<[number, LessonPlan[]]> {
+  const whereClause: Prisma.SavedLessonPlanWhereInput = {
+    userId,
+  };
+
+  const lessonPlanQuery: Prisma.LessonPlanWhereInput = {};
+
+  if (filters.ageGroup) lessonPlanQuery.ageGroup = filters.ageGroup;
+  if (filters.frame) lessonPlanQuery.frame = filters.frame;
+
+  if (filters.search !== undefined) {
+    lessonPlanQuery.OR = [
+      { topic: { contains: filters.search, mode: "insensitive" } },
+      { unit: { contains: filters.search, mode: "insensitive" } },
+      { superGoal: { contains: filters.search, mode: "insensitive" } },
+    ];
+  }
+
+  if (Object.keys(lessonPlanQuery).length > 0) {
+    whereClause.lessonPlan = lessonPlanQuery;
+  }
+
+  const result = await Promise.all([
+    prisma.savedLessonPlan.count({ where: whereClause }),
+    prisma.savedLessonPlan.findMany({
+      where: whereClause,
+      skip,
+      take: limit,
+      orderBy: { savedAt: "desc" },
+      include: {
+        lessonPlan: {
+          include: {
+            author: {
+              select: {
+                id: true,
+                fullName: true,
+                role: true,
+                email: true,
+              },
+            },
+            savedBy: {
+              select: {
+                userId: true,
+              },
+            },
+          },
+        },
+      },
+    }),
+  ]);
+
+  const [total, savedPlans] = result;
+  return [total, savedPlans.map((sp) => sp.lessonPlan)];
+}
+

@@ -55,6 +55,12 @@ export const Layout = ({ children }: LayoutProps) => {
                 >
                   צור מערך שיעור
                 </Link>
+                <Link
+                  to="/saved"
+                  className={`text-sm font-medium transition-colors ${isActive("/saved") ? "text-indigo-600" : "text-gray-500 hover:text-gray-900"}`}
+                >
+                  המערכים השמורים שלי
+                </Link>
                 {user.role === "OWNER" && (
                   <Link
                     to="/users"
