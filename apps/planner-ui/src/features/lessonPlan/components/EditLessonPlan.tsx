@@ -13,7 +13,9 @@ import { LessonPlanForm } from "./LessonPlanForm";
 export const EditLessonPlan = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [attachmentToDelete, setAttachmentToDelete] = useState<string | null>(null);
+  const [attachmentToDelete, setAttachmentToDelete] = useState<string | null>(
+    null,
+  );
 
   // 1. Fetch existing data (Ensure ID exists)
   const { data: plan, isLoading, isError } = useLessonPlan(id ?? "");

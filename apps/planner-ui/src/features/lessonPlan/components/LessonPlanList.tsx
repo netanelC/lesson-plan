@@ -57,7 +57,7 @@ export const LessonPlanList = () => {
     ageGroup: undefined,
     frame: undefined,
   });
-  
+
   const [planToDelete, setPlanToDelete] = useState<string | null>(null);
 
   const {
@@ -225,12 +225,15 @@ export const LessonPlanList = () => {
                   )}
                 </button>
               )}
-              
+
               {/* Bookmark Button */}
               <div className="absolute top-4 left-14 z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                <BookmarkButton 
-                  lessonPlanId={plan.id} 
-                  initialIsSaved={Array.isArray(plan.savedBy) && plan.savedBy.some((s) => s.userId === user.id)} 
+                <BookmarkButton
+                  lessonPlanId={plan.id}
+                  initialIsSaved={
+                    Array.isArray(plan.savedBy) &&
+                    plan.savedBy.some((s) => s.userId === user.id)
+                  }
                   className="bg-white/90 shadow-sm border border-transparent hover:border-red-100"
                 />
               </div>

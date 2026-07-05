@@ -183,9 +183,12 @@ export const LessonPlanDetails = () => {
               <h1 className="text-3xl font-extrabold text-gray-900">
                 {plan.topic}
               </h1>
-              <BookmarkButton 
-                lessonPlanId={plan.id} 
-                initialIsSaved={Array.isArray(plan.savedBy) && plan.savedBy.some((s) => s.userId === user.id)} 
+              <BookmarkButton
+                lessonPlanId={plan.id}
+                initialIsSaved={
+                  Array.isArray(plan.savedBy) &&
+                  plan.savedBy.some((s) => s.userId === user.id)
+                }
                 className="print:hidden border border-gray-200"
               />
             </div>

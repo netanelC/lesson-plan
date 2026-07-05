@@ -19,7 +19,11 @@ describe("LessonPlan Controller Integration Tests", () => {
     // Setup Test User
     const userData = buildMockUser();
     testUser = await prisma.user.create({ data: userData });
-    const token = app.jwt.sign({ id: testUser.id, role: testUser.role, email: testUser.email });
+    const token = app.jwt.sign({
+      id: testUser.id,
+      role: testUser.role,
+      email: testUser.email,
+    });
     authHeader = `Bearer ${token}`;
   });
 
@@ -30,7 +34,7 @@ describe("LessonPlan Controller Integration Tests", () => {
   describe("POST /api/lessons", () => {
     it("should successfully create a lesson plan and return 201", async () => {
       // Arrange
-      const mockPlan = buildMockLessonPlan({ 
+      const mockPlan = buildMockLessonPlan({
         authorId: testUser.id,
         operativeGoals: ["Goal 1", "Goal 2", "Goal 3"],
       });
@@ -47,7 +51,8 @@ describe("LessonPlan Controller Integration Tests", () => {
 
       // Assert
       const body = JSON.parse(response.payload);
-      if (response.statusCode !== 201) fs.writeFileSync('post_error.json', JSON.stringify(body, null, 2));
+      if (response.statusCode !== 201)
+        fs.writeFileSync("post_error.json", JSON.stringify(body, null, 2));
       expect(response.statusCode).toBe(201);
       expect(body.success).toBe(true);
       expect(body.data.topic).toBe(payload.topic);
@@ -56,7 +61,7 @@ describe("LessonPlan Controller Integration Tests", () => {
 
     it("should return 400 Bad Request when topic is too short", async () => {
       // Arrange
-      const mockPlan = buildMockLessonPlan({ 
+      const mockPlan = buildMockLessonPlan({
         authorId: testUser.id,
         operativeGoals: ["Goal 1", "Goal 2", "Goal 3"],
       });
@@ -82,8 +87,12 @@ describe("LessonPlan Controller Integration Tests", () => {
   describe("GET /api/lessons", () => {
     it("should fetch paginated lesson plans", async () => {
       // Arrange
-      await prisma.lessonPlan.create({ data: buildMockLessonPlan({ authorId: testUser.id }) });
-      await prisma.lessonPlan.create({ data: buildMockLessonPlan({ authorId: testUser.id }) });
+      await prisma.lessonPlan.create({
+        data: buildMockLessonPlan({ authorId: testUser.id }),
+      });
+      await prisma.lessonPlan.create({
+        data: buildMockLessonPlan({ authorId: testUser.id }),
+      });
 
       // Act
       const response = await app.inject({
@@ -101,7 +110,9 @@ describe("LessonPlan Controller Integration Tests", () => {
 
     it("should correctly filter lesson plans by authorId", async () => {
       // Arrange
-      await prisma.lessonPlan.create({ data: buildMockLessonPlan({ authorId: testUser.id }) });
+      await prisma.lessonPlan.create({
+        data: buildMockLessonPlan({ authorId: testUser.id }),
+      });
 
       // Act
       const response = await app.inject({
@@ -112,9 +123,15 @@ describe("LessonPlan Controller Integration Tests", () => {
 
       // Assert
       expect(response.statusCode).toBe(200);
-      const body = JSON.parse(response.payload) as { data: { authorId: string }[] };
+      const body = JSON.parse(response.payload) as {
+        data: { authorId: string }[];
+      };
       expect(body.data).toBeInstanceOf(Array);
-      expect(body.data.every((p: { authorId: string }) => p.authorId === testUser.id)).toBe(true);
+      expect(
+        body.data.every(
+          (p: { authorId: string }) => p.authorId === testUser.id,
+        ),
+      ).toBe(true);
     });
   });
 
@@ -137,8 +154,11 @@ describe("LessonPlan Controller Integration Tests", () => {
   describe("PUT /api/lessons/:id", () => {
     it("should successfully update an existing lesson plan", async () => {
       // Arrange
-      const plan = await prisma.lessonPlan.create({ 
-        data: buildMockLessonPlan({ authorId: testUser.id, operativeGoals: ["1", "2", "3"] }) 
+      const plan = await prisma.lessonPlan.create({
+        data: buildMockLessonPlan({
+          authorId: testUser.id,
+          operativeGoals: ["1", "2", "3"],
+        }),
       });
       const newTopic = "Updated Topic";
 
@@ -152,7 +172,8 @@ describe("LessonPlan Controller Integration Tests", () => {
 
       // Assert
       const body = JSON.parse(response.payload);
-      if (response.statusCode !== 200) fs.writeFileSync('put_error.json', JSON.stringify(body, null, 2));
+      if (response.statusCode !== 200)
+        fs.writeFileSync("put_error.json", JSON.stringify(body, null, 2));
       expect(response.statusCode).toBe(200);
       expect(body.success).toBe(true);
       expect(body.data.topic).toBe(newTopic);
@@ -177,7 +198,9 @@ describe("LessonPlan Controller Integration Tests", () => {
   describe("DELETE /api/lessons/:id", () => {
     it("should delete an existing lesson plan", async () => {
       // Arrange
-      const plan = await prisma.lessonPlan.create({ data: buildMockLessonPlan({ authorId: testUser.id }) });
+      const plan = await prisma.lessonPlan.create({
+        data: buildMockLessonPlan({ authorId: testUser.id }),
+      });
 
       // Act
       const response = await app.inject({
@@ -188,8 +211,10 @@ describe("LessonPlan Controller Integration Tests", () => {
 
       // Assert
       expect(response.statusCode).toBe(204);
-      
-      const checkDb = await prisma.lessonPlan.findUnique({ where: { id: plan.id } });
+
+      const checkDb = await prisma.lessonPlan.findUnique({
+        where: { id: plan.id },
+      });
       expect(checkDb).toBeNull();
     });
 
@@ -211,7 +236,9 @@ describe("LessonPlan Controller Integration Tests", () => {
   describe("Bookmarks", () => {
     it("should toggle save/unsave for a lesson plan", async () => {
       // Arrange
-      const plan = await prisma.lessonPlan.create({ data: buildMockLessonPlan({ authorId: testUser.id }) });
+      const plan = await prisma.lessonPlan.create({
+        data: buildMockLessonPlan({ authorId: testUser.id }),
+      });
 
       // Act 1: Save
       const saveResponse = await app.inject({
@@ -242,8 +269,12 @@ describe("LessonPlan Controller Integration Tests", () => {
 
     it("should fetch saved lesson plans", async () => {
       // Arrange
-      const plan1 = await prisma.lessonPlan.create({ data: buildMockLessonPlan({ authorId: testUser.id }) });
-      const plan2 = await prisma.lessonPlan.create({ data: buildMockLessonPlan({ authorId: testUser.id }) });
+      const plan1 = await prisma.lessonPlan.create({
+        data: buildMockLessonPlan({ authorId: testUser.id }),
+      });
+      const plan2 = await prisma.lessonPlan.create({
+        data: buildMockLessonPlan({ authorId: testUser.id }),
+      });
 
       await prisma.savedLessonPlan.create({
         data: {

@@ -14,7 +14,7 @@ export const useToggleBookmark = () => {
   return useMutation({
     mutationFn: async (id: string) => {
       const response = await api.post<ToggleBookmarkResponse>(
-        `/lessons/${id}/save`
+        `/lessons/${id}/save`,
       );
       return response.data;
     },

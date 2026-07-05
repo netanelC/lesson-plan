@@ -25,7 +25,7 @@ export function ConfirmModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden bg-black/40 backdrop-blur-sm transition-opacity">
-      <div 
+      <div
         className="relative mx-auto w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-right shadow-2xl transition-all duration-300 scale-100 opacity-100"
         dir="rtl"
       >

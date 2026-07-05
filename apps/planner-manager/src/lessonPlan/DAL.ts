@@ -178,7 +178,10 @@ export async function deleteAttachment(id: string): Promise<Attachment> {
   });
 }
 
-export async function toggleSaveLessonPlan(userId: string, lessonPlanId: string): Promise<{ saved: boolean }> {
+export async function toggleSaveLessonPlan(
+  userId: string,
+  lessonPlanId: string,
+): Promise<{ saved: boolean }> {
   const existing = await prisma.savedLessonPlan.findUnique({
     where: {
       // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -270,4 +273,3 @@ export async function getSavedLessonPlans(
   const [total, savedPlans] = result;
   return [total, savedPlans.map((sp) => sp.lessonPlan)];
 }
-

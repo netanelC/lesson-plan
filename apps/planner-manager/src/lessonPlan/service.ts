@@ -134,7 +134,10 @@ export async function removeAttachment(fileId: string): Promise<void> {
   await dal.deleteAttachment(fileId);
 }
 
-export async function toggleSaveLessonPlan(userId: string, lessonPlanId: string): Promise<{ saved: boolean }> {
+export async function toggleSaveLessonPlan(
+  userId: string,
+  lessonPlanId: string,
+): Promise<{ saved: boolean }> {
   const plan = await dal.getById(lessonPlanId);
   if (!plan) {
     throw new NotFoundError("המערך לא נמצא");
@@ -142,8 +145,14 @@ export async function toggleSaveLessonPlan(userId: string, lessonPlanId: string)
   return dal.toggleSaveLessonPlan(userId, lessonPlanId);
 }
 
-export async function getSavedLessonPlans(userId: string, filters: LessonFilters): Promise<{
-  data: (LessonPlan & { author: { fullName: string }; savedBy: { userId: string }[] })[];
+export async function getSavedLessonPlans(
+  userId: string,
+  filters: LessonFilters,
+): Promise<{
+  data: (LessonPlan & {
+    author: { fullName: string };
+    savedBy: { userId: string }[];
+  })[];
   meta: {
     total: number;
     page: number;
@@ -155,7 +164,12 @@ export async function getSavedLessonPlans(userId: string, filters: LessonFilters
   const limit = filters.limit;
   const skip = (page - DEFAULT_PAGE) * limit;
 
-  const [total, rawLessonPlans] = await dal.getSavedLessonPlans(userId, filters, skip, limit);
+  const [total, rawLessonPlans] = await dal.getSavedLessonPlans(
+    userId,
+    filters,
+    skip,
+    limit,
+  );
 
   return {
     data: rawLessonPlans as unknown as (LessonPlan & {

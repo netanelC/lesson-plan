@@ -119,9 +119,7 @@ export const SavedPlansList = () => {
     if (!response?.data || response.data.length === 0) {
       return (
         <div className="text-center py-20 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-          <h3 className="text-lg font-bold text-gray-900">
-            אין מערכים שמורים
-          </h3>
+          <h3 className="text-lg font-bold text-gray-900">אין מערכים שמורים</h3>
           <p className="mt-2 text-sm text-gray-500">
             עדיין לא שמרת אף מערך שיעור. ניתן לשמור מערכים מתוך ספריית המערכים.
           </p>
@@ -150,9 +148,12 @@ export const SavedPlansList = () => {
             >
               {/* Bookmark Button */}
               <div className="absolute top-4 right-4 z-10 opacity-100 transition-opacity">
-                <BookmarkButton 
-                  lessonPlanId={plan.id} 
-                  initialIsSaved={Array.isArray(plan.savedBy) && plan.savedBy.some((s) => s.userId === user.id)} 
+                <BookmarkButton
+                  lessonPlanId={plan.id}
+                  initialIsSaved={
+                    Array.isArray(plan.savedBy) &&
+                    plan.savedBy.some((s) => s.userId === user.id)
+                  }
                   className="bg-white/90 shadow-sm border border-transparent hover:border-red-100"
                 />
               </div>
@@ -313,9 +314,9 @@ export const SavedPlansList = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 pb-5">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-red-100 text-red-500 rounded-full">
-             <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
-                <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-             </svg>
+            <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+              <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
           </div>
           <div>
             <h1 className="text-3xl font-extrabold text-gray-900">

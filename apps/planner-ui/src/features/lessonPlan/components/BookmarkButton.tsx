@@ -8,7 +8,11 @@ interface BookmarkButtonProps {
   className?: string;
 }
 
-export const BookmarkButton = ({ lessonPlanId, initialIsSaved, className = "" }: BookmarkButtonProps) => {
+export const BookmarkButton = ({
+  lessonPlanId,
+  initialIsSaved,
+  className = "",
+}: BookmarkButtonProps) => {
   const [isSaved, setIsSaved] = useState(initialIsSaved);
   const toggleMutation = useToggleBookmark();
 

@@ -122,6 +122,9 @@ export async function getSavedLessonPlansController(
   req: FastifyRequest<{ Querystring: LessonFilters }>,
   reply: FastifyReply,
 ): Promise<FastifyReply> {
-  const result = await lessonPlanService.getSavedLessonPlans(req.user.id, req.query);
+  const result = await lessonPlanService.getSavedLessonPlans(
+    req.user.id,
+    req.query,
+  );
   return reply.status(status.OK).send(result);
 }

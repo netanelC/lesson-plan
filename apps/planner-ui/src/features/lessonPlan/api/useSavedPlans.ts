@@ -8,9 +8,12 @@ export const useSavedPlans = (filters: LessonFilters) => {
   return useQuery({
     queryKey: ["saved-plans", filters],
     queryFn: async () => {
-      const response = await api.get<PaginatedResponse<ExtendedLessonPlan>>("/lessons/saved", {
-        params: filters,
-      });
+      const response = await api.get<PaginatedResponse<ExtendedLessonPlan>>(
+        "/lessons/saved",
+        {
+          params: filters,
+        },
+      );
       return response.data;
     },
   });
