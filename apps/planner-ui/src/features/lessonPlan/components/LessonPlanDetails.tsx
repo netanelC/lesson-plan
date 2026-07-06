@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useReactToPrint } from "react-to-print";
 import {
   type LessonFlowStep,
@@ -9,7 +9,9 @@ import {
 } from "@repo/types";
 import { toast } from "react-hot-toast";
 import { useLessonPlan } from "../api/useLessonPlan";
+import { useDeleteLessonPlan } from "../api/useDeleteLessonPlan";
 import { SectionCard } from "../../../components/ui/SectionCard";
+import { ConfirmModal } from "../../../components/ui/ConfirmModal";
 import { exportLessonPlanToWord } from "../../../utils/exportToWord";
 import { Can } from "../../../components/auth/Can";
 import { api, extractApiError } from "../../../lib/axios";
@@ -37,7 +39,7 @@ const AudioPlayer = ({ fileId }: { fileId: string }) => {
   if (url == null) {
     return (
       <div className="text-xs text-gray-400 mt-1.5 h-8 flex items-center">
-        טוען נגן אודיו...
+        טעינת נגן אודיו...
       </div>
     );
   }
@@ -52,7 +54,10 @@ const AudioPlayer = ({ fileId }: { fileId: string }) => {
 export const LessonPlanDetails = () => {
   const { id } = useParams<{ id: string }>();
   const { data: plan, isLoading, isError } = useLessonPlan(id!);
+  const deleteMutation = useDeleteLessonPlan();
+  const navigate = useNavigate();
   const { user } = useAuth();
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const componentRef = useRef<HTMLDivElement>(null);
 
@@ -83,8 +88,21 @@ export const LessonPlanDetails = () => {
     }
   };
 
+  const confirmDelete = async () => {
+    if (!plan) return;
+    try {
+      await deleteMutation.mutateAsync(plan.id);
+      toast.success("המערך נמחק בהצלחה!");
+      void navigate("/");
+    } catch (error) {
+      toast.error(extractApiError(error) || "שגיאה במחיקת המערך");
+    } finally {
+      setIsDeleteModalOpen(false);
+    }
+  };
+
   if (isLoading)
-    return <div className="text-center py-20">טוען מערך שיעור...</div>;
+    return <div className="text-center py-20">טעינת מערך שיעור...</div>;
   if (isError || !plan)
     return (
       <div className="text-center py-20 text-red-600">שגיאה בטעינת המערך</div>
@@ -126,11 +144,11 @@ export const LessonPlanDetails = () => {
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            ייצאי ל- Word
+            ייצוא ל- Word
           </button>
 
           <button
-            onClick={() => handlePrint()}
+            onClick={() => { void handlePrint(); }}
             className="flex items-center gap-2 text-indigo-700 bg-indigo-50 border border-indigo-100 px-4 py-2 rounded-lg hover:bg-indigo-100 transition-colors font-medium text-sm"
           >
             <svg
@@ -146,7 +164,7 @@ export const LessonPlanDetails = () => {
                 d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
               />
             </svg>
-            ייצאי ל- PDF
+            ייצוא ל- PDF
           </button>
 
           {/* --- Conditional Edit Button using Can Component --- */}
@@ -168,8 +186,53 @@ export const LessonPlanDetails = () => {
                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                 />
               </svg>
-              ערכי מערך
+              עריכת מערך
             </Link>
+          </Can>
+
+          <Can perform="delete" data={{ authorId: plan.authorId }}>
+            <button
+              onClick={() => setIsDeleteModalOpen(true)}
+              disabled={deleteMutation.isPending}
+              className="flex items-center gap-2 text-red-700 bg-red-50 border border-red-100 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors font-medium text-sm disabled:opacity-50"
+            >
+              {deleteMutation.isPending ? (
+                <svg
+                  className="animate-spin h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              )}
+              מחיקת מערך
+            </button>
           </Can>
         </div>
       </div>
@@ -277,6 +340,32 @@ export const LessonPlanDetails = () => {
                 </svg>
               }
             >
+              {(() => {
+                const steps = plan.lessonFlow as LessonFlowStep[];
+                const totalDuration = steps.reduce(
+                  (sum, step) => sum + (step.durationMinutes || 0),
+                  0,
+                );
+                return totalDuration > 0 ? (
+                  <div className="mb-6 flex items-center gap-2 text-sm font-bold text-green-700 bg-green-50 px-3 py-2 rounded-lg w-fit print:border print:border-green-200">
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    משך זמן כולל: {totalDuration} דקות
+                  </div>
+                ) : null;
+              })()}
+
               <div className="relative border-r-2 border-green-100 mr-3 space-y-8 pr-6 print:border-none print:mr-0 print:pr-0 print:space-y-4">
                 {(plan.lessonFlow as LessonFlowStep[]).map((step, idx) => (
                   <div
@@ -408,7 +497,7 @@ export const LessonPlanDetails = () => {
                         <button
                           onClick={() => handleDownload(file.id)}
                           className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors shrink-0"
-                          title="הורד קובץ"
+                          title="הורדת קובץ"
                         >
                           <svg
                             className="h-5 w-5"
@@ -472,6 +561,16 @@ export const LessonPlanDetails = () => {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="מחיקת מערך"
+        message="האם למחוק מערך זה? (פעולה זו לא ניתנת לביטול)"
+        confirmText="מחיקת מערך"
+        isDestructive={true}
+      />
     </div>
   );
 };

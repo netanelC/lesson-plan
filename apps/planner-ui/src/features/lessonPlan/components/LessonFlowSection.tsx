@@ -71,7 +71,7 @@ export const LessonFlowSection = ({
                   ? "text-gray-400 hover:text-red-500 hover:bg-red-50"
                   : "text-gray-300 cursor-not-allowed",
               )}
-              aria-label="מחק שלב"
+              aria-label="מחיקת שלב"
             >
               <svg
                 className="h-5 w-5"
@@ -97,7 +97,7 @@ export const LessonFlowSection = ({
         }
         className="w-full py-2 border-2 border-dashed text-indigo-600 font-medium hover:bg-indigo-50 rounded-md transition-colors"
       >
-        + הוסיפי חלק חדש
+        + הוספת חלק חדש
       </button>
     </div>
   );

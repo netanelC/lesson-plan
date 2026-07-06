@@ -67,7 +67,7 @@ export const OperativeGoalsSection = ({
                     ? "text-red-500 hover:bg-red-50"
                     : "text-gray-300 cursor-not-allowed",
                 )}
-                aria-label="מחק מטרה"
+                aria-label="מחיקת מטרה"
               >
                 <svg
                   className="h-5 w-5"
@@ -91,7 +91,7 @@ export const OperativeGoalsSection = ({
           onClick={() => setValue("operativeGoals", [...goals, ""])}
           className="text-indigo-600 text-sm font-medium"
         >
-          + הוסיפי מטרה נוספת
+          + הוספת מטרה נוספת
         </button>
       </div>
     </div>

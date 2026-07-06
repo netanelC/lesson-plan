@@ -41,7 +41,7 @@ export const BookmarkButton = ({
           ? "text-red-500 bg-red-50 hover:bg-red-100"
           : "text-gray-400 bg-gray-50 hover:text-red-500 hover:bg-red-50"
       } ${className}`}
-      title={isSaved ? "הסר מהשמורים" : "שמור מערך"}
+      title={isSaved ? "הסרה מהשמורים" : "שמירת מערך"}
     >
       <svg
         className={`w-5 h-5 transition-transform ${isSaved ? "scale-110 fill-current" : "fill-none"}`}

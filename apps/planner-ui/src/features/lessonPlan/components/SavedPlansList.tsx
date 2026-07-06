@@ -1,8 +1,12 @@
 import { useState, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "react-hot-toast";
 import { type LessonFilters, AGE_LABELS } from "@repo/types";
 import { useAuth } from "../../auth/context/AuthContext";
 import { useSavedPlans } from "../api/useSavedPlans";
+import { useDeleteLessonPlan } from "../api/useDeleteLessonPlan";
+import { extractApiError } from "../../../lib/axios";
+import { ConfirmModal } from "../../../components/ui/ConfirmModal";
 import { FilterBar } from "./FilterBar";
 import { BookmarkButton } from "./BookmarkButton";
 
@@ -58,6 +62,8 @@ export const SavedPlansList = () => {
     isError,
     isFetching,
   } = useSavedPlans(filters);
+  const deleteMutation = useDeleteLessonPlan();
+  const [planToDelete, setPlanToDelete] = useState<string | null>(null);
 
   const isFirstLoad = isLoading;
   const isBackgroundLoading = isFetching && !!response;
@@ -98,6 +104,29 @@ export const SavedPlansList = () => {
     handleFilterChange({ limit: Number(e.target.value) });
   };
 
+  const canDelete = (planAuthorId: string) => {
+    if (user.role === "OWNER") return true;
+    if (user.role === "ADMIN" && user.id === planAuthorId) return true;
+    return false;
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    setPlanToDelete(id);
+  };
+
+  const confirmDelete = async () => {
+    if (planToDelete === null) return;
+    try {
+      await deleteMutation.mutateAsync(planToDelete);
+      toast.success("המערך נמחק בהצלחה!");
+    } catch (error) {
+      toast.error(extractApiError(error) || "שגיאה במחיקת המערך");
+    } finally {
+      setPlanToDelete(null);
+    }
+  };
+
   const renderContent = () => {
     if (isFirstLoad) {
       return (
@@ -111,7 +140,7 @@ export const SavedPlansList = () => {
       return (
         <div className="text-center p-10 bg-red-50 text-red-600 rounded-lg border border-red-100">
           <p className="font-bold">שגיאה בטעינת המערכים.</p>
-          <p className="text-sm">וודאי שהשרת רץ ושהחיבור תקין.</p>
+          <p className="text-sm">יש לוודא שהשרת רץ ושהחיבור תקין.</p>
         </div>
       );
     }
@@ -146,8 +175,53 @@ export const SavedPlansList = () => {
               key={plan.id}
               className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
             >
+              {canDelete(plan.authorId) && (
+                <button
+                  onClick={(e) => handleDeleteClick(e, plan.id)}
+                  disabled={deleteMutation.isPending}
+                  className="absolute top-4 left-4 p-2 bg-white/90 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded-full transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 shadow-sm border border-transparent hover:border-red-100 z-10"
+                  title="מחיקת מערך"
+                >
+                  {deleteMutation.isPending ? (
+                    <svg
+                      className="animate-spin h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  )}
+                </button>
+              )}
+
               {/* Bookmark Button */}
-              <div className="absolute top-4 right-4 z-10 opacity-100 transition-opacity">
+              <div className={`absolute top-4 ${canDelete(plan.authorId) ? 'left-14' : 'left-4'} z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity`}>
                 <BookmarkButton
                   lessonPlanId={plan.id}
                   initialIsSaved={
@@ -201,8 +275,11 @@ export const SavedPlansList = () => {
                       clipRule="evenodd"
                     />
                   </svg>
-                  {Array.isArray(plan.lessonFlow) ? plan.lessonFlow.length : 0}{" "}
-                  שלבים
+                  {Array.isArray(plan.lessonFlow) ? plan.lessonFlow.length : 0} שלבים
+                  {(() => {
+                    const duration = (plan.lessonFlow as import("@repo/types").LessonFlowStep[]).reduce((sum, step) => sum + (step.durationMinutes || 0), 0);
+                    return duration > 0 ? ` (${duration} דק')` : "";
+                  })()}
                 </span>
 
                 <div className="flex items-center gap-1.5 px-2 overflow-hidden">
@@ -222,7 +299,7 @@ export const SavedPlansList = () => {
                   to={`/plan/${plan.id}`}
                   className="text-indigo-600 text-xs font-bold flex items-center gap-1 hover:gap-1.5 transition-all cursor-pointer shrink-0"
                 >
-                  צפי בפרטים
+                  צפייה בפרטים
                   <svg
                     className="h-3.5 w-3.5 rotate-180"
                     viewBox="0 0 20 20"
@@ -243,7 +320,7 @@ export const SavedPlansList = () => {
         {response.meta.totalPages > 0 && (
           <div className="flex flex-col-reverse md:flex-row justify-between items-center mt-12 py-6 border-t border-gray-100 gap-6">
             <div className="flex items-center gap-2 text-sm text-gray-600 font-medium">
-              <span>הצג:</span>
+              <span>תצוגה:</span>
               <select
                 value={filters.limit}
                 onChange={handleLimitChange}
@@ -297,7 +374,7 @@ export const SavedPlansList = () => {
                   </button>
                 </nav>
                 <div className="mt-2 text-xs text-gray-500">
-                  מציג עמוד {filters.page} מתוך {response.meta.totalPages}
+                  עמוד {filters.page} מתוך {response.meta.totalPages}
                 </div>
               </div>
             )}
@@ -320,7 +397,7 @@ export const SavedPlansList = () => {
           </div>
           <div>
             <h1 className="text-3xl font-extrabold text-gray-900">
-              המערכים השמורים שלי
+              המועדפים שלי
             </h1>
             <p className="text-gray-500 mt-1">הספרייה האישית שלך</p>
           </div>
@@ -334,6 +411,16 @@ export const SavedPlansList = () => {
       />
 
       {renderContent()}
+
+      <ConfirmModal
+        isOpen={planToDelete !== null}
+        onClose={() => setPlanToDelete(null)}
+        onConfirm={confirmDelete}
+        title="מחיקת מערך"
+        message="האם למחוק מערך זה? (פעולה זו לא ניתנת לביטול)"
+        confirmText="מחיקת מערך"
+        isDestructive={true}
+      />
     </div>
   );
 };

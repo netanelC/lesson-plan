@@ -7,6 +7,7 @@ import { useLessonPlans } from "../api/useLessonPlans";
 import { useDeleteLessonPlan } from "../api/useDeleteLessonPlan";
 import { extractApiError } from "../../../lib/axios";
 import { ConfirmModal } from "../../../components/ui/ConfirmModal";
+import { Can } from "../../../components/auth/Can";
 import { FilterBar } from "./FilterBar";
 import { BookmarkButton } from "./BookmarkButton";
 
@@ -144,7 +145,7 @@ export const LessonPlanList = () => {
       return (
         <div className="text-center p-10 bg-red-50 text-red-600 rounded-lg border border-red-100">
           <p className="font-bold">שגיאה בטעינת המערכים.</p>
-          <p className="text-sm">וודאי שהשרת רץ ושהחיבור תקין.</p>
+          <p className="text-sm">יש לוודא שהשרת רץ ושהחיבור תקין.</p>
         </div>
       );
     }
@@ -162,7 +163,7 @@ export const LessonPlanList = () => {
             onClick={resetFilters}
             className="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-bold rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 transition-colors"
           >
-            נקה את כל המסננים
+            ניקוי המסננים
           </button>
         </div>
       );
@@ -186,7 +187,7 @@ export const LessonPlanList = () => {
                   onClick={(e) => handleDeleteClick(e, plan.id)}
                   disabled={deleteMutation.isPending}
                   className="absolute top-4 left-4 p-2 bg-white/90 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded-full transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 shadow-sm border border-transparent hover:border-red-100 z-10"
-                  title="מחק מערך"
+                  title="מחיקת מערך"
                 >
                   {deleteMutation.isPending ? (
                     <svg
@@ -227,7 +228,7 @@ export const LessonPlanList = () => {
               )}
 
               {/* Bookmark Button */}
-              <div className="absolute top-4 left-14 z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+              <div className={`absolute top-4 ${canDelete(plan.authorId) ? 'left-14' : 'left-4'} z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity`}>
                 <BookmarkButton
                   lessonPlanId={plan.id}
                   initialIsSaved={
@@ -281,8 +282,11 @@ export const LessonPlanList = () => {
                       clipRule="evenodd"
                     />
                   </svg>
-                  {Array.isArray(plan.lessonFlow) ? plan.lessonFlow.length : 0}{" "}
-                  שלבים
+                  {Array.isArray(plan.lessonFlow) ? plan.lessonFlow.length : 0} שלבים
+                  {(() => {
+                    const duration = (plan.lessonFlow as import("@repo/types").LessonFlowStep[]).reduce((sum, step) => sum + (step.durationMinutes || 0), 0);
+                    return duration > 0 ? ` (${duration} דק')` : "";
+                  })()}
                 </span>
 
                 <div className="flex items-center gap-1.5 px-2 overflow-hidden">
@@ -302,7 +306,7 @@ export const LessonPlanList = () => {
                   to={`/plan/${plan.id}`}
                   className="text-indigo-600 text-xs font-bold flex items-center gap-1 hover:gap-1.5 transition-all cursor-pointer shrink-0"
                 >
-                  צפי בפרטים
+                  צפייה בפרטים
                   <svg
                     className="h-3.5 w-3.5 rotate-180"
                     viewBox="0 0 20 20"
@@ -323,7 +327,7 @@ export const LessonPlanList = () => {
         {response.meta.totalPages > 0 && (
           <div className="flex flex-col-reverse md:flex-row justify-between items-center mt-12 py-6 border-t border-gray-100 gap-6">
             <div className="flex items-center gap-2 text-sm text-gray-600 font-medium">
-              <span>הצג:</span>
+              <span>תצוגה:</span>
               <select
                 value={filters.limit}
                 onChange={handleLimitChange}
@@ -401,7 +405,7 @@ export const LessonPlanList = () => {
                   </button>
                 </nav>
                 <div className="mt-2 text-xs text-gray-500">
-                  מציג עמוד {filters.page} מתוך {response.meta.totalPages}
+                  עמוד {filters.page} מתוך {response.meta.totalPages}
                 </div>
               </div>
             )}
@@ -422,20 +426,22 @@ export const LessonPlanList = () => {
           </h1>
           <p className="text-gray-500 mt-1">מאגר הידע המשותף של מערכי השיעור</p>
         </div>
-        <Link
-          to="/create"
-          className="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors"
-        >
-          <svg
-            className="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            aria-hidden="true"
+        <Can perform="create">
+          <Link
+            to="/create"
+            className="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors"
           >
-            <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-          </svg>
-          צור מערך חדש
-        </Link>
+            <svg
+              className="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+            </svg>
+            יצירת מערך שיעור
+          </Link>
+        </Can>
       </div>
 
       <FilterBar
@@ -451,8 +457,8 @@ export const LessonPlanList = () => {
         onClose={() => setPlanToDelete(null)}
         onConfirm={confirmDelete}
         title="מחיקת מערך"
-        message="האם את בטוחה שברצונך למחוק מערך זה? פעולה זו לא ניתנת לביטול."
-        confirmText="מחק מערך"
+        message="האם למחוק מערך זה? (פעולה זו לא ניתנת לביטול)"
+        confirmText="מחיקת מערך"
         isDestructive={true}
       />
     </div>

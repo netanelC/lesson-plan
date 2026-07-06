@@ -11,6 +11,7 @@ export async function getAllUsers(): Promise<Partial<User>[]> {
       role: true,
       avatarUrl: true,
       createdAt: true,
+      isActive: true,
     },
   });
   return users;
@@ -64,5 +65,25 @@ export async function upsertGoogleUser(
       avatarUrl,
       role: Role.KINDERGARTEN,
     },
+  });
+}
+
+export async function updateUserStatus(id: string, isActive: boolean): Promise<User> {
+  return prisma.user.update({
+    where: { id },
+    data: { isActive },
+  });
+}
+
+export async function deleteUser(id: string): Promise<User> {
+  return prisma.user.delete({
+    where: { id },
+  });
+}
+
+export async function updateUserPassword(id: string, passwordHash: string): Promise<User> {
+  return prisma.user.update({
+    where: { id },
+    data: { passwordHash },
   });
 }

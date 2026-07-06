@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/naming-convention */
 import fs from "fs";
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi  } from "vitest";
 import { FastifyInstance } from "fastify";
 import { buildApp } from "../app";
 import { prisma } from "../db/prisma/prisma";
+import { fileStorageService } from "../fileStorage/index";
 import { buildMockUser } from "../tests/factories/user.factory";
 import { buildMockLessonPlan } from "../tests/factories/lessonplan.factory";
 
@@ -11,13 +12,15 @@ describe("LessonPlan Controller Integration Tests", () => {
   let app: FastifyInstance;
   let testUser: { id: string; role: string; email: string };
   let authHeader: string;
+  let kinderUser: { id: string; role: string; email: string };
+  let kinderAuthHeader: string;
 
   beforeAll(async () => {
     app = buildApp();
     await app.ready();
 
     // Setup Test User
-    const userData = buildMockUser();
+    const userData = buildMockUser({ role: "ADMIN" });
     testUser = await prisma.user.create({ data: userData });
     const token = app.jwt.sign({
       id: testUser.id,
@@ -25,6 +28,15 @@ describe("LessonPlan Controller Integration Tests", () => {
       email: testUser.email,
     });
     authHeader = `Bearer ${token}`;
+
+    const kinderData = buildMockUser({ role: "KINDERGARTEN" });
+    kinderUser = await prisma.user.create({ data: kinderData });
+    const kinderToken = app.jwt.sign({
+      id: kinderUser.id,
+      role: kinderUser.role,
+      email: kinderUser.email,
+    });
+    kinderAuthHeader = `Bearer ${kinderToken}`;
   });
 
   afterAll(async () => {
@@ -81,6 +93,23 @@ describe("LessonPlan Controller Integration Tests", () => {
       const body = JSON.parse(response.payload);
       expect(body.success).toBe(false);
       expect(body.error).toBe("Validation Error");
+    });
+
+    it("should return 403 Forbidden for KINDERGARTEN role", async () => {
+      // Arrange
+      const mockPlan = buildMockLessonPlan({ authorId: kinderUser.id, operativeGoals: ["Goal 1", "Goal 2", "Goal 3"] });
+      const { id, createdAt, updatedAt, authorId, ...payload } = mockPlan;
+
+      // Act
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/lessons",
+        headers: { Authorization: kinderAuthHeader },
+        payload,
+      });
+
+      // Assert
+      expect(response.statusCode).toBe(403);
     });
   });
 
@@ -191,7 +220,44 @@ describe("LessonPlan Controller Integration Tests", () => {
       // Assert
       expect(response.statusCode).toBe(404);
       const body = JSON.parse(response.payload);
-      expect(body.error).toBe("המערך לא נמצא");
+      expect(body.error).toBe("Lesson plan not found");
+    });
+
+    it("should return 403 Forbidden for KINDERGARTEN role", async () => {
+      // Arrange
+      const plan = await prisma.lessonPlan.create({
+        data: buildMockLessonPlan({ authorId: testUser.id }),
+      });
+
+      // Act
+      const response = await app.inject({
+        method: "PUT",
+        url: `/api/lessons/${plan.id}`,
+        headers: { Authorization: kinderAuthHeader },
+        payload: { topic: "Updated Topic" },
+      });
+
+      // Assert
+      expect(response.statusCode).toBe(403);
+    });
+
+    it("should return 403 Forbidden for ADMIN trying to edit another user's plan", async () => {
+      // Arrange
+      const otherAdmin = await prisma.user.create({ data: buildMockUser({ role: "ADMIN" }) });
+      const plan = await prisma.lessonPlan.create({
+        data: buildMockLessonPlan({ authorId: otherAdmin.id }),
+      });
+
+      // Act
+      const response = await app.inject({
+        method: "PUT",
+        url: `/api/lessons/${plan.id}`,
+        headers: { Authorization: authHeader },
+        payload: { topic: "Hacked Topic" },
+      });
+
+      // Assert
+      expect(response.statusCode).toBe(403);
     });
   });
 
@@ -229,7 +295,83 @@ describe("LessonPlan Controller Integration Tests", () => {
       // Assert
       expect(response.statusCode).toBe(404);
       const body = JSON.parse(response.payload);
-      expect(body.error).toBe("המערך לא נמצא");
+      expect(body.error).toBe("Lesson plan not found");
+    });
+  });
+
+  describe("Attachments API", () => {
+    it("should successfully generate a download URL for an attachment", async () => {
+      // Arrange
+      const plan = await prisma.lessonPlan.create({
+        data: buildMockLessonPlan({ authorId: testUser.id }),
+      });
+      const file = await prisma.attachment.create({
+        data: {
+          lessonPlanId: plan.id,
+          filename: "test.pdf",
+          url: "http://mock/lesson-attachments/s3-key",
+          fileType: "application/pdf",
+          sizeBytes: 1024,
+        }
+      });
+      const spy = vi.spyOn(fileStorageService, "getDownloadUrl").mockResolvedValue("http://mock-url/test.pdf");
+
+      // Act
+      const response = await app.inject({
+        method: "GET",
+        url: `/api/lessons/attachments/${file.id}/download`,
+        headers: { Authorization: authHeader },
+      });
+
+      // Assert
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.payload);
+      expect(body.url).toBe("http://mock-url/test.pdf");
+      
+      spy.mockRestore();
+    });
+
+    it("should return 403 Forbidden if KINDERGARTEN tries to remove an attachment", async () => {
+      // Arrange
+      const plan = await prisma.lessonPlan.create({
+        data: buildMockLessonPlan({ authorId: testUser.id }),
+      });
+      const file = await prisma.attachment.create({
+        data: {
+          lessonPlanId: plan.id,
+          filename: "test.pdf",
+          url: "http://mock/lesson-attachments/s3-key",
+          fileType: "application/pdf",
+          sizeBytes: 1024,
+        }
+      });
+
+      // Act
+      const response = await app.inject({
+        method: "DELETE",
+        url: `/api/lessons/attachments/${file.id}`,
+        headers: { Authorization: kinderAuthHeader },
+      });
+
+      // Assert
+      expect(response.statusCode).toBe(403);
+    });
+
+    it("should return 403 Forbidden if KINDERGARTEN tries to upload an attachment", async () => {
+      // Arrange
+      const plan = await prisma.lessonPlan.create({
+        data: buildMockLessonPlan({ authorId: testUser.id }),
+      });
+
+      // Act
+      const response = await app.inject({
+        method: "POST",
+        url: `/api/lessons/${plan.id}/attachments`,
+        headers: { Authorization: kinderAuthHeader },
+      });
+
+      // Assert
+      expect(response.statusCode).toBe(403);
     });
   });
 

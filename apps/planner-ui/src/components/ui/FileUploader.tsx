@@ -66,7 +66,7 @@ export const FileUploader = ({
             />
           </svg>
           <span className="text-sm font-medium">
-            לחצי להוספת קבצים (תמונות, מסמכים, שירים)
+            לחיצה להוספת קבצים (תמונות, מסמכים, שירים)
           </span>
         </div>
       </div>
@@ -110,7 +110,7 @@ export const FileUploader = ({
                   onClick={() => onRemoveExisting(file.id)}
                   disabled={disabled}
                   className="text-gray-400 hover:text-red-500 p-1"
-                  title="מחק קובץ"
+                  title="מחיקת קובץ"
                 >
                   <svg
                     className="h-5 w-5"

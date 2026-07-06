@@ -18,6 +18,12 @@ export class NotFoundError extends AppError {
   }
 }
 
+export class ForbiddenError extends AppError {
+  public constructor(message = "Forbidden") {
+    super(status.FORBIDDEN, message);
+  }
+}
+
 export class BadRequestError extends AppError {
   public constructor(message = "Bad Request") {
     super(status.BAD_REQUEST, message);

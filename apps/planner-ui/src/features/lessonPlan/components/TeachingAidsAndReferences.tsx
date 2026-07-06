@@ -65,7 +65,7 @@ export const TeachingAidsAndReferences = ({
               type="button"
               onClick={() => handleRemoveAid(i)}
               className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-              aria-label="מחק אמצעי הוראה"
+              aria-label="מחיקת אמצעי הוראה"
             >
               <svg
                 className="h-5 w-5"
@@ -88,7 +88,7 @@ export const TeachingAidsAndReferences = ({
           onClick={handleAddAid}
           className="text-indigo-600 text-sm font-bold flex items-center gap-1"
         >
-          + הוסיפי אמצעי הוראה
+          + הוספת אמצעי הוראה
         </button>
       </div>
 
@@ -110,7 +110,7 @@ export const TeachingAidsAndReferences = ({
               type="button"
               onClick={() => handleRemoveReference(i)}
               className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-              aria-label="מחק מקור מידע"
+              aria-label="מחיקת מקור מידע"
             >
               <svg
                 className="h-5 w-5"
@@ -133,7 +133,7 @@ export const TeachingAidsAndReferences = ({
           onClick={handleAddReference}
           className="text-indigo-600 text-sm font-bold flex items-center gap-1"
         >
-          + הוסיפי מקור מידע
+          + הוספת מקור מידע
         </button>
       </div>
     </div>

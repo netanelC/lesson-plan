@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AuthProvider } from "./features/auth/context/AuthProvider";
 import { LoginPage } from "./features/auth/components/LoginPage";
+import { RegisterPage } from "./features/auth/components/RegisterPage";
 import { RequireAuth } from "./features/auth/components/RequireAuth";
 import { Layout } from "./components/Layout";
 import { LessonPlanList } from "./features/lessonPlan/components/LessonPlanList";
@@ -35,6 +36,7 @@ function App() {
             <Routes>
               {/* --- Public Routes (No Layout) --- */}
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
 
               {/* --- Protected Routes (With Layout) --- */}
               <Route element={<RequireAuth />}>

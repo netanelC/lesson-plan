@@ -83,7 +83,7 @@ export const EditLessonPlan = () => {
         className="text-center p-10 bg-red-50 text-red-600 rounded-lg"
         dir="rtl"
       >
-        שגיאה בטעינת המערך לעריכה. וודא שהשרת רץ.
+        שגיאה בטעינת המערך לעריכה. יש לוודא שהשרת רץ.
       </div>
     );
   }
@@ -107,7 +107,7 @@ export const EditLessonPlan = () => {
           removeAttachmentMutation.isPending
         }
         title="עריכת מערך שיעור"
-        submitLabel="שמור שינויים"
+        submitLabel="שמירת שינויים"
       />
       <ConfirmModal
         isOpen={attachmentToDelete !== null}
@@ -115,7 +115,7 @@ export const EditLessonPlan = () => {
         onConfirm={confirmRemoveAttachment}
         title="מחיקת קובץ"
         message="האם למחוק קובץ זה? (פעולה זו לא ניתנת לביטול)"
-        confirmText="מחק קובץ"
+        confirmText="מחיקת קובץ"
         isDestructive={true}
       />
     </>

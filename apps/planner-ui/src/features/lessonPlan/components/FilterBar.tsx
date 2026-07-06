@@ -76,7 +76,7 @@ export const FilterBar = ({
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="חפשי מערך..."
+            placeholder="חיפוש מערך..."
             className="w-full pr-10 pl-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm"
           />
           <svg
@@ -133,6 +133,26 @@ export const FilterBar = ({
         </select>
       </div>
 
+      {/* Sort Select */}
+      <div className="w-full md:w-48">
+        <label className="block text-xs font-bold text-gray-500 mb-1 mr-1">
+          מיון
+        </label>
+        <select
+          value={`${filters.sortBy ?? "createdAt"}_${filters.sortOrder ?? "desc"}`}
+          onChange={(e) => {
+            const [sortBy, sortOrder] = e.target.value.split("_");
+            onFilterChange({ sortBy: sortBy as "createdAt" | "topic", sortOrder: sortOrder as "asc" | "desc" });
+          }}
+          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+        >
+          <option value="createdAt_desc">תאריך (מהחדש לישן)</option>
+          <option value="createdAt_asc">תאריך (מהישן לחדש)</option>
+          <option value="topic_asc">נושא (א-ת)</option>
+          <option value="topic_desc">נושא (ת-א)</option>
+        </select>
+      </div>
+
       {/* My Plans Checkbox (Only for Admins/Owners) */}
       {(userRole === "OWNER" || userRole === "ADMIN") && (
         <div className="flex items-center gap-2 h-[42px] px-2 bg-gray-50 rounded-lg border border-gray-200">
@@ -157,7 +177,7 @@ export const FilterBar = ({
         type="button"
         onClick={onReset}
         className="text-gray-400 hover:text-red-500 p-2.5 transition-colors group"
-        title="נקה הכל"
+        title="ניקוי הכל"
       >
         <svg
           className="h-6 w-6 group-hover:rotate-180 transition-transform duration-500"

@@ -1,3 +1,4 @@
+/* eslint-disable import-x/exports-last */
 /* eslint-disable @typescript-eslint/no-magic-numbers */
 /* eslint-disable @typescript-eslint/naming-convention */
 import { z } from "zod";
@@ -8,7 +9,10 @@ import {
   type FrameType,
   LessonPlanSchema,
   type User,
+  type RoleType,
 } from "./generated";
+
+export const MIN_PASSWORD_LENGTH = 8;
 
 // Omit the fields the database handles automatically
 const BaseHttpCreateSchema = LessonPlanSchema.omit({
@@ -50,14 +54,16 @@ export const LessonFiltersSchema = z.object({
   ageGroup: AgeGroupSchema.optional(),
   frame: FrameSchema.optional(),
   authorId: z.string().optional(),
+  sortBy: z.enum(["createdAt", "topic"]).default("createdAt").optional(),
+  sortOrder: z.enum(["asc", "desc"]).default("desc").optional(),
 });
 
 export const LoginSchema = z.object({
   email: z.email("כתובת אימייל לא תקינה"),
-  password: z.string().min(1, "חובה להזין סיסמה"),
+  password: z.string().min(MIN_PASSWORD_LENGTH, `הסיסמה חייבת להכיל לפחות ${MIN_PASSWORD_LENGTH} תווים`),
 });
 export const RegisterSchema = LoginSchema.extend({
-  fullName: z.string().min(2, "שם מלא חייב להכיל לפחות 2 תווים"),
+  fullName: z.string().min(2, "שם מלא חייב להכיל לפחות 2 תווים").refine(val => val.trim().includes(" "), "נא להזין שם פרטי ושם משפחה"),
 });
 
 export type CreateLessonPlanBody = z.infer<typeof CreateLessonPlanSchema>;
@@ -111,3 +117,10 @@ export const FIELD_LABELS: Record<string, string> = {
   references: "מקורות",
   lessonFlow: "חלקי השיעור",
 };
+
+export const ROLE_LABELS = {
+  KINDERGARTEN: "גננ/ת (צפייה בלבד)",
+  ADMIN: "מנהל/ת (יצירת תכנים)",
+  OWNER: "בעלים",
+} as const satisfies Record<RoleType, string>;
+export const ROLES = Object.keys(ROLE_LABELS) as RoleType[];

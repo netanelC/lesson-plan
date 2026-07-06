@@ -18,9 +18,22 @@ export async function registerController(
     request.body.fullName,
   );
 
-  // 2. Send Success
+  // 2. Sign Token
+  const token = await reply.jwtSign(
+    {
+      id: newUser.id as string,
+      email: newUser.email as string,
+      role: newUser.role as string,
+    },
+    {
+      expiresIn: "7d",
+    },
+  );
+
+  // 3. Send Success
   return reply.status(status.CREATED).send({
     message: "User created successfully",
+    token,
     user: newUser,
   });
 }
@@ -41,6 +54,10 @@ export async function loginController(
   if (!user) {
     // Generic error message for security (don't say "User not found")
     throw new UnauthorizedError("Invalid email or password");
+  }
+
+  if (!user.isActive) {
+    throw new UnauthorizedError("משתמש מושעה");
   }
 
   // 2. Sign Token (The "Session Ticket")
@@ -74,6 +91,10 @@ export async function googleLoginController(
 
   // 1. Verify token and get/create user in DB
   const user = await authService.verifyGoogleToken(token);
+
+  if (!user.isActive) {
+    throw new UnauthorizedError("משתמש מושעה");
+  }
 
   // 2. Sign JWT for our app
   const appToken = await reply.jwtSign(

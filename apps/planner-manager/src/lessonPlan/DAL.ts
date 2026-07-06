@@ -47,7 +47,7 @@ export async function getAll(
       where: whereClause,
       skip,
       take: limit,
-      orderBy: { createdAt: "desc" },
+      orderBy: { [filters.sortBy ?? "createdAt"]: filters.sortOrder ?? "desc" },
       include: {
         author: {
           select: {
@@ -159,11 +159,13 @@ export async function addAttachment(
  * @param id The ID of the attachment
  * @returns The Attachment record or null if not found
  */
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function getAttachmentById(
   id: string,
-): Promise<Attachment | null> {
+) {
   return prisma.attachment.findUnique({
     where: { id },
+    include: { lessonPlan: true },
   });
 }
 
@@ -247,7 +249,10 @@ export async function getSavedLessonPlans(
       where: whereClause,
       skip,
       take: limit,
-      orderBy: { savedAt: "desc" },
+      orderBy:
+        filters.sortBy === "topic"
+          ? { lessonPlan: { topic: filters.sortOrder ?? "desc" } }
+          : { savedAt: filters.sortOrder ?? "desc" },
       include: {
         lessonPlan: {
           include: {

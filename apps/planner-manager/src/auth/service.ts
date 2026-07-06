@@ -30,7 +30,7 @@ export const authService = {
       email,
       passwordHash: hashedPassword,
       fullName,
-      role: Role.ADMIN, // Default to ADMIN so they can create content immediately
+      role: Role.KINDERGARTEN, // Default to KINDERGARTEN (read-only)
     });
   },
 
@@ -53,6 +53,7 @@ export const authService = {
       email: user.email,
       fullName: user.fullName,
       role: user.role,
+      isActive: user.isActive,
     };
   },
 

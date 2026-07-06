@@ -1,6 +1,7 @@
 import { type ReactNode, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../features/auth/context/AuthContext";
+import { Can } from "./auth/Can";
 
 interface LayoutProps {
   children: ReactNode;
@@ -49,26 +50,28 @@ export const Layout = ({ children }: LayoutProps) => {
                 >
                   ספריית המערכים
                 </Link>
-                <Link
-                  to="/create"
-                  className={`text-sm font-medium transition-colors ${isActive("/create") ? "text-indigo-600" : "text-gray-500 hover:text-gray-900"}`}
-                >
-                  צור מערך שיעור
-                </Link>
+                <Can perform="create">
+                  <Link
+                    to="/create"
+                    className={`text-sm font-medium transition-colors ${isActive("/create") ? "text-indigo-600" : "text-gray-500 hover:text-gray-900"}`}
+                  >
+                    יצירת מערך שיעור
+                  </Link>
+                </Can>
                 <Link
                   to="/saved"
                   className={`text-sm font-medium transition-colors ${isActive("/saved") ? "text-indigo-600" : "text-gray-500 hover:text-gray-900"}`}
                 >
-                  המערכים השמורים שלי
+                  המועדפים שלי
                 </Link>
-                {user.role === "OWNER" && (
+                <Can perform="viewUsers">
                   <Link
                     to="/users"
                     className={`text-sm font-medium transition-colors ${isActive("/users") ? "text-indigo-600" : "text-gray-500 hover:text-gray-900"}`}
                   >
                     ניהול משתמשים
                   </Link>
-                )}
+                </Can>
               </nav>
             </div>
 
@@ -82,8 +85,8 @@ export const Layout = ({ children }: LayoutProps) => {
                   {user.role === "OWNER"
                     ? "בעלים"
                     : user.role === "ADMIN"
-                      ? "מנהל"
-                      : "גננת"}
+                      ? "מנהל/ת"
+                      : "גננ/ת"}
                 </span>
               </div>
 
@@ -113,7 +116,7 @@ export const Layout = ({ children }: LayoutProps) => {
                       }}
                       className="block w-full px-4 py-2 text-right text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700"
                     >
-                      התנתק מהמערכת
+                      התנתקות מהמערכת
                     </button>
                   </div>
                 )}

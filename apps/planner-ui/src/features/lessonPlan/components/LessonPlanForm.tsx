@@ -266,7 +266,7 @@ export const LessonPlanForm = ({
               />
             </svg>
             <span>
-              אנא תקני את השגיאות בשדות הבאים:{" "}
+              נא לתקן את השגיאות בשדות הבאים:{" "}
               {Object.keys(errors)
                 .map((key) => FIELD_LABELS[key] || key)
                 .join(", ")}
