@@ -62,7 +62,7 @@ jobs:
         run: pnpm run build
 
       - name: Format Check
-        run: pnpm exec prettier --check "**/*.{ts,tsx,md,json,yaml,yml}"
+        run: pnpm run format
 
       - name: Lint
         run: pnpm run lint
