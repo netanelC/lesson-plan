@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/naming-convention */
 import fs from "fs";
-import { describe, it, expect, beforeAll, afterAll, vi  } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import { FastifyInstance } from "fastify";
 import { buildApp } from "../app";
 import { prisma } from "../db/prisma/prisma";
@@ -97,7 +97,10 @@ describe("LessonPlan Controller Integration Tests", () => {
 
     it("should return 403 Forbidden for KINDERGARTEN role", async () => {
       // Arrange
-      const mockPlan = buildMockLessonPlan({ authorId: kinderUser.id, operativeGoals: ["Goal 1", "Goal 2", "Goal 3"] });
+      const mockPlan = buildMockLessonPlan({
+        authorId: kinderUser.id,
+        operativeGoals: ["Goal 1", "Goal 2", "Goal 3"],
+      });
       const { id, createdAt, updatedAt, authorId, ...payload } = mockPlan;
 
       // Act
@@ -243,7 +246,9 @@ describe("LessonPlan Controller Integration Tests", () => {
 
     it("should return 403 Forbidden for ADMIN trying to edit another user's plan", async () => {
       // Arrange
-      const otherAdmin = await prisma.user.create({ data: buildMockUser({ role: "ADMIN" }) });
+      const otherAdmin = await prisma.user.create({
+        data: buildMockUser({ role: "ADMIN" }),
+      });
       const plan = await prisma.lessonPlan.create({
         data: buildMockLessonPlan({ authorId: otherAdmin.id }),
       });
@@ -312,9 +317,11 @@ describe("LessonPlan Controller Integration Tests", () => {
           url: "http://mock/lesson-attachments/s3-key",
           fileType: "application/pdf",
           sizeBytes: 1024,
-        }
+        },
       });
-      const spy = vi.spyOn(fileStorageService, "getDownloadUrl").mockResolvedValue("http://mock-url/test.pdf");
+      const spy = vi
+        .spyOn(fileStorageService, "getDownloadUrl")
+        .mockResolvedValue("http://mock-url/test.pdf");
 
       // Act
       const response = await app.inject({
@@ -327,7 +334,7 @@ describe("LessonPlan Controller Integration Tests", () => {
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.payload);
       expect(body.url).toBe("http://mock-url/test.pdf");
-      
+
       spy.mockRestore();
     });
 
@@ -343,7 +350,7 @@ describe("LessonPlan Controller Integration Tests", () => {
           url: "http://mock/lesson-attachments/s3-key",
           fileType: "application/pdf",
           sizeBytes: 1024,
-        }
+        },
       });
 
       // Act

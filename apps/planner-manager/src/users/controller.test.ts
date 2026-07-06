@@ -7,7 +7,7 @@ import { buildMockUser } from "../tests/factories/user.factory";
 
 describe("Users Controller Integration Tests", () => {
   let app: FastifyInstance;
-  
+
   // Roles users
   let ownerUser: { id: string; role: string; email: string };
   let adminUser: { id: string; role: string; email: string };
@@ -24,10 +24,18 @@ describe("Users Controller Integration Tests", () => {
     await app.ready();
 
     // Setup Test Users
-    ownerUser = await prisma.user.create({ data: buildMockUser({ role: "OWNER" }) });
-    adminUser = await prisma.user.create({ data: buildMockUser({ role: "ADMIN" }) });
-    kinderUser = await prisma.user.create({ data: buildMockUser({ role: "KINDERGARTEN" }) });
-    targetUser = await prisma.user.create({ data: buildMockUser({ role: "KINDERGARTEN" }) });
+    ownerUser = await prisma.user.create({
+      data: buildMockUser({ role: "OWNER" }),
+    });
+    adminUser = await prisma.user.create({
+      data: buildMockUser({ role: "ADMIN" }),
+    });
+    kinderUser = await prisma.user.create({
+      data: buildMockUser({ role: "KINDERGARTEN" }),
+    });
+    targetUser = await prisma.user.create({
+      data: buildMockUser({ role: "KINDERGARTEN" }),
+    });
 
     ownerToken = `Bearer ${app.jwt.sign({ id: ownerUser.id, role: ownerUser.role, email: ownerUser.email })}`;
     adminToken = `Bearer ${app.jwt.sign({ id: adminUser.id, role: adminUser.role, email: adminUser.email })}`;
@@ -37,8 +45,8 @@ describe("Users Controller Integration Tests", () => {
   afterAll(async () => {
     await prisma.user.deleteMany({
       where: {
-        id: { in: [ownerUser.id, adminUser.id, kinderUser.id, targetUser.id] }
-      }
+        id: { in: [ownerUser.id, adminUser.id, kinderUser.id, targetUser.id] },
+      },
     });
     await app.close();
   });
@@ -51,7 +59,7 @@ describe("Users Controller Integration Tests", () => {
         url: "/api/users",
         headers: { Authorization: ownerToken },
       });
-      
+
       // Assert
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.payload);
@@ -66,7 +74,7 @@ describe("Users Controller Integration Tests", () => {
         url: "/api/users",
         headers: { Authorization: adminToken },
       });
-      
+
       // Assert
       expect(response.statusCode).toBe(200);
     });
@@ -78,7 +86,7 @@ describe("Users Controller Integration Tests", () => {
         url: "/api/users",
         headers: { Authorization: kinderToken },
       });
-      
+
       // Assert
       expect(response.statusCode).toBe(403);
     });
@@ -93,7 +101,7 @@ describe("Users Controller Integration Tests", () => {
         headers: { Authorization: adminToken },
         payload: { role: "ADMIN" },
       });
-      
+
       // Assert
       expect(response.statusCode).toBe(403);
     });
@@ -106,7 +114,7 @@ describe("Users Controller Integration Tests", () => {
         headers: { Authorization: ownerToken },
         payload: { role: "ADMIN" },
       });
-      
+
       // Assert
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.payload);
@@ -123,7 +131,7 @@ describe("Users Controller Integration Tests", () => {
         headers: { Authorization: adminToken },
         payload: { isActive: false },
       });
-      
+
       // Assert
       expect(response.statusCode).toBe(403);
     });
@@ -136,7 +144,7 @@ describe("Users Controller Integration Tests", () => {
         headers: { Authorization: ownerToken },
         payload: { isActive: false },
       });
-      
+
       // Assert
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.payload);
@@ -153,7 +161,7 @@ describe("Users Controller Integration Tests", () => {
         headers: { Authorization: ownerToken },
         payload: { newPassword: "short" },
       });
-      
+
       // Assert
       expect(response.statusCode).toBe(400);
     });
@@ -166,7 +174,7 @@ describe("Users Controller Integration Tests", () => {
         headers: { Authorization: adminToken },
         payload: { newPassword: "validpassword123" },
       });
-      
+
       // Assert
       expect(response.statusCode).toBe(403);
     });
@@ -179,7 +187,7 @@ describe("Users Controller Integration Tests", () => {
         headers: { Authorization: adminToken },
         payload: { newPassword: "validpassword123" },
       });
-      
+
       // Assert
       expect(response.statusCode).toBe(200);
     });
@@ -192,7 +200,7 @@ describe("Users Controller Integration Tests", () => {
         headers: { Authorization: ownerToken },
         payload: { newPassword: "validpassword123" },
       });
-      
+
       // Assert
       expect(response.statusCode).toBe(200);
     });
@@ -212,23 +220,25 @@ describe("Users Controller Integration Tests", () => {
         url: `/api/users/${userToDeleteOwner.id}`,
         headers: { Authorization: adminToken },
       });
-      
+
       // Assert
       expect(response.statusCode).toBe(403);
     });
 
     it("should allow ADMIN to delete their OWN user", async () => {
       // Arrange
-      const temporaryAdmin = await prisma.user.create({ data: buildMockUser({ role: "ADMIN" }) });
+      const temporaryAdmin = await prisma.user.create({
+        data: buildMockUser({ role: "ADMIN" }),
+      });
       const tempToken = `Bearer ${app.jwt.sign({ id: temporaryAdmin.id, role: "ADMIN", email: temporaryAdmin.email })}`;
-      
+
       // Act
       const response = await app.inject({
         method: "DELETE",
         url: `/api/users/${temporaryAdmin.id}`,
         headers: { Authorization: tempToken },
       });
-      
+
       // Assert
       expect(response.statusCode).toBe(200);
     });
@@ -240,7 +250,7 @@ describe("Users Controller Integration Tests", () => {
         url: `/api/users/${userToDeleteOwner.id}`,
         headers: { Authorization: ownerToken },
       });
-      
+
       // Assert
       expect(response.statusCode).toBe(200);
     });

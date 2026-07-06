@@ -67,9 +67,11 @@ export async function resetPasswordController(
   const { id } = request.params;
   const newPassword = request.body.newPassword;
   const minPasswordLength = 8;
-  
+
   if (newPassword == null || newPassword.length < minPasswordLength) {
-    return reply.status(status.BAD_REQUEST).send({ message: "הסיסמה חייבת להכיל לפחות 8 תווים" });
+    return reply
+      .status(status.BAD_REQUEST)
+      .send({ message: "הסיסמה חייבת להכיל לפחות 8 תווים" });
   }
 
   const result = await usersService.resetPassword(id, newPassword);

@@ -160,9 +160,7 @@ export async function addAttachment(
  * @returns The Attachment record or null if not found
  */
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function getAttachmentById(
-  id: string,
-) {
+export async function getAttachmentById(id: string) {
   return prisma.attachment.findUnique({
     where: { id },
     include: { lessonPlan: true },

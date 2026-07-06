@@ -35,13 +35,15 @@ describe("Auth Controller Integration Tests", () => {
       expect(body.success).toBe(false);
       expect(body.error).toBe("Validation Error");
       // Fastify schema validation wraps messages, so we check for the string we added
-      expect(JSON.stringify(body)).toContain("הסיסמה חייבת להכיל לפחות 8 תווים");
+      expect(JSON.stringify(body)).toContain(
+        "הסיסמה חייבת להכיל לפחות 8 תווים",
+      );
     });
 
     it("should successfully register when password is 8 or more characters", async () => {
       // Arrange
       const email = `test-valid-${Date.now()}@example.com`;
-      
+
       // Act
       const response = await app.inject({
         method: "POST",
@@ -71,8 +73,8 @@ describe("Auth Controller Integration Tests", () => {
           email,
           fullName: "Original User",
           passwordHash: "hashedpass",
-          role: "ADMIN"
-        }
+          role: "ADMIN",
+        },
       });
 
       // Act
@@ -115,7 +117,9 @@ describe("Auth Controller Integration Tests", () => {
     });
 
     afterAll(async () => {
-      await prisma.user.delete({ where: { email: testUserEmail } }).catch(() => {});
+      await prisma.user
+        .delete({ where: { email: testUserEmail } })
+        .catch(() => {});
     });
 
     it("should return 401 Unauthorized for wrong password", async () => {

@@ -2,7 +2,11 @@ import { MultipartFile } from "@fastify/multipart";
 import { CreateLessonPlanBody, LessonFilters } from "@repo/types";
 import { Prisma, LessonPlan, Attachment } from "../db/prisma/generated/client";
 import { fileStorageService } from "../fileStorage";
-import { NotFoundError, InternalServerError, ForbiddenError } from "../utils/errors";
+import {
+  NotFoundError,
+  InternalServerError,
+  ForbiddenError,
+} from "../utils/errors";
 import * as dal from "./DAL";
 
 const DEFAULT_PAGE = 1;
@@ -118,7 +122,7 @@ export async function getAttachmentDownloadUrl(
 
 export async function removeAttachment(
   fileId: string,
-  user: { id: string; role: string }
+  user: { id: string; role: string },
 ): Promise<void> {
   const attachment = await dal.getAttachmentById(fileId);
   if (!attachment) {
@@ -126,7 +130,9 @@ export async function removeAttachment(
   }
 
   if (user.role === "ADMIN" && attachment.lessonPlan.authorId !== user.id) {
-    throw new ForbiddenError("Admins can only remove attachments from their own lesson plans.");
+    throw new ForbiddenError(
+      "Admins can only remove attachments from their own lesson plans.",
+    );
   }
 
   const urlParts = attachment.url.split("/lesson-attachments/");

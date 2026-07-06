@@ -68,7 +68,10 @@ export async function upsertGoogleUser(
   });
 }
 
-export async function updateUserStatus(id: string, isActive: boolean): Promise<User> {
+export async function updateUserStatus(
+  id: string,
+  isActive: boolean,
+): Promise<User> {
   return prisma.user.update({
     where: { id },
     data: { isActive },
@@ -81,7 +84,10 @@ export async function deleteUser(id: string): Promise<User> {
   });
 }
 
-export async function updateUserPassword(id: string, passwordHash: string): Promise<User> {
+export async function updateUserPassword(
+  id: string,
+  passwordHash: string,
+): Promise<User> {
   return prisma.user.update({
     where: { id },
     data: { passwordHash },

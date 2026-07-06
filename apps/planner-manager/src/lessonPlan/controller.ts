@@ -96,7 +96,9 @@ export async function uploadAttachmentController(
     throw new ForbiddenError("Cannot upload attachments.");
   }
   if (req.user.role === "ADMIN" && existing.authorId !== req.user.id) {
-    throw new ForbiddenError("Admins can only upload attachments to their own lesson plans.");
+    throw new ForbiddenError(
+      "Admins can only upload attachments to their own lesson plans.",
+    );
   }
 
   const data = await req.file();
@@ -131,7 +133,7 @@ export async function removeAttachmentController(
   if (req.user.role === "KINDERGARTEN") {
     throw new ForbiddenError("Cannot remove attachments.");
   }
-  
+
   await lessonPlanService.removeAttachment(req.params.fileId, req.user);
   return reply.status(status.NO_CONTENT).send();
 }

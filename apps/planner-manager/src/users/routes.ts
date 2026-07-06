@@ -2,12 +2,12 @@
 import { FastifyInstance } from "fastify";
 import { status } from "http-status";
 import { authenticate } from "../middleware/auth";
-import { 
-  getAllUsersController, 
+import {
+  getAllUsersController,
   updateUserRoleController,
   updateUserStatusController,
   deleteUserController,
-  resetPasswordController
+  resetPasswordController,
 } from "./controller";
 
 export function userRoutes(fastify: FastifyInstance): void {

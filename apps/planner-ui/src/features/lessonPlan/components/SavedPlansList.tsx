@@ -221,7 +221,9 @@ export const SavedPlansList = () => {
               )}
 
               {/* Bookmark Button */}
-              <div className={`absolute top-4 ${canDelete(plan.authorId) ? 'left-14' : 'left-4'} z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity`}>
+              <div
+                className={`absolute top-4 ${canDelete(plan.authorId) ? "left-14" : "left-4"} z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity`}
+              >
                 <BookmarkButton
                   lessonPlanId={plan.id}
                   initialIsSaved={
@@ -275,9 +277,15 @@ export const SavedPlansList = () => {
                       clipRule="evenodd"
                     />
                   </svg>
-                  {Array.isArray(plan.lessonFlow) ? plan.lessonFlow.length : 0} שלבים
+                  {Array.isArray(plan.lessonFlow) ? plan.lessonFlow.length : 0}{" "}
+                  שלבים
                   {(() => {
-                    const duration = (plan.lessonFlow as import("@repo/types").LessonFlowStep[]).reduce((sum, step) => sum + (step.durationMinutes || 0), 0);
+                    const duration = (
+                      plan.lessonFlow as import("@repo/types").LessonFlowStep[]
+                    ).reduce(
+                      (sum, step) => sum + (step.durationMinutes || 0),
+                      0,
+                    );
                     return duration > 0 ? ` (${duration} דק')` : "";
                   })()}
                 </span>

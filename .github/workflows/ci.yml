@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ master ]
+  push:
+    branches: [ master ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: lesson_plan_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.33.0
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Types
+        run: pnpm --filter planner-manager run migration:generate-types
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Format Check
+        run: pnpm exec prettier --check "**/*.{ts,tsx,md,json,yaml,yml}"
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Push DB Schema
+        run: pnpm --filter planner-manager run test:db:push
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/lesson_plan_test?schema=public"
+
+      - name: Test
+        run: pnpm run test
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/lesson_plan_test?schema=public"

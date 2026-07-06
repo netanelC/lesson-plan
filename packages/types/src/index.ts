@@ -60,10 +60,18 @@ export const LessonFiltersSchema = z.object({
 
 export const LoginSchema = z.object({
   email: z.email("כתובת אימייל לא תקינה"),
-  password: z.string().min(MIN_PASSWORD_LENGTH, `הסיסמה חייבת להכיל לפחות ${MIN_PASSWORD_LENGTH} תווים`),
+  password: z
+    .string()
+    .min(
+      MIN_PASSWORD_LENGTH,
+      `הסיסמה חייבת להכיל לפחות ${MIN_PASSWORD_LENGTH} תווים`,
+    ),
 });
 export const RegisterSchema = LoginSchema.extend({
-  fullName: z.string().min(2, "שם מלא חייב להכיל לפחות 2 תווים").refine(val => val.trim().includes(" "), "נא להזין שם פרטי ושם משפחה"),
+  fullName: z
+    .string()
+    .min(2, "שם מלא חייב להכיל לפחות 2 תווים")
+    .refine((val) => val.trim().includes(" "), "נא להזין שם פרטי ושם משפחה"),
 });
 
 export type CreateLessonPlanBody = z.infer<typeof CreateLessonPlanSchema>;

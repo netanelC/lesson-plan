@@ -142,7 +142,10 @@ export const FilterBar = ({
           value={`${filters.sortBy ?? "createdAt"}_${filters.sortOrder ?? "desc"}`}
           onChange={(e) => {
             const [sortBy, sortOrder] = e.target.value.split("_");
-            onFilterChange({ sortBy: sortBy as "createdAt" | "topic", sortOrder: sortOrder as "asc" | "desc" });
+            onFilterChange({
+              sortBy: sortBy as "createdAt" | "topic",
+              sortOrder: sortOrder as "asc" | "desc",
+            });
           }}
           className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
         >

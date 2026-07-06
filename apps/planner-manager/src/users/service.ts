@@ -1,6 +1,12 @@
 import bcrypt from "bcryptjs";
 import { Role, User } from "../db/prisma/generated/client";
-import { getAllUsers, updateUserRole, updateUserStatus, deleteUser as deleteUserDAL, updateUserPassword } from "./DAL";
+import {
+  getAllUsers,
+  updateUserRole,
+  updateUserStatus,
+  deleteUser as deleteUserDAL,
+  updateUserPassword,
+} from "./DAL";
 
 export const usersService = {
   async getAll(): Promise<Partial<User>[]> {
@@ -19,7 +25,10 @@ export const usersService = {
     return deleteUserDAL(id);
   },
 
-  async resetPassword(id: string, newPassword?: string): Promise<{ success: boolean; message: string }> {
+  async resetPassword(
+    id: string,
+    newPassword?: string,
+  ): Promise<{ success: boolean; message: string }> {
     if (newPassword == null) {
       throw new Error("Missing new password");
     }
