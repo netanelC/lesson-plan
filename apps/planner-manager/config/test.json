@@ -4,7 +4,7 @@
   },
   "db": {
     "host": "localhost",
-    "port": 5434,
+    "port": 5432,
     "username": "postgres",
     "password": "postgres",
     "database": "lesson_plan_test",
