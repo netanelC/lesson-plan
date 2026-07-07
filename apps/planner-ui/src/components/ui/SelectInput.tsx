@@ -13,7 +13,7 @@ interface SelectInputProps extends SelectHTMLAttributes<HTMLSelectElement> {
 const SELECT_CLASS =
   "block w-full bg-white border border-indigo-200 rounded-md px-3 py-2 pr-8 sm:text-sm text-gray-800 transition-shadow appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 shadow-sm";
 
-export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
+const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
   ({ label, error, options, getLabel, className, ...props }, ref) => {
     return (
       <div className={className}>
@@ -57,3 +57,5 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
 );
 
 SelectInput.displayName = "SelectInput";
+
+export { SelectInput };

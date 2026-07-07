@@ -1,18 +1,18 @@
-import { useState, useEffect } from "react";
-import { useForm, useFieldArray, type Resolver } from "react-hook-form";
+import { useState } from "react";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  createLessonPlanSchema,
-  type CreateLessonPlanDto,
+  CreateLessonPlanSchema,
+  type CreateLessonPlanBody,
+  type CreateLessonPlanInput,
   AGE_GROUPS,
   ACTIVITY_FRAMES,
-  MIN_OPERATIVE_GOALS,
-  type LessonPlan,
-  type Attachment,
+  FRAME_LABELS,
+  AGE_LABELS,
+  FIELD_LABELS,
+  type AgeGroupType,
+  type FrameType,
 } from "@repo/types";
-
-// Hooks
-import { useRemoveAttachment } from "../api/useRemoveAttachment";
 
 // UI Components
 import { TextInput } from "../../../components/ui/TextInput";
@@ -25,14 +25,11 @@ import { OperativeGoalsSection } from "./OperativeGoalsSection";
 import { TeachingAidsAndReferences } from "./TeachingAidsAndReferences";
 import { LessonFlowSection } from "./LessonFlowSection";
 
-const FRAME_LABELS: Record<string, string> = {
-  plenary: "מליאה",
-  "small-group": "קבוצה קטנה",
-};
-
 interface Props {
-  initialData?: LessonPlan;
-  onSubmit: (data: CreateLessonPlanDto, newFiles: File[]) => Promise<void>;
+  initialData?: CreateLessonPlanInput;
+  existingAttachments?: { id: string; filename: string; sizeBytes: number }[];
+  onRemoveExistingAttachment?: (id: string) => void;
+  onSubmit: (data: CreateLessonPlanBody, files?: File[]) => Promise<void>;
   isSubmitting: boolean;
   title: string;
   submitLabel: string;
@@ -40,19 +37,14 @@ interface Props {
 
 export const LessonPlanForm = ({
   initialData,
+  existingAttachments = [],
+  onRemoveExistingAttachment,
   onSubmit,
   isSubmitting,
   title,
   submitLabel,
 }: Props) => {
-  const [newFiles, setNewFiles] = useState<File[]>([]);
-  // Local state for immediate UI updates when deleting existing attachments
-  const [existingAttachments, setExistingAttachments] = useState<Attachment[]>(
-    [],
-  );
-
-  const removeAttachmentMutation = useRemoveAttachment();
-
+  const [files, setFiles] = useState<File[]>([]);
   const {
     register,
     control,
@@ -60,73 +52,33 @@ export const LessonPlanForm = ({
     formState: { errors },
     watch,
     setValue,
-    reset,
-  } = useForm<CreateLessonPlanDto>({
-    resolver: zodResolver(
-      createLessonPlanSchema,
-    ) as Resolver<CreateLessonPlanDto>,
-    mode: "onTouched",
-    defaultValues: {
+  } = useForm<CreateLessonPlanInput>({
+    resolver: zodResolver(CreateLessonPlanSchema),
+    defaultValues: initialData ?? {
       topic: "",
       unit: "",
       ageGroup: AGE_GROUPS[0],
       frame: ACTIVITY_FRAMES[0],
       superGoal: "",
-      operativeGoals: Array(MIN_OPERATIVE_GOALS).fill(""),
+      operativeGoals: ["", "", ""],
       priorKnowledge: "",
       teachingAids: [],
       references: [],
-      lessonFlow: [{ name: "", durationMinutes: 0, description: "" }],
+      lessonFlow: [{ stage: "", durationMinutes: 0, description: "" }],
     },
   });
 
-  // Pre-fill form and local attachment state when editing
-  useEffect(() => {
-    if (initialData) {
-      reset({
-        topic: initialData.topic,
-        unit: initialData.unit,
-        ageGroup: initialData.ageGroup,
-        frame: initialData.frame,
-        superGoal: initialData.superGoal,
-        priorKnowledge: initialData.priorKnowledge || "",
-        operativeGoals: initialData.operativeGoals,
-        teachingAids: initialData.teachingAids || [],
-        references: initialData.references || [],
-        lessonFlow: initialData.lessonFlow,
-      });
-      setExistingAttachments(initialData.attachments || []);
-    }
-  }, [initialData, reset]);
-
-  // Dynamic Logic for Lesson Flow
   const {
     fields: lessonFlowFields,
     append: appendFlow,
     remove: removeFlow,
   } = useFieldArray({ control, name: "lessonFlow" });
 
-  // Watchers for dynamic lists
-  const operativeGoals = watch("operativeGoals") || [];
-
-  const handleDeleteExistingFile = async (fileId: string) => {
-    if (window.confirm("האם אתה בטוח שברצונך למחוק קובץ זה לצמיתות?")) {
-      try {
-        await removeAttachmentMutation.mutateAsync(fileId);
-        // Immediately update local state so the file disappears from the UI
-        setExistingAttachments((prev) =>
-          prev.filter((file) => file.id !== fileId),
-        );
-      } catch (error) {
-        alert("שגיאה במחיקת הקובץ");
-        console.error("Failed to delete attachment:", error);
-      }
-    }
-  };
-
   return (
     <form
-      onSubmit={handleSubmit((data) => onSubmit(data, newFiles))}
+      onSubmit={handleSubmit((data) =>
+        onSubmit(data as CreateLessonPlanBody, files),
+      )}
       className="max-w-3xl mx-auto space-y-8 bg-neutral-50 p-8 rounded-xl shadow-sm border border-neutral-100"
       dir="rtl"
     >
@@ -134,7 +86,6 @@ export const LessonPlanForm = ({
         <h2 className="text-3xl font-extrabold text-indigo-900">{title}</h2>
       </header>
 
-      {/* --- Section 1: Basic Details --- */}
       <SectionCard
         title="פרטים בסיסיים"
         theme="indigo"
@@ -173,6 +124,7 @@ export const LessonPlanForm = ({
             id="ageGroup"
             label="קבוצת גיל"
             options={AGE_GROUPS}
+            getLabel={(val) => AGE_LABELS[val as AgeGroupType]}
             {...register("ageGroup")}
             error={errors.ageGroup}
           />
@@ -180,14 +132,13 @@ export const LessonPlanForm = ({
             id="frame"
             label="מסגרת הוראה"
             options={ACTIVITY_FRAMES}
-            getLabel={(val) => FRAME_LABELS[val] || val}
+            getLabel={(val) => FRAME_LABELS[val as FrameType]}
             {...register("frame")}
             error={errors.frame}
           />
         </div>
       </SectionCard>
 
-      {/* --- Section 2: Goals --- */}
       <SectionCard
         title="מטרות"
         theme="orange"
@@ -202,26 +153,19 @@ export const LessonPlanForm = ({
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              d="M12 2l3 6 6 .5-4.5 3 1.5 6L12 15l-6 3 1.5-6L3 8.5 9 8 12 2z"
+              d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
             />
           </svg>
         }
       >
         <OperativeGoalsSection
-          operativeGoals={operativeGoals}
           register={register}
           watch={watch}
           setValue={setValue}
-          errors={{
-            superGoal: errors.superGoal,
-            operativeGoals: Array.isArray(errors.operativeGoals)
-              ? errors.operativeGoals
-              : undefined,
-          }}
+          errors={errors}
         />
       </SectionCard>
 
-      {/* --- Section 3: Preparation --- */}
       <SectionCard
         title="הכנה לשיעור"
         theme="indigo"
@@ -241,103 +185,13 @@ export const LessonPlanForm = ({
           </svg>
         }
       >
-        <TextInput
-          id="priorKnowledge"
-          label="ידע קודם נדרש (אופציונלי)"
-          placeholder="לדוגמה: היכרות עם מחזור החיים"
-          {...register("priorKnowledge")}
-        />
-
-        <div className="mt-6">
-          <TeachingAidsAndReferences
-            register={register}
-            watch={watch}
-            setValue={setValue}
-          />
-        </div>
-      </SectionCard>
-
-      {/* --- Section 4: Attachments --- */}
-      <SectionCard
-        title="קבצים נלווים"
-        theme="indigo"
-        icon={
-          <svg
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-            />
-          </svg>
-        }
-      >
-        {existingAttachments.length > 0 && (
-          <div className="mb-4 p-4 bg-indigo-50/50 rounded-lg border border-indigo-100">
-            <p className="text-sm font-bold text-indigo-900 mb-3">
-              קבצים קיימים במערך:
-            </p>
-            <ul className="space-y-2">
-              {existingAttachments.map((file) => (
-                <li
-                  key={file.id}
-                  className="text-sm bg-white p-2 rounded border border-indigo-100 flex items-center justify-between shadow-sm transition-all animate-in fade-in slide-in-from-right-2"
-                >
-                  <div className="flex items-center gap-2 text-indigo-700">
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <span className="truncate max-w-[200px]">
-                      {file.filename}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteExistingFile(file.id)}
-                    disabled={removeAttachmentMutation.isPending}
-                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-all"
-                  >
-                    {removeAttachmentMutation.isPending ? (
-                      <div className="h-4 w-4 animate-spin border-2 border-red-500 border-t-transparent rounded-full" />
-                    ) : (
-                      <svg
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    )}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        <FileUploader
-          files={newFiles}
-          onFilesChange={setNewFiles}
-          disabled={isSubmitting}
+        <TeachingAidsAndReferences
+          register={register}
+          watch={watch}
+          setValue={setValue}
         />
       </SectionCard>
 
-      {/* --- Section 5: Lesson Flow --- */}
       <SectionCard
         title="חלקי השיעור"
         theme="green"
@@ -363,28 +217,68 @@ export const LessonPlanForm = ({
           remove={removeFlow}
           register={register}
           watch={watch}
-          errors={{
-            lessonFlow: Array.isArray(errors.lessonFlow)
-              ? errors.lessonFlow
-              : undefined,
-          }}
+          errors={errors}
         />
       </SectionCard>
 
-      <footer className="flex justify-start pt-4">
+      <SectionCard
+        title="קבצים נלווים"
+        theme="indigo"
+        icon={
+          <svg
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+            />
+          </svg>
+        }
+      >
+        <FileUploader
+          files={files}
+          onFilesChange={setFiles}
+          existingAttachments={existingAttachments}
+          onRemoveExisting={onRemoveExistingAttachment}
+          disabled={isSubmitting}
+        />
+      </SectionCard>
+
+      <footer className="flex flex-col items-start gap-4 pt-4 border-t border-gray-100">
+        {Object.keys(errors).length > 0 && (
+          <div className="w-full bg-red-50 border border-red-100 text-red-600 p-4 rounded-lg text-sm font-bold flex items-center gap-3">
+            <svg
+              className="h-5 w-5 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            <span>
+              נא לתקן את השגיאות בשדות הבאים:{" "}
+              {Object.keys(errors)
+                .map((key) => FIELD_LABELS[key] || key)
+                .join(", ")}
+            </span>
+          </div>
+        )}
         <button
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex items-center gap-2 bg-indigo-600 text-white px-10 py-3 rounded-lg font-bold shadow-lg hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95"
+          className="inline-flex items-center justify-center gap-2 bg-indigo-600 text-white px-10 py-3 rounded-lg font-bold shadow-lg hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95 min-w-[200px]"
         >
-          {isSubmitting ? (
-            <>
-              <div className="h-5 w-5 animate-spin border-2 border-white border-t-transparent rounded-full" />{" "}
-              מעבד...
-            </>
-          ) : (
-            submitLabel
-          )}
+          {isSubmitting ? "מעבד..." : submitLabel}
         </button>
       </footer>
     </form>

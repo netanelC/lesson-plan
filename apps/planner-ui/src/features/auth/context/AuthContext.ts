@@ -1,9 +1,8 @@
 import { createContext, useContext } from "react";
-// IMPORT FROM SHARED TYPES
 import type { User } from "@repo/types";
 
 export interface AuthContextType {
-  user: User | null;
+  user: User;
   token: string | null;
   isAuthenticated: boolean;
   login: (token: string, user: User) => void;

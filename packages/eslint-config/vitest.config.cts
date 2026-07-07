@@ -1,4 +1,4 @@
 import { mergeConfig, defineProject } from 'vitest/config';
-import sharedConfig from 'vitest-config';
+import sharedConfig from '@repo/vitest-config';
 
 export default mergeConfig(sharedConfig, defineProject({}));

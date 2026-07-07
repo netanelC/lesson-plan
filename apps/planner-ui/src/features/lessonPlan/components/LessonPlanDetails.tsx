@@ -1,14 +1,63 @@
-import { useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useRef, useState, useEffect } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useReactToPrint } from "react-to-print";
+import {
+  type LessonFlowStep,
+  AGE_LABELS,
+  FRAME_LABELS,
+  FIELD_LABELS,
+} from "@repo/types";
+import { toast } from "react-hot-toast";
 import { useLessonPlan } from "../api/useLessonPlan";
+import { useDeleteLessonPlan } from "../api/useDeleteLessonPlan";
 import { SectionCard } from "../../../components/ui/SectionCard";
+import { ConfirmModal } from "../../../components/ui/ConfirmModal";
 import { exportLessonPlanToWord } from "../../../utils/exportToWord";
-import { Can } from "../../../components/auth/Can"; // <--- Import the new Can component
+import { Can } from "../../../components/auth/Can";
+import { api, extractApiError } from "../../../lib/axios";
+import { useAuth } from "../../auth/context/AuthContext";
+import { BookmarkButton } from "./BookmarkButton";
+
+const AudioPlayer = ({ fileId }: { fileId: string }) => {
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    api
+      .get<{ url: string }>(`/lessons/attachments/${fileId}/download`)
+      .then((res) => {
+        if (isMounted) setUrl(res.data.url);
+      })
+      .catch((err) => {
+        console.error("Failed to load audio URL:", err);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [fileId]);
+
+  if (url == null) {
+    return (
+      <div className="text-xs text-gray-400 mt-1.5 h-8 flex items-center">
+        טעינת נגן אודיו...
+      </div>
+    );
+  }
+
+  return (
+    <audio controls className="w-full h-8 mt-1.5" src={url}>
+      הדפדפן שלך לא תומך בניגון אודיו.
+    </audio>
+  );
+};
 
 export const LessonPlanDetails = () => {
   const { id } = useParams<{ id: string }>();
-  const { data: plan, isLoading, isError } = useLessonPlan(id || "");
+  const { data: plan, isLoading, isError } = useLessonPlan(id!);
+  const deleteMutation = useDeleteLessonPlan();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const componentRef = useRef<HTMLDivElement>(null);
 
@@ -17,8 +66,43 @@ export const LessonPlanDetails = () => {
     documentTitle: plan ? `מערך שיעור - ${plan.topic}` : "Lesson Plan",
   });
 
+  const handleDownload = async (fileId: string) => {
+    try {
+      // Securely fetch the signed URL using Axios (which attaches the JWT token)
+      const { data } = await api.get<{ url: string }>(
+        `/lessons/attachments/${fileId}/download`,
+      );
+
+      // Use the signed URL to download directly from MinIO
+      // Creating a hidden link to ensure the 'download' attribute forces a download prompt
+      const link = document.createElement("a");
+      link.href = data.url;
+      // We rely on the backend setting ResponseContentDisposition, but we can also set the download attribute
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      toast.error(extractApiError(error) || "שגיאה בהורדת הקובץ");
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!plan) return;
+    try {
+      await deleteMutation.mutateAsync(plan.id);
+      toast.success("המערך נמחק בהצלחה!");
+      void navigate("/");
+    } catch (error) {
+      toast.error(extractApiError(error) || "שגיאה במחיקת המערך");
+    } finally {
+      setIsDeleteModalOpen(false);
+    }
+  };
+
   if (isLoading)
-    return <div className="text-center py-20">טוען מערך שיעור...</div>;
+    return <div className="text-center py-20">טעינת מערך שיעור...</div>;
   if (isError || !plan)
     return (
       <div className="text-center py-20 text-red-600">שגיאה בטעינת המערך</div>
@@ -60,11 +144,13 @@ export const LessonPlanDetails = () => {
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            ייצאי ל- Word
+            ייצוא ל- Word
           </button>
 
           <button
-            onClick={() => handlePrint()}
+            onClick={() => {
+              void handlePrint();
+            }}
             className="flex items-center gap-2 text-indigo-700 bg-indigo-50 border border-indigo-100 px-4 py-2 rounded-lg hover:bg-indigo-100 transition-colors font-medium text-sm"
           >
             <svg
@@ -80,7 +166,7 @@ export const LessonPlanDetails = () => {
                 d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
               />
             </svg>
-            ייצאי ל- PDF
+            ייצוא ל- PDF
           </button>
 
           {/* --- Conditional Edit Button using Can Component --- */}
@@ -102,8 +188,53 @@ export const LessonPlanDetails = () => {
                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                 />
               </svg>
-              ערכי מערך
+              עריכת מערך
             </Link>
+          </Can>
+
+          <Can perform="delete" data={{ authorId: plan.authorId }}>
+            <button
+              onClick={() => setIsDeleteModalOpen(true)}
+              disabled={deleteMutation.isPending}
+              className="flex items-center gap-2 text-red-700 bg-red-50 border border-red-100 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors font-medium text-sm disabled:opacity-50"
+            >
+              {deleteMutation.isPending ? (
+                <svg
+                  className="animate-spin h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              )}
+              מחיקת מערך
+            </button>
           </Can>
         </div>
       </div>
@@ -113,9 +244,19 @@ export const LessonPlanDetails = () => {
         {/* Header Card */}
         <div className="bg-white p-8 rounded-xl border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 print:border-none print:shadow-none print:p-0 print:mb-6">
           <div>
-            <h1 className="text-3xl font-extrabold text-gray-900">
-              {plan.topic}
-            </h1>
+            <div className="flex items-center gap-4">
+              <h1 className="text-3xl font-extrabold text-gray-900">
+                {plan.topic}
+              </h1>
+              <BookmarkButton
+                lessonPlanId={plan.id}
+                initialIsSaved={
+                  Array.isArray(plan.savedBy) &&
+                  plan.savedBy.some((s) => s.userId === user.id)
+                }
+                className="print:hidden border border-gray-200"
+              />
+            </div>
             <p className="text-lg text-indigo-600 font-medium mt-1">
               {plan.superGoal}
             </p>
@@ -124,20 +265,25 @@ export const LessonPlanDetails = () => {
           <div className="flex flex-col items-end gap-2 text-left">
             <div className="flex gap-2 print:hidden">
               <span className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm font-bold border border-indigo-100">
-                גיל {plan.ageGroup}
+                {AGE_LABELS[plan.ageGroup]}
               </span>
               <span className="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-sm font-bold border border-purple-100">
+                {" "}
                 {plan.unit}
               </span>
             </div>
             {/* Author Name Display - Relies on Backend include: { author: true } */}
             <span className="text-sm text-gray-400">
-              נוצר ע״י: {plan.author?.fullName || "משתמש לא ידוע"}
+              נוצר ע״י:{" "}
+              {plan.author.fullName.length > 0
+                ? plan.author.fullName
+                : "משתמש לא ידוע"}
             </span>
           </div>
 
           <div className="hidden print:block text-sm text-gray-500">
-            גיל: {plan.ageGroup} | יחידה: {plan.unit} | תאריך:{" "}
+            {FIELD_LABELS.ageGroup}: {AGE_LABELS[plan.ageGroup]} |{" "}
+            {FIELD_LABELS.unit}: {plan.unit} | תאריך:{" "}
             {new Date(plan.createdAt).toLocaleDateString("he-IL")}
           </div>
         </div>
@@ -146,7 +292,7 @@ export const LessonPlanDetails = () => {
           {/* --- Right Column: Main Content (Wide) --- */}
           <div className="lg:col-span-2 space-y-8 print:space-y-6">
             <SectionCard
-              title="מטרות אופרטיביות"
+              title={FIELD_LABELS.operativeGoals}
               theme="orange"
               icon={
                 <svg
@@ -178,7 +324,7 @@ export const LessonPlanDetails = () => {
             </SectionCard>
 
             <SectionCard
-              title="מהלך השיעור"
+              title={FIELD_LABELS.lessonFlow}
               theme="green"
               icon={
                 <svg
@@ -196,8 +342,34 @@ export const LessonPlanDetails = () => {
                 </svg>
               }
             >
+              {(() => {
+                const steps = plan.lessonFlow as LessonFlowStep[];
+                const totalDuration = steps.reduce(
+                  (sum, step) => sum + (step.durationMinutes || 0),
+                  0,
+                );
+                return totalDuration > 0 ? (
+                  <div className="mb-6 flex items-center gap-2 text-sm font-bold text-green-700 bg-green-50 px-3 py-2 rounded-lg w-fit print:border print:border-green-200">
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    משך זמן כולל: {totalDuration} דקות
+                  </div>
+                ) : null;
+              })()}
+
               <div className="relative border-r-2 border-green-100 mr-3 space-y-8 pr-6 print:border-none print:mr-0 print:pr-0 print:space-y-4">
-                {plan.lessonFlow.map((step, idx) => (
+                {(plan.lessonFlow as LessonFlowStep[]).map((step, idx) => (
                   <div
                     key={idx}
                     className="relative print:border-b print:border-gray-100 print:pb-4"
@@ -206,9 +378,9 @@ export const LessonPlanDetails = () => {
 
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="text-lg font-bold text-gray-900">
-                        {step.name}
+                        {step.stage}
                       </h3>
-                      {step.durationMinutes && (
+                      {step.durationMinutes > 0 && (
                         <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded text-gray-600 print:border print:border-gray-200">
                           {step.durationMinutes} דק׳
                         </span>
@@ -233,12 +405,14 @@ export const LessonPlanDetails = () => {
                 <div>
                   <dt className="text-sm text-gray-500">מסגרת הוראה</dt>
                   <dd className="font-medium text-gray-900">
-                    {plan.frame === "plenary" ? "מליאה" : "קבוצה קטנה"}
+                    {FRAME_LABELS[plan.frame]}
                   </dd>
                 </div>
-                {plan.priorKnowledge && (
+                {plan.priorKnowledge != null && plan.priorKnowledge !== "" && (
                   <div>
-                    <dt className="text-sm text-gray-500">ידע קודם נדרש</dt>
+                    <dt className="text-sm text-gray-500">
+                      {FIELD_LABELS.priorKnowledge}
+                    </dt>
                     <dd className="font-medium text-gray-900">
                       {plan.priorKnowledge}
                     </dd>
@@ -269,7 +443,7 @@ export const LessonPlanDetails = () => {
                       d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                     />
                   </svg>
-                  ציוד נדרש
+                  {FIELD_LABELS.teachingAids}
                 </h3>
                 <ul className="list-disc list-inside text-indigo-800 space-y-1 print:text-gray-800">
                   {plan.teachingAids.map((aid, i) => (
@@ -279,7 +453,7 @@ export const LessonPlanDetails = () => {
               </div>
             )}
 
-            {plan.attachments && plan.attachments.length > 0 && (
+            {plan.attachments.length > 0 && (
               <div className="print:hidden">
                 <SectionCard
                   title="קבצים ומדיה"
@@ -314,13 +488,7 @@ export const LessonPlanDetails = () => {
                             {file.filename}
                           </p>
                           {file.fileType.startsWith("audio/") ? (
-                            <audio
-                              controls
-                              className="w-full h-8 mt-1.5"
-                              src={file.url}
-                            >
-                              הדפדפן שלך לא תומך בניגון אודיו.
-                            </audio>
+                            <AudioPlayer fileId={file.id} />
                           ) : (
                             <p className="text-[10px] text-gray-500 uppercase">
                               {file.fileType.split("/")[1]} FILE
@@ -328,12 +496,10 @@ export const LessonPlanDetails = () => {
                           )}
                         </div>
 
-                        <a
-                          href={`${import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"}/api/lessons/attachments/${file.id}/download`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          onClick={() => handleDownload(file.id)}
                           className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors shrink-0"
-                          title="הורד קובץ"
+                          title="הורדת קובץ"
                         >
                           <svg
                             className="h-5 w-5"
@@ -348,7 +514,7 @@ export const LessonPlanDetails = () => {
                               d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                             />
                           </svg>
-                        </a>
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -372,7 +538,7 @@ export const LessonPlanDetails = () => {
                       d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
                     />
                   </svg>
-                  מקורות מידע
+                  {FIELD_LABELS.references}
                 </h3>
                 <ul className="space-y-2">
                   {plan.references.map((ref, i) => (
@@ -397,6 +563,16 @@ export const LessonPlanDetails = () => {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="מחיקת מערך"
+        message="האם למחוק מערך זה? (פעולה זו לא ניתנת לביטול)"
+        confirmText="מחיקת מערך"
+        isDestructive={true}
+      />
     </div>
   );
 };

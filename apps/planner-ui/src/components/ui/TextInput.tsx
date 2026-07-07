@@ -11,7 +11,7 @@ interface TextInputProps extends InputHTMLAttributes<HTMLInputElement> {
 const INPUT_CLASS =
   "block w-full bg-white border border-indigo-200 rounded-md px-3 py-2 sm:text-sm text-gray-800 transition-shadow focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 shadow-sm disabled:bg-gray-50 disabled:text-gray-500";
 
-export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
+const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
   ({ label, error, className, ...props }, ref) => {
     return (
       <div className={className}>
@@ -38,3 +38,5 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
 );
 
 TextInput.displayName = "TextInput";
+
+export { TextInput };

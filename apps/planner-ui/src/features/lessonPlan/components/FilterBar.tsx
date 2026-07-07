@@ -1,11 +1,16 @@
 import { useState, useEffect } from "react";
 import { useDebounce } from "use-debounce";
 import {
-  type AgeGroup,
-  type ActivityFrame,
-  AGE_GROUPS,
   type LessonFilters,
+  AGE_GROUPS,
+  ACTIVITY_FRAMES,
+  FRAME_LABELS,
+  AGE_LABELS,
+  type AgeGroupType,
+  type FrameType,
 } from "@repo/types";
+
+const SEARCH_DEBOUNCE_MS = 400;
 
 interface FilterBarProps {
   filters: LessonFilters;
@@ -22,13 +27,13 @@ export const FilterBar = ({
   userRole,
   userId,
 }: FilterBarProps) => {
-  const [searchTerm, setSearchTerm] = useState(filters.search || "");
-  const [debouncedSearch] = useDebounce(searchTerm, 400);
+  const [searchTerm, setSearchTerm] = useState(filters.search ?? "");
+  const [debouncedSearch] = useDebounce(searchTerm, SEARCH_DEBOUNCE_MS);
 
   // Sync local state when parent resets filters
   useEffect(() => {
     if (filters.search !== searchTerm) {
-      setSearchTerm(filters.search || "");
+      setSearchTerm(filters.search ?? "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.search]);
@@ -42,16 +47,18 @@ export const FilterBar = ({
   }, [debouncedSearch]);
 
   const handleAgeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onFilterChange({ ageGroup: e.target.value as AgeGroup | "" });
+    const val = e.target.value;
+    onFilterChange({ ageGroup: val ? (val as AgeGroupType) : undefined });
   };
 
   const handleFrameChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onFilterChange({ frame: e.target.value as ActivityFrame | "" });
+    const val = e.target.value;
+    onFilterChange({ frame: val ? (val as FrameType) : undefined });
   };
 
   const handleMyPlansChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // If checked, filter by current userId. If unchecked, clear the authorId filter.
-    onFilterChange({ authorId: e.target.checked ? userId : "" });
+    // If checked, filter by current userId. If unchecked, clear the authorId filter by setting undefined.
+    onFilterChange({ authorId: e.target.checked ? userId : undefined });
   };
 
   return (
@@ -69,7 +76,7 @@ export const FilterBar = ({
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="חפשי מערך..."
+            placeholder="חיפוש מערך..."
             className="w-full pr-10 pl-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm"
           />
           <svg
@@ -94,14 +101,14 @@ export const FilterBar = ({
           קבוצת גיל
         </label>
         <select
-          value={filters.ageGroup || ""}
+          value={filters.ageGroup ?? ""}
           onChange={handleAgeChange}
           className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
         >
           <option value="">כל הגילאים</option>
           {AGE_GROUPS.map((group) => (
             <option key={group} value={group}>
-              {group}
+              {AGE_LABELS[group]}
             </option>
           ))}
         </select>
@@ -113,13 +120,39 @@ export const FilterBar = ({
           מסגרת פעילות
         </label>
         <select
-          value={filters.frame || ""}
+          value={filters.frame ?? ""}
           onChange={handleFrameChange}
           className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
         >
           <option value="">כל המסגרות</option>
-          <option value="plenary">מליאה</option>
-          <option value="small-group">קבוצה קטנה</option>
+          {ACTIVITY_FRAMES.map((frame) => (
+            <option key={frame} value={frame}>
+              {FRAME_LABELS[frame]}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Sort Select */}
+      <div className="w-full md:w-48">
+        <label className="block text-xs font-bold text-gray-500 mb-1 mr-1">
+          מיון
+        </label>
+        <select
+          value={`${filters.sortBy ?? "createdAt"}_${filters.sortOrder ?? "desc"}`}
+          onChange={(e) => {
+            const [sortBy, sortOrder] = e.target.value.split("_");
+            onFilterChange({
+              sortBy: sortBy as "createdAt" | "topic",
+              sortOrder: sortOrder as "asc" | "desc",
+            });
+          }}
+          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+        >
+          <option value="createdAt_desc">תאריך (מהחדש לישן)</option>
+          <option value="createdAt_asc">תאריך (מהישן לחדש)</option>
+          <option value="topic_asc">נושא (א-ת)</option>
+          <option value="topic_desc">נושא (ת-א)</option>
         </select>
       </div>
 
@@ -147,7 +180,7 @@ export const FilterBar = ({
         type="button"
         onClick={onReset}
         className="text-gray-400 hover:text-red-500 p-2.5 transition-colors group"
-        title="נקה הכל"
+        title="ניקוי הכל"
       >
         <svg
           className="h-6 w-6 group-hover:rotate-180 transition-transform duration-500"

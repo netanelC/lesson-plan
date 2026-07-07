@@ -1,172 +1,164 @@
-import axios from "axios";
+/* eslint-disable @typescript-eslint/naming-convention */
 import { FastifyRequest, FastifyReply } from "fastify";
-import { lessonPlanDal } from "./DAL";
-import { lessonPlanService } from "./service";
-import type { CreateLessonPlanDto } from "@repo/types";
-import { fileStorageService } from "../file-storage";
-import { LessonFilters } from "@repo/types";
+import { status } from "http-status";
+import { CreateLessonPlanBody, LessonFilters } from "@repo/types";
+import { Prisma } from "../db/prisma/generated/client";
+import { BadRequestError, ForbiddenError } from "../utils/errors";
+import * as lessonPlanService from "./service";
 
-export const lessonPlanController = {
-  create: async (
-    req: FastifyRequest<{ Body: CreateLessonPlanDto }>,
-    reply: FastifyReply,
-  ) => {
-    const planData = req.body;
-    const userId = req.user.id;
+export async function createLessonPlanController(
+  request: FastifyRequest<{ Body: CreateLessonPlanBody }>,
+  reply: FastifyReply,
+): Promise<FastifyReply> {
+  if (request.user.role === "KINDERGARTEN") {
+    throw new ForbiddenError("Only Admins and Owners can create lesson plans.");
+  }
 
-    const newPlan = await lessonPlanDal.create(planData, userId);
+  const newLessonPlan = await lessonPlanService.createLessonPlan(
+    request.body,
+    request.user.id,
+  );
 
-    // Send back 201 (Created) and the data
-    return reply.code(201).send(newPlan);
-  },
+  return reply.status(status.CREATED).send({
+    success: true,
+    data: newLessonPlan,
+  });
+}
 
-  getAll: async (
-    req: FastifyRequest<{ Querystring: any }>,
-    reply: FastifyReply,
-  ) => {
-    try {
-      const query = req.query as Partial<LessonFilters>;
-      const filters: LessonFilters = {
-        ...query,
-        page: query.page ? parseInt(query.page as unknown as string) : 1,
-        limit: query.limit ? parseInt(query.limit as unknown as string) : 12, // 12 works well for 3-column grids
-      };
+export async function getLessonPlansController(
+  request: FastifyRequest<{ Querystring: LessonFilters }>,
+  reply: FastifyReply,
+): Promise<FastifyReply> {
+  const result = await lessonPlanService.getLessonPlans(request.query);
+  return reply.status(status.OK).send(result);
+}
 
-      const result = await lessonPlanService.getLessonPlans(filters);
-      return result;
-    } catch (error) {
-      req.log.error(error);
-      return reply.code(500).send({ message: "Error fetching lesson plans" });
-    }
-  },
+export async function getLessonPlanByIdController(
+  request: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+): Promise<FastifyReply> {
+  const lessonPlan = await lessonPlanService.getLessonPlanById(
+    request.params.id,
+  );
+  return reply.status(status.OK).send({
+    success: true,
+    data: lessonPlan,
+  });
+}
 
-  getOne: async (
-    req: FastifyRequest<{ Params: { id: string } }>,
-    reply: FastifyReply,
-  ) => {
-    const { id } = req.params;
-    const plan = await lessonPlanDal.getById(id);
+export async function updateLessonPlanController(
+  req: FastifyRequest<{
+    Params: { id: string };
+    Body: Prisma.LessonPlanUncheckedUpdateInput;
+  }>,
+  reply: FastifyReply,
+): Promise<FastifyReply> {
+  const existing = await lessonPlanService.getLessonPlanById(req.params.id);
+  if (req.user.role === "KINDERGARTEN") {
+    throw new ForbiddenError("Cannot edit lesson plans.");
+  }
+  if (req.user.role === "ADMIN" && existing.authorId !== req.user.id) {
+    throw new ForbiddenError("Admins can only edit their own lesson plans.");
+  }
 
-    if (!plan) {
-      return reply.code(404).send({ message: "Lesson plan not found" });
-    }
+  const updatedPlan = await lessonPlanService.updateLessonPlan(
+    req.params.id,
+    req.body,
+  );
+  return reply.status(status.OK).send({
+    success: true,
+    data: updatedPlan,
+  });
+}
 
-    return reply.code(200).send(plan);
-  },
+export async function deleteLessonPlanController(
+  req: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+): Promise<FastifyReply> {
+  const existing = await lessonPlanService.getLessonPlanById(req.params.id);
+  if (req.user.role === "KINDERGARTEN") {
+    throw new ForbiddenError("Cannot delete lesson plans.");
+  }
+  if (req.user.role === "ADMIN" && existing.authorId !== req.user.id) {
+    throw new ForbiddenError("Admins can only delete their own lesson plans.");
+  }
 
-  update: async (
-    req: FastifyRequest<{ Params: { id: string }; Body: CreateLessonPlanDto }>,
-    reply: FastifyReply,
-  ) => {
-    const { id } = req.params;
-    const updateData = req.body;
+  await lessonPlanService.deleteLessonPlan(req.params.id);
+  return reply.status(status.NO_CONTENT).send();
+}
 
-    try {
-      // 1. Check if it exists
-      const existing = await lessonPlanDal.getById(id);
-      if (!existing) {
-        return reply.code(404).send({ message: "המערך לא נמצא" });
-      }
-
-      // 2. Perform update
-      const updatedPlan = await lessonPlanDal.update(id, updateData);
-      return reply.code(200).send(updatedPlan);
-    } catch (error) {
-      req.log.error(error);
-      return reply.code(500).send({ message: "שגיאה בעדכון המערך" });
-    }
-  },
-
-  delete: async (
-    req: FastifyRequest<{ Params: { id: string } }>,
-    reply: FastifyReply,
-  ) => {
-    const { id } = req.params;
-    await lessonPlanDal.delete(id);
-    // 204 No Content is the standard for successful deletion
-    return reply.code(204).send();
-  },
-
-  uploadAttachment: async (
-    req: FastifyRequest<{ Params: { id: string } }>,
-    reply: FastifyReply,
-  ) => {
-    // 1. Get the file from the request stream
-    const data = await req.file();
-    if (!data) {
-      return reply.code(400).send({ message: "No file uploaded" });
-    }
-
-    const lessonPlanId = req.params.id;
-
-    // 2. Upload to MinIO using our service
-    // We convert the stream to a Buffer for the S3 SDK
-    const fileBuffer = await data.toBuffer();
-    const uploadResult = await fileStorageService.uploadFile(
-      lessonPlanId,
-      fileBuffer,
-      data.filename,
-      data.mimetype,
+export async function uploadAttachmentController(
+  req: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+): Promise<FastifyReply> {
+  const existing = await lessonPlanService.getLessonPlanById(req.params.id);
+  if (req.user.role === "KINDERGARTEN") {
+    throw new ForbiddenError("Cannot upload attachments.");
+  }
+  if (req.user.role === "ADMIN" && existing.authorId !== req.user.id) {
+    throw new ForbiddenError(
+      "Admins can only upload attachments to their own lesson plans.",
     );
+  }
 
-    // 3. Save the metadata to Postgres
-    const attachment = await lessonPlanDal.addAttachment(lessonPlanId, {
-      filename: uploadResult.filename,
-      url: uploadResult.url,
-      fileType: data.mimetype,
-      sizeBytes: fileBuffer.length,
-    });
+  const data = await req.file();
+  if (!data) {
+    throw new BadRequestError("No file uploaded");
+  }
 
-    return reply.code(201).send(attachment);
-  },
+  const attachment = await lessonPlanService.uploadAttachment(
+    req.params.id,
+    data,
+  );
+  return reply.status(status.CREATED).send({
+    success: true,
+    data: attachment,
+  });
+}
 
-  downloadAttachment: async (
-    req: FastifyRequest<{ Params: { id: string } }>,
-    reply: FastifyReply,
-  ) => {
-    const { id } = req.params;
+export async function downloadAttachmentController(
+  req: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+): Promise<FastifyReply | void> {
+  const signedUrl = await lessonPlanService.getAttachmentDownloadUrl(
+    req.params.id,
+  );
+  return reply.status(status.OK).send({ url: signedUrl });
+}
 
-    // 1. Get attachment metadata from DB
-    const attachment = await lessonPlanDal.getAttachmentById(id);
-    if (!attachment) {
-      return reply.code(404).send({ message: "Attachment not found" });
-    }
+export async function removeAttachmentController(
+  req: FastifyRequest<{ Params: { fileId: string } }>,
+  reply: FastifyReply,
+): Promise<FastifyReply> {
+  if (req.user.role === "KINDERGARTEN") {
+    throw new ForbiddenError("Cannot remove attachments.");
+  }
 
-    try {
-      // 2. Fetch the file stream from MinIO (Internal Network Call)
-      const response = await axios.get(attachment.url, {
-        responseType: "stream",
-      });
+  await lessonPlanService.removeAttachment(req.params.fileId, req.user);
+  return reply.status(status.NO_CONTENT).send();
+}
 
-      // 3. Set headers to FORCE download and hide the origin
-      reply.header("Content-Type", attachment.fileType);
-      // This header tells the browser: "Don't open this! Save it as..."
-      reply.header(
-        "Content-Disposition",
-        `attachment; filename="${encodeURIComponent(attachment.filename)}"`,
-      );
+export async function toggleSaveLessonPlanController(
+  req: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+): Promise<FastifyReply> {
+  const result = await lessonPlanService.toggleSaveLessonPlan(
+    req.user.id,
+    req.params.id,
+  );
+  return reply.status(status.OK).send({
+    success: true,
+    data: result,
+  });
+}
 
-      // 4. Send the stream
-      return reply.send(response.data);
-    } catch (error) {
-      req.log.error(error);
-      return reply.code(500).send({ message: "Failed to download file" });
-    }
-  },
-
-  removeAttachment: async (
-    req: FastifyRequest<{ Params: { fileId: string } }>,
-    reply: FastifyReply,
-  ) => {
-    const { fileId } = req.params;
-
-    try {
-      // Delegate to service to handle orchestration
-      await lessonPlanService.removeAttachment(fileId);
-      return reply.code(204).send();
-    } catch (error) {
-      req.log.error(error);
-      return reply.code(500).send({ message: "שגיאה במחיקת הקובץ" });
-    }
-  },
-};
+export async function getSavedLessonPlansController(
+  req: FastifyRequest<{ Querystring: LessonFilters }>,
+  reply: FastifyReply,
+): Promise<FastifyReply> {
+  const result = await lessonPlanService.getSavedLessonPlans(
+    req.user.id,
+    req.query,
+  );
+  return reply.status(status.OK).send(result);
+}

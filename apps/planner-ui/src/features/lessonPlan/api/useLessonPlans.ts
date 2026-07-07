@@ -1,12 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
-import { api } from "../../../lib/axios";
 import type { LessonFilters, LessonPlan, PaginatedResponse } from "@repo/types";
+import { api } from "../../../lib/axios";
+
+export type ExtendedLessonPlan = LessonPlan & {
+  author: { fullName: string };
+  savedBy?: { userId: string }[];
+};
 
 export const useLessonPlans = (filters: LessonFilters) => {
-  return useQuery<PaginatedResponse<LessonPlan>>({
+  return useQuery({
     queryKey: ["lessons", filters], // Query key must include filters to trigger refetch
     queryFn: async () => {
-      const { data } = await api.get<PaginatedResponse<LessonPlan>>(
+      const { data } = await api.get<PaginatedResponse<ExtendedLessonPlan>>(
         "/lessons",
         {
           params: filters, // Axios converts this object to ?search=...&page=...
@@ -14,5 +19,8 @@ export const useLessonPlans = (filters: LessonFilters) => {
       );
       return data;
     },
+    // Keep previous data on the screen while fetching the next page
+    // to prevent jarring UI flashes
+    placeholderData: (previousData) => previousData,
   });
 };

@@ -1,81 +1,99 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
   output = "generated/client"
+}
+
+generator zod {
+  provider                  = "zod-prisma-types"
+  output                    = "../../../../../packages/types/src/generated" 
+  createInputTypes          = true
+  createModelTypes          = true
+  addInputTypeValidation    = true
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-// 1. User Roles for Permissions
-enum UserRole {
-  OWNER    // Full system access
-  ADMIN    // Can create/edit/delete THEIR OWN plans
-  KINDERGARTEN  // Read-only access to public plans
+enum Frame {
+  PLENARY
+  SMALL_GROUP
 }
 
-// 2. The User Model (Hybrid Auth)
+enum AgeGroup {
+  THREE_TO_FOUR
+  FOUR_TO_FIVE
+}
+
+enum Role {
+  KINDERGARTEN
+  ADMIN
+  OWNER
+}
+
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  fullName      String
-  
+  id        String       @id @default(cuid())
+  email     String       @unique
+  fullName  String
+  role      Role         @default(KINDERGARTEN)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  isActive      Boolean   @default(true)  // For banning users without deleting data
+
   // Auth: Supports both Email/Password AND Google Login
   passwordHash  String?   // Nullable: Empty if using Google-only
   googleId      String?   @unique // Nullable: Empty if using Password-only
   avatarUrl     String?
 
-  role          UserRole  @default(ADMIN) // Default to ADMIN so new users can create content immediately
-  isActive      Boolean   @default(true)  // For banning users without deleting data
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  // Relation: One User has many Lesson Plans
-  lessonPlans   LessonPlan[]
+  // Relation: A user can author many lesson plans
+  lessonPlans LessonPlan[]
+  
+  // Relation: Plans a user has bookmarked/saved
+  savedPlans  SavedLessonPlan[]
 }
 
-// 3. The Lesson Plan Model
 model LessonPlan {
-  id          String   @id @default(uuid())
-  
-  // Link to the User (Foreign Key)
-  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  authorId    String
+  id             String   @id @default(uuid())
 
-  // Header Info
-  topic       String
-  unit        String
-  
-  // Context
-  frame       String    // "plenary" or "small-group"
-  ageGroup    String    // "3-4" or "4-5"
-  
-  // Pedagogy
-  superGoal       String
-  operativeGoals  String[]
+  /// @zod.string.min(3, { message: "הנושא חייב להכיל לפחות 3 תווים" }).max(100, { message: "הנושא ארוך מדי" })
+  topic          String
+
+  /// @zod.string.min(2, { message: "נא להזין יחידת לימוד" })
+  unit           String
+
+  frame          Frame
+  ageGroup       AgeGroup
+
+  /// @zod.string.min(5, { message: "מטרת העל חייבת להכיל לפחות 5 תווים" })
+  superGoal      String
+  operativeGoals String[] // prisma doesn't support arrays of objects, so we'll handle this in our types package and validation logic
   priorKnowledge  String?
-  
-  // Preparation
-  teachingAids String[]
-  references   String[]
-  
-  // Content
-  lessonFlow  Json      // Array of lesson steps
-  
-  // Metadata
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  isPublished Boolean  @default(true)
+  lessonFlow     Json
+  teachingAids   String[]
+  references     String[]
 
-  // Relations
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  authorId       String
+  author         User     @relation(fields: [authorId], references: [id])
+
   attachments Attachment[]
+  savedBy     SavedLessonPlan[]
 }
 
-// 4. File Attachments
+model SavedLessonPlan {
+  userId       String
+  lessonPlanId String
+  savedAt      DateTime @default(now())
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonPlan LessonPlan @relation(fields: [lessonPlanId], references: [id], onDelete: Cascade)
+
+  @@id([userId, lessonPlanId])
+}
+
 model Attachment {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())

@@ -11,8 +11,11 @@
     "lint": {
       "dependsOn": []
     },
+    "check-types": {
+      "dependsOn": ["^build"]
+    },
     "test": {
-      "dependsOn": []
+      "dependsOn": ["^build"]
     },
     "check-dist": {
       "dependsOn": ["build"],

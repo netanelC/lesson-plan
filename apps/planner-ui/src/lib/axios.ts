@@ -1,24 +1,35 @@
 import axios from "axios";
 
-export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+const api = axios.create({
+  // Fallback to our backend port if the env var isn't set yet
+  baseURL:
+    (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+    "http://localhost:8080/api",
 });
 
-// Interceptor to automatically attach the token to every request
-// That way, when a use refreshes the page, we don't lose the token and have to log in again.
-api.interceptors.request.use(
-  (config) => {
-    // 1. Grab the token from wherever you store it (localStorage is most common)
-    const token = localStorage.getItem("token");
-
-    // 2. If the token exists, attach it to the Authorization header
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+api.interceptors.response.use(
+  (response) => response,
+  (error: unknown) => {
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      window.dispatchEvent(new Event("auth:unauthorized"));
     }
-
-    return config;
-  },
-  (error) => {
+    // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
     return Promise.reject(error);
   },
 );
+
+export function extractApiError(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const serverError = error.response?.data?.error as string | undefined;
+    if (serverError != null) return serverError;
+    return error.message;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return "An unexpected error occurred.";
+}
+
+export { api };

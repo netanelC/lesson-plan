@@ -1,153 +1,134 @@
+/* eslint-disable import-x/exports-last */
+/* eslint-disable @typescript-eslint/no-magic-numbers */
+/* eslint-disable @typescript-eslint/naming-convention */
 import { z } from "zod";
+import {
+  AgeGroupSchema,
+  type AgeGroupType,
+  FrameSchema,
+  type FrameType,
+  LessonPlanSchema,
+  type User,
+  type RoleType,
+} from "./generated";
 
-const MIN_STRING_LENGTH = 2; // Minimum length for string fields
+export const MIN_PASSWORD_LENGTH = 8;
 
-const lessonStepSchema = z.object({
-  name: z.string().min(1, "יש למלא את שם שלב השיעור"),
+// Omit the fields the database handles automatically
+const BaseHttpCreateSchema = LessonPlanSchema.omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  authorId: true,
+});
+
+export const LessonFlowStepSchema = z.object({
+  stage: z.string().min(2, { message: "נא להזין את שם השלב (למשל: פתיחה)" }),
   durationMinutes: z
     .number()
-    .optional()
-    .transform((v) => (v === undefined || Number.isNaN(v) ? undefined : v)),
-  description: z.string().min(1, "יש למלא את תיאור שלב השיעור"),
+    .positive({ message: "משך הזמן חייב להיות חיובי" }),
+  description: z.string().min(5, { message: "נא להזין תיאור מפורט לשלב זה" }),
 });
+
+// Re-export all raw generated types
+export * from "./generated";
+
+// Now we can extend the base schema with our custom validation for the HTTP layer
+export const CreateLessonPlanSchema = BaseHttpCreateSchema.extend({
+  operativeGoals: z
+    .array(
+      z.string().min(2, { message: "נא להזין מטרה אופרטיבית (לפחות 2 תווים)" }),
+    )
+    .min(3, { message: "חובה להזין לפחות 3 מטרות אופרטיביות מלאות" }),
+  lessonFlow: z
+    .array(LessonFlowStepSchema)
+    .min(1, { message: "חובה להזין לפחות שלב אחד במהלך השיעור" }),
+  teachingAids: z.array(z.string()).default([]),
+  references: z.array(z.string()).default([]),
+});
+
+export const LessonFiltersSchema = z.object({
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(100).default(12),
+  search: z.string().optional(),
+  ageGroup: AgeGroupSchema.optional(),
+  frame: FrameSchema.optional(),
+  authorId: z.string().optional(),
+  sortBy: z.enum(["createdAt", "topic"]).default("createdAt").optional(),
+  sortOrder: z.enum(["asc", "desc"]).default("desc").optional(),
+});
+
+export const LoginSchema = z.object({
+  email: z.email("כתובת אימייל לא תקינה"),
+  password: z
+    .string()
+    .min(
+      MIN_PASSWORD_LENGTH,
+      `הסיסמה חייבת להכיל לפחות ${MIN_PASSWORD_LENGTH} תווים`,
+    ),
+});
+export const RegisterSchema = LoginSchema.extend({
+  fullName: z
+    .string()
+    .min(2, "שם מלא חייב להכיל לפחות 2 תווים")
+    .refine((val) => val.trim().includes(" "), "נא להזין שם פרטי ושם משפחה"),
+});
+
+export type CreateLessonPlanBody = z.infer<typeof CreateLessonPlanSchema>;
+export type LessonFlowStep = z.infer<typeof LessonFlowStepSchema>;
+export type CreateLessonPlanInput = z.input<typeof CreateLessonPlanSchema>;
+export type LessonFilters = z.infer<typeof LessonFiltersSchema>;
+export type Login = z.infer<typeof LoginSchema>;
+export type Register = z.infer<typeof RegisterSchema>;
 
 export interface PaginatedResponse<T> {
   data: T[];
   meta: {
-    totalItems: number;
-    itemCount: number;
-    itemsPerPage: number;
+    total: number;
+    page: number;
+    limit: number;
     totalPages: number;
-    currentPage: number;
   };
 }
 
-export interface LessonFilters {
-  search?: string;
-  ageGroup?: AgeGroup | "";
-  frame?: ActivityFrame | "";
-  authorId?: string;
-  page?: number;
-  limit?: number;
-}
-
-// =========================================
-// 1. User & Authentication (NEW)
-// =========================================
-
-export const USER_ROLES = ["OWNER", "ADMIN", "KINDERGARTEN"] as const;
-export type UserRole = (typeof USER_ROLES)[number];
-
-// The "Safe" User object sent to the frontend (no password/googleId)
-export interface User {
-  id: string;
-  email: string;
-  fullName: string;
-  role: UserRole;
-  avatarUrl?: string | null;
-  createdAt: string;
-}
-
-// Zod Schemas for Auth Forms
-export const loginSchema = z.object({
-  email: z.email("כתובת אימייל לא תקינה"),
-  password: z.string().min(1, "חובה להזין סיסמה"),
-});
-export type LoginDto = z.infer<typeof loginSchema>;
-
-export const registerSchema = loginSchema.extend({
-  fullName: z.string().min(MIN_STRING_LENGTH, "שם מלא חייב להכיל לפחות 2 תווים"),
-});
-export type RegisterDto = z.infer<typeof registerSchema>;
+export type LessonPlan = z.infer<typeof LessonPlanSchema> & {
+  author: User;
+};
 
 export interface AuthResponse {
   token: string;
   user: User;
 }
 
-// =========================================
-// 2. Lesson Plan Constants
-// =========================================
-export const AGE_GROUPS = ["3-4", "4-5"] as const;
-export const ACTIVITY_FRAMES = ["plenary", "small-group"] as const;
+// Common constants/labels for UI and Backend consistency
+export const AGE_LABELS = {
+  THREE_TO_FOUR: "גילאי 3-4",
+  FOUR_TO_FIVE: "גילאי 4-5",
+} as const satisfies Record<AgeGroupType, string>;
+export const AGE_GROUPS = Object.keys(AGE_LABELS) as AgeGroupType[];
 
-export type AgeGroup = (typeof AGE_GROUPS)[number];
-export type ActivityFrame = (typeof ACTIVITY_FRAMES)[number];
+export const FRAME_LABELS = {
+  PLENARY: "מליאה",
+  SMALL_GROUP: "קבוצה קטנה",
+} as const satisfies Record<FrameType, string>;
+export const ACTIVITY_FRAMES = Object.keys(FRAME_LABELS) as FrameType[];
 
-// =========================================
-// 3. Sub-Entities (Steps, Attachments)
-// =========================================
-export interface LessonStep {
-  name: string; // e.g., "פתיחה", "גוף", "סיכום"
-  durationMinutes?: number;
-  description: string;
-}
+export const FIELD_LABELS: Record<string, string> = {
+  topic: "נושא",
+  unit: "יחידה",
+  ageGroup: "קבוצת גיל",
+  frame: "מסגרת הוראה",
+  superGoal: "מטרת על",
+  operativeGoals: "מטרות אופרטיביות",
+  priorKnowledge: "ידע קודם",
+  teachingAids: "עזרי הוראה",
+  references: "מקורות",
+  lessonFlow: "חלקי השיעור",
+};
 
-export interface Attachment {
-  id: string;
-  filename: string;
-  url: string;
-  fileType: string;
-  sizeBytes: number;
-  lessonPlanId?: string;
-}
-
-// =========================================
-// 4. Create Lesson Plan (Zod schema and DTO)
-// =========================================
-export const MIN_OPERATIVE_GOALS = 3; // Ensure this matches UI validation logic
-
-export const createLessonPlanSchema = z.object({
-  topic: z.string().min(MIN_STRING_LENGTH, "יש למלא את נושא השיחה"),
-  unit: z.string().min(MIN_STRING_LENGTH, "יש למלא את יחידת הלימוד"),
-  ageGroup: z.enum(AGE_GROUPS),
-  frame: z.enum(ACTIVITY_FRAMES),
-  superGoal: z.string().min(MIN_STRING_LENGTH, "יש למלא את מטרת העל"),
-  operativeGoals: z
-    .array(z.string().min(1, "יש למלא את המטרה"))
-    .min(
-      MIN_OPERATIVE_GOALS,
-      `נדרשות לפחות ${MIN_OPERATIVE_GOALS} מטרות אופרטיביות`,
-    ),
-  priorKnowledge: z.string().optional(),
-  teachingAids: z.array(z.string()),
-  references: z.array(z.string()),
-  lessonFlow: z.array(lessonStepSchema).min(1),
-});
-
-export type CreateLessonPlanDto = z.infer<typeof createLessonPlanSchema>;
-
-// =========================================
-// 5. The Main Lesson Plan Interface
-// =========================================
-export interface LessonPlan {
-  id: string;
-
-  authorId: string;
-  author?: User;
-
-  createdAt: Date | string;
-  updatedAt?: Date | string;
-  isPublished: boolean;
-
-  // Header Info
-  topic: string; // נושא השיחה
-  unit: string; // יחידה
-
-  // Context
-  frame: ActivityFrame; // מסגרת הוראה
-  ageGroup: AgeGroup; // גיל הילדים
-
-  // Pedagogy
-  superGoal: string; // מטרת על
-  operativeGoals: string[]; // מטרות אופרטיביות
-  priorKnowledge?: string; // ידע קודם
-
-  // Preparation
-  teachingAids: string[]; // אמצעי הוראה
-  references: string[]; // מקורות מידע
-
-  // The Plan
-  lessonFlow: LessonStep[];
-  attachments?: Attachment[];
-}
+export const ROLE_LABELS = {
+  KINDERGARTEN: "גננ/ת (צפייה בלבד)",
+  ADMIN: "מנהל/ת (יצירת תכנים)",
+  OWNER: "בעלים",
+} as const satisfies Record<RoleType, string>;
+export const ROLES = Object.keys(ROLE_LABELS) as RoleType[];

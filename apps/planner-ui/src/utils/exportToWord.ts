@@ -1,21 +1,28 @@
 import { saveAs } from "file-saver";
+import {
+  type LessonFlowStep,
+  AGE_LABELS,
+  FRAME_LABELS,
+  FIELD_LABELS,
+} from "@repo/types";
 import type { LessonPlanWithAttachments } from "../features/lessonPlan/api/useLessonPlan";
 
 export const exportLessonPlanToWord = (plan: LessonPlanWithAttachments) => {
   // עיבוד נתונים לפורמט התצוגה
   const dateStr = new Date(plan.createdAt).toLocaleDateString("he-IL");
-  const frameStr = plan.frame === "plenary" ? "מליאה" : "קבוצה קטנה";
+  const frameStr = FRAME_LABELS[plan.frame];
+  const ageStr = AGE_LABELS[plan.ageGroup];
 
   // יצירת שורות הטבלה (מהלך השיחה)
-  const lessonRows = plan.lessonFlow
+  const lessonRows = (plan.lessonFlow as unknown as LessonFlowStep[])
     .map(
       (step) => `
     <tr>
       <td style="width: 15%; padding: 5px 10px; border: 1px solid #000; vertical-align: top; font-weight: bold;">
-        ${step.name}
+        ${step.stage}
       </td>
       <td style="width: 10%; padding: 5px 10px; border: 1px solid #000; vertical-align: top; text-align: center;">
-        ${step.durationMinutes ? `${step.durationMinutes} דק'` : "-"}
+        ${step.durationMinutes > 0 ? `${step.durationMinutes} דק'` : "-"}
       </td>
       <td style="width: 75%; padding: 5px 10px; border: 1px solid #000; vertical-align: top;">
         ${step.description.replace(/\n/g, "<br>")}
@@ -102,22 +109,22 @@ export const exportLessonPlanToWord = (plan: LessonPlanWithAttachments) => {
       
       <p class="top-header">מערך שיחה - ${frameStr}</p>
 
-      <p><span class="label">נושא השיחה:</span> ${plan.topic}</p>
+      <p><span class="label">${FIELD_LABELS.topic}:</span> ${plan.topic}</p>
       <p><span class="label">תאריך:</span> ${dateStr}</p>
-      <p><span class="label">יחידה:</span> ${plan.unit}</p>
-      <p><span class="label">מסגרת ההוראה:</span> ${frameStr}</p>
-      <p><span class="label">גיל הילדים:</span> ${plan.ageGroup}</p>
-      <p><span class="label">מטרת על:</span> ${plan.superGoal}</p>
+      <p><span class="label">${FIELD_LABELS.unit}:</span> ${plan.unit}</p>
+      <p><span class="label">${FIELD_LABELS.frame}:</span> ${frameStr}</p>
+      <p><span class="label">${FIELD_LABELS.ageGroup}:</span> ${ageStr}</p>
+      <p><span class="label">${FIELD_LABELS.superGoal}:</span> ${plan.superGoal}</p>
 
-      <p><span class="label">מטרות אופרטיביות:</span></p>
+      <p><span class="label">${FIELD_LABELS.operativeGoals}:</span></p>
       <ol>
         ${goalsList}
       </ol>
 
       ${
-        plan.priorKnowledge
+        plan.priorKnowledge != null && plan.priorKnowledge !== ""
           ? `
-        <p><span class="label">ידע קודם:</span> ${plan.priorKnowledge}</p>
+        <p><span class="label">${FIELD_LABELS.priorKnowledge}:</span> ${plan.priorKnowledge}</p>
       `
           : ""
       }
@@ -125,7 +132,7 @@ export const exportLessonPlanToWord = (plan: LessonPlanWithAttachments) => {
       ${
         plan.teachingAids.length > 0
           ? `
-        <p><span class="label">אמצעי הוראה:</span> ${plan.teachingAids.join(", ")}</p>
+        <p><span class="label">${FIELD_LABELS.teachingAids}:</span> ${plan.teachingAids.join(", ")}</p>
       `
           : ""
       }
@@ -133,7 +140,7 @@ export const exportLessonPlanToWord = (plan: LessonPlanWithAttachments) => {
       ${
         plan.references.length > 0
           ? `
-        <p><span class="label">מקורות מידע:</span></p>
+        <p><span class="label">${FIELD_LABELS.references}:</span></p>
         <ul>
           ${plan.references.map((ref) => `<li><a href="${ref}">${ref}</a></li>`).join("")}
         </ul>
@@ -143,7 +150,7 @@ export const exportLessonPlanToWord = (plan: LessonPlanWithAttachments) => {
 
       <br>
 
-      <p><span class="label">מהלך השיחה:</span></p>
+      <p><span class="label">${FIELD_LABELS.lessonFlow}:</span></p>
       
       <table dir="rtl" width="100%" border="1" cellspacing="0" cellpadding="5">
         <thead>

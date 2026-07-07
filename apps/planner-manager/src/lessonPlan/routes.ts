@@ -1,29 +1,51 @@
 import { FastifyInstance } from "fastify";
-import { CreateLessonPlanSchema } from "@repo/types";
-import { lessonPlanController } from "./controller";
+import { CreateLessonPlanSchema, LessonFiltersSchema } from "@repo/types";
 import { authenticate } from "../middleware/auth";
+import {
+  createLessonPlanController,
+  deleteLessonPlanController,
+  downloadAttachmentController,
+  getLessonPlanByIdController,
+  getLessonPlansController,
+  removeAttachmentController,
+  updateLessonPlanController,
+  uploadAttachmentController,
+  toggleSaveLessonPlanController,
+  getSavedLessonPlansController,
+} from "./controller";
 
-// This function is a "Fastify Plugin"
-// It encapsulates all the routes for this feature.
-export async function lessonPlanRoutes(fastify: FastifyInstance) {
+export function lessonPlanRoutes(fastify: FastifyInstance): void {
   fastify.addHook("onRequest", authenticate);
-
-  // Lesson Plan Routes
   fastify.post(
     "/",
-    { schema: { body: CreateLessonPlanSchema } },
-    lessonPlanController.create,
+    {
+      schema: {
+        body: CreateLessonPlanSchema,
+      },
+    },
+    createLessonPlanController,
   );
-  fastify.get("/", lessonPlanController.getAll);
-  fastify.get("/:id", lessonPlanController.getOne);
-  fastify.put("/:id", lessonPlanController.update);
-  fastify.delete("/:id", lessonPlanController.delete);
+
+  fastify.get(
+    "/",
+    { schema: { querystring: LessonFiltersSchema } },
+    getLessonPlansController,
+  );
+
+  fastify.get("/:id", getLessonPlanByIdController);
+  fastify.put("/:id", updateLessonPlanController);
+  fastify.delete("/:id", deleteLessonPlanController);
 
   // Attachment Routes
+  fastify.get("/attachments/:id/download", downloadAttachmentController);
+  fastify.post("/:id/attachments", uploadAttachmentController);
+  fastify.delete("/attachments/:fileId", removeAttachmentController);
+
+  // Bookmark Routes
+  fastify.post("/:id/save", toggleSaveLessonPlanController);
   fastify.get(
-    "/attachments/:id/download",
-    lessonPlanController.downloadAttachment,
+    "/saved",
+    { schema: { querystring: LessonFiltersSchema } },
+    getSavedLessonPlansController,
   );
-  fastify.post("/:id/attachments", lessonPlanController.uploadAttachment);
-  fastify.delete("/attachments/:fileId", lessonPlanController.removeAttachment);
 }

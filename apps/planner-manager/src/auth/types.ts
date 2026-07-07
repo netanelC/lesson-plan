@@ -3,4 +3,5 @@ export type LoginResult = {
   email: string;
   fullName: string;
   role: string;
+  isActive: boolean;
 } | null;

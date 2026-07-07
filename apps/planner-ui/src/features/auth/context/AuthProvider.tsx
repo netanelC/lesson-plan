@@ -1,16 +1,22 @@
 import { useState, useEffect, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
+import type { User } from "@repo/types";
 import { api } from "../../../lib/axios";
 import { AuthContext } from "./AuthContext"; // Import from the new file
-import type { User } from "@repo/types";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(() => {
     const saved = localStorage.getItem("user");
-    return saved ? JSON.parse(saved) : null;
+    return saved != null ? (JSON.parse(saved) as User) : null;
   });
 
   const [token, setToken] = useState<string | null>(() => {
-    return localStorage.getItem("token");
+    const savedToken = localStorage.getItem("token");
+    if (savedToken !== null) {
+      api.defaults.headers.common["Authorization"] = `Bearer ${savedToken}`;
+    }
+    return savedToken;
   });
 
   const login = (newToken: string, newUser: User) => {
@@ -28,19 +34,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     delete api.defaults.headers.common["Authorization"];
-    window.location.href = "/login";
+    void navigate("/login");
   };
 
-  // Sync axios on app load
+  // Sync axios on app load and listen for unauthorized events
   useEffect(() => {
-    if (token) {
+    if (token != null && token !== "") {
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     }
+
+    const handleUnauthorized = () => {
+      logout();
+    };
+
+    window.addEventListener("auth:unauthorized", handleUnauthorized);
+
+    return () => {
+      window.removeEventListener("auth:unauthorized", handleUnauthorized);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   return (
     <AuthContext.Provider
-      value={{ user, token, isAuthenticated: !!user, login, logout }}
+      value={{ user: user!, token, isAuthenticated: !!user, login, logout }}
     >
       {children}
     </AuthContext.Provider>

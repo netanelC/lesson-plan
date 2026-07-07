@@ -1,47 +1,48 @@
 import { useNavigate } from "react-router-dom";
-import type { CreateLessonPlanDto } from "@repo/types";
+import type { CreateLessonPlanBody } from "@repo/types";
+import { toast } from "react-hot-toast";
 import { useCreateLessonPlan } from "../api/useCreateLessonPlan";
 import { useUploadAttachment } from "../api/useUploadAttachment";
+import { extractApiError } from "../../../lib/axios";
 import { LessonPlanForm } from "./LessonPlanForm";
 
 export const CreateLessonPlanForm = () => {
   const navigate = useNavigate();
   const createPlanMutation = useCreateLessonPlan();
-  const uploadAttachmentMutation = useUploadAttachment();
+  const uploadMutation = useUploadAttachment();
 
-  const handleCreate = async (data: CreateLessonPlanDto, files: File[]) => {
+  const handleCreate = async (
+    data: CreateLessonPlanBody,
+    newFiles: File[] = [],
+  ) => {
     try {
-      // Step 1: Create the textual Lesson Plan
-      const newPlan = await createPlanMutation.mutateAsync(data);
+      const createdPlan = await createPlanMutation.mutateAsync(data);
 
-      // Step 2: Upload files if they exist
-      if (files.length > 0 && newPlan?.id) {
+      if (newFiles.length > 0) {
         await Promise.all(
-          files.map((file) =>
-            uploadAttachmentMutation.mutateAsync({
-              lessonPlanId: newPlan.id,
+          newFiles.map((file) =>
+            uploadMutation.mutateAsync({
+              lessonPlanId: createdPlan.id,
               file,
             }),
           ),
         );
       }
 
-      alert("המערך נוצר בהצלחה!");
-      navigate("/"); // Redirect to dashboard
+      toast.success("המערך נוצר בהצלחה!");
+      // We'll navigate to the home page, but right now it's just a placeholder!
+      void navigate("/");
     } catch (error) {
-      console.error("Failed to create lesson plan:", error);
-      alert("אירעה שגיאה ביצירת המערך.");
+      toast.error(extractApiError(error));
     }
   };
 
   return (
     <LessonPlanForm
       onSubmit={handleCreate}
-      isSubmitting={
-        createPlanMutation.isPending || uploadAttachmentMutation.isPending
-      }
-      title="צרי מערך שיעור חדש"
-      submitLabel="שמרי וצרי מערך"
+      isSubmitting={createPlanMutation.isPending || uploadMutation.isPending}
+      title="יצירת מערך שיעור חדש"
+      submitLabel="שמירה ויצירת מערך"
     />
   );
 };

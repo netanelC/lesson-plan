@@ -1,28 +1,29 @@
 import { type ReactNode, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../features/auth/context/AuthContext";
+import { Can } from "./auth/Can";
 
 interface LayoutProps {
   children: ReactNode;
 }
 
 export const Layout = ({ children }: LayoutProps) => {
-  const { user, logout } = useAuth();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col" dir="rtl">
+    <div className="min-h-screen flex flex-col bg-gray-50" dir="rtl">
       {/* --- Header --- */}
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 justify-between">
             {/* Logo and Main Nav */}
             <div className="flex items-center gap-8">
               <Link to="/" className="flex items-center gap-3">
-                <div className="bg-indigo-600 text-white p-2 rounded-lg">
+                <div className="rounded-lg bg-indigo-600 p-2 text-white">
                   <svg
                     className="h-6 w-6"
                     fill="none"
@@ -37,52 +38,64 @@ export const Layout = ({ children }: LayoutProps) => {
                     />
                   </svg>
                 </div>
-                <h1 className="text-xl font-bold text-gray-900 hidden sm:block">
+                <h1 className="hidden text-xl font-bold text-gray-900 sm:block">
                   מערכת מערכי שיעור
                 </h1>
               </Link>
 
-              <nav className="hidden md:flex gap-6 items-center">
+              <nav className="hidden items-center gap-6 md:flex">
                 <Link
                   to="/"
                   className={`text-sm font-medium transition-colors ${isActive("/") ? "text-indigo-600" : "text-gray-500 hover:text-gray-900"}`}
                 >
                   ספריית המערכים
                 </Link>
-
-                {/* --- Conditional Link for User Management --- */}
-                {user?.role === "OWNER" && (
+                <Can perform="create">
+                  <Link
+                    to="/create"
+                    className={`text-sm font-medium transition-colors ${isActive("/create") ? "text-indigo-600" : "text-gray-500 hover:text-gray-900"}`}
+                  >
+                    יצירת מערך שיעור
+                  </Link>
+                </Can>
+                <Link
+                  to="/saved"
+                  className={`text-sm font-medium transition-colors ${isActive("/saved") ? "text-indigo-600" : "text-gray-500 hover:text-gray-900"}`}
+                >
+                  המועדפים שלי
+                </Link>
+                <Can perform="viewUsers">
                   <Link
                     to="/users"
                     className={`text-sm font-medium transition-colors ${isActive("/users") ? "text-indigo-600" : "text-gray-500 hover:text-gray-900"}`}
                   >
                     ניהול משתמשים
                   </Link>
-                )}
+                </Can>
               </nav>
             </div>
 
             {/* User Profile and Role Indicator */}
-            <div className="flex items-center gap-3 relative">
-              <div className="text-right hidden sm:block">
+            <div className="relative flex items-center gap-3">
+              <div className="hidden text-right sm:block">
                 <p className="text-sm font-bold text-gray-900">
-                  {user?.fullName}
+                  {user.fullName}
                 </p>
-                <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full font-medium">
-                  {user?.role === "OWNER"
+                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
+                  {user.role === "OWNER"
                     ? "בעלים"
-                    : user?.role === "ADMIN"
-                      ? "מנהל"
-                      : "גננת"}
+                    : user.role === "ADMIN"
+                      ? "מנהל/ת"
+                      : "גננ/ת"}
                 </span>
               </div>
 
               <div className="relative">
                 <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold border border-indigo-200 hover:bg-indigo-200 transition-colors"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-indigo-200 bg-indigo-100 font-bold text-indigo-700 transition-colors hover:bg-indigo-200"
                 >
-                  {user?.avatarUrl ? (
+                  {user.avatarUrl != null ? (
                     <img
                       src={user.avatarUrl}
                       alt=""
@@ -90,20 +103,20 @@ export const Layout = ({ children }: LayoutProps) => {
                       className="h-full w-full rounded-full border border-indigo-200"
                     />
                   ) : (
-                    user?.fullName?.charAt(0)
+                    user.fullName.charAt(0) || "U"
                   )}
                 </button>
 
                 {isMenuOpen && (
-                  <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 border border-gray-100 ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                  <div className="absolute left-0 z-50 mt-2 w-48 rounded-md border border-gray-100 bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                     <button
                       onClick={() => {
                         logout();
                         setIsMenuOpen(false);
                       }}
-                      className="block w-full text-right px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 font-medium"
+                      className="block w-full px-4 py-2 text-right text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700"
                     >
-                      התנתק מהמערכת
+                      התנתקות מהמערכת
                     </button>
                   </div>
                 )}
@@ -114,7 +127,7 @@ export const Layout = ({ children }: LayoutProps) => {
       </header>
 
       {/* --- Main Content --- */}
-      <main className="flex-1 max-w-7xl w-full mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <main className="mx-auto flex-1 w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {children}
       </main>
     </div>

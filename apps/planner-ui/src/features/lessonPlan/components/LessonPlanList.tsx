@@ -1,12 +1,16 @@
 import { useState, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
+import { type LessonFilters, AGE_LABELS } from "@repo/types";
+import { toast } from "react-hot-toast";
 import { useAuth } from "../../auth/context/AuthContext";
 import { useLessonPlans } from "../api/useLessonPlans";
 import { useDeleteLessonPlan } from "../api/useDeleteLessonPlan";
+import { extractApiError } from "../../../lib/axios";
+import { ConfirmModal } from "../../../components/ui/ConfirmModal";
+import { Can } from "../../../components/auth/Can";
 import { FilterBar } from "./FilterBar";
-import type { LessonFilters } from "@repo/types";
+import { BookmarkButton } from "./BookmarkButton";
 
-// --- Helper Component for Highlighting ---
 const HighlightText = ({
   text,
   highlight,
@@ -14,8 +18,8 @@ const HighlightText = ({
   text?: string;
   highlight?: string;
 }) => {
-  if (!text) return null;
-  if (!highlight || !highlight.trim()) return <>{text}</>;
+  if (text == null) return null;
+  if (highlight == null || highlight.trim() === "") return <>{text}</>;
 
   const escapeRegExp = (string: string) =>
     string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -49,11 +53,13 @@ export const LessonPlanList = () => {
   const [filters, setFilters] = useState<LessonFilters>({
     page: 1,
     limit: 12,
-    search: "",
-    ageGroup: "",
-    frame: "",
-    authorId: "",
+    search: undefined,
+    authorId: undefined,
+    ageGroup: undefined,
+    frame: undefined,
   });
+
+  const [planToDelete, setPlanToDelete] = useState<string | null>(null);
 
   const {
     data: response,
@@ -63,7 +69,7 @@ export const LessonPlanList = () => {
   } = useLessonPlans(filters);
   const deleteMutation = useDeleteLessonPlan();
 
-  const isFirstLoad = isLoading && !response;
+  const isFirstLoad = isLoading;
   const isBackgroundLoading = isFetching && !!response;
 
   const handleFilterChange = useCallback(
@@ -85,10 +91,10 @@ export const LessonPlanList = () => {
     setFilters({
       page: 1,
       limit: 12,
-      search: "",
-      ageGroup: "",
-      frame: "",
-      authorId: "",
+      search: undefined,
+      authorId: undefined,
+      ageGroup: undefined,
+      frame: undefined,
     });
   }, []);
 
@@ -104,15 +110,25 @@ export const LessonPlanList = () => {
   };
 
   const canDelete = (planAuthorId: string) => {
-    if (user?.role === "OWNER") return true;
-    if (user?.role === "ADMIN" && user.id === planAuthorId) return true;
+    if (user.role === "OWNER") return true;
+    if (user.role === "ADMIN" && user.id === planAuthorId) return true;
     return false;
   };
 
-  const handleDelete = (e: React.MouseEvent, id: string) => {
+  const handleDeleteClick = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
-    if (window.confirm("האם את בטוחה שברצונך למחוק מערך זה?")) {
-      deleteMutation.mutate(id);
+    setPlanToDelete(id);
+  };
+
+  const confirmDelete = async () => {
+    if (planToDelete === null) return;
+    try {
+      await deleteMutation.mutateAsync(planToDelete);
+      toast.success("המערך נמחק בהצלחה!");
+    } catch (error) {
+      toast.error(extractApiError(error) || "שגיאה במחיקת המערך");
+    } finally {
+      setPlanToDelete(null);
     }
   };
 
@@ -129,7 +145,7 @@ export const LessonPlanList = () => {
       return (
         <div className="text-center p-10 bg-red-50 text-red-600 rounded-lg border border-red-100">
           <p className="font-bold">שגיאה בטעינת המערכים.</p>
-          <p className="text-sm">וודאי שהשרת רץ ושהחיבור תקין.</p>
+          <p className="text-sm">יש לוודא שהשרת רץ ושהחיבור תקין.</p>
         </div>
       );
     }
@@ -147,16 +163,19 @@ export const LessonPlanList = () => {
             onClick={resetFilters}
             className="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-bold rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 transition-colors"
           >
-            נקה את כל המסננים
+            ניקוי המסננים
           </button>
         </div>
       );
     }
 
     return (
-      <div
-        className={`transition-opacity duration-200 ${isBackgroundLoading ? "opacity-50 pointer-events-none" : "opacity-100"}`}
-      >
+      <div className="relative transition-opacity duration-200">
+        {isBackgroundLoading && (
+          <div className="absolute top-[-24px] left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-none">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-600"></div>
+          </div>
+        )}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {response.data.map((plan) => (
             <div
@@ -165,10 +184,10 @@ export const LessonPlanList = () => {
             >
               {canDelete(plan.authorId) && (
                 <button
-                  onClick={(e) => handleDelete(e, plan.id)}
+                  onClick={(e) => handleDeleteClick(e, plan.id)}
                   disabled={deleteMutation.isPending}
                   className="absolute top-4 left-4 p-2 bg-white/90 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded-full transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 shadow-sm border border-transparent hover:border-red-100 z-10"
-                  title="מחק מערך"
+                  title="מחיקת מערך"
                 >
                   {deleteMutation.isPending ? (
                     <svg
@@ -208,6 +227,20 @@ export const LessonPlanList = () => {
                 </button>
               )}
 
+              {/* Bookmark Button */}
+              <div
+                className={`absolute top-4 ${canDelete(plan.authorId) ? "left-14" : "left-4"} z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity`}
+              >
+                <BookmarkButton
+                  lessonPlanId={plan.id}
+                  initialIsSaved={
+                    Array.isArray(plan.savedBy) &&
+                    plan.savedBy.some((s) => s.userId === user.id)
+                  }
+                  className="bg-white/90 shadow-sm border border-transparent hover:border-red-100"
+                />
+              </div>
+
               <div className="p-6 flex-1">
                 <h3 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors mb-2">
                   <HighlightText text={plan.topic} highlight={filters.search} />
@@ -221,7 +254,7 @@ export const LessonPlanList = () => {
 
                 <div className="flex flex-wrap gap-2 mt-auto">
                   <span className="inline-flex items-center rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">
-                    גיל: {plan.ageGroup}
+                    גיל: {AGE_LABELS[plan.ageGroup]}
                   </span>
                   <span className="inline-flex items-center rounded-md bg-purple-50 px-2.5 py-1 text-xs font-medium text-purple-700 ring-1 ring-inset ring-purple-700/10">
                     <HighlightText
@@ -251,15 +284,29 @@ export const LessonPlanList = () => {
                       clipRule="evenodd"
                     />
                   </svg>
-                  {plan.lessonFlow?.length || 0} שלבים
+                  {Array.isArray(plan.lessonFlow) ? plan.lessonFlow.length : 0}{" "}
+                  שלבים
+                  {(() => {
+                    const duration = (
+                      plan.lessonFlow as import("@repo/types").LessonFlowStep[]
+                    ).reduce(
+                      (sum, step) => sum + (step.durationMinutes || 0),
+                      0,
+                    );
+                    return duration > 0 ? ` (${duration} דק')` : "";
+                  })()}
                 </span>
 
                 <div className="flex items-center gap-1.5 px-2 overflow-hidden">
                   <div className="h-5 w-5 rounded-full bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-700 shrink-0 border border-indigo-200">
-                    {plan.author?.fullName?.charAt(0) || "U"}
+                    {plan.author.fullName.length > 0
+                      ? plan.author.fullName.charAt(0)
+                      : "U"}
                   </div>
                   <span className="text-[11px] text-gray-600 truncate font-medium">
-                    {plan.author?.fullName || "משתמש"}
+                    {plan.author.fullName.length > 0
+                      ? plan.author.fullName
+                      : "משתמש"}
                   </span>
                 </div>
 
@@ -267,7 +314,7 @@ export const LessonPlanList = () => {
                   to={`/plan/${plan.id}`}
                   className="text-indigo-600 text-xs font-bold flex items-center gap-1 hover:gap-1.5 transition-all cursor-pointer shrink-0"
                 >
-                  צפי בפרטים
+                  צפייה בפרטים
                   <svg
                     className="h-3.5 w-3.5 rotate-180"
                     viewBox="0 0 20 20"
@@ -285,10 +332,10 @@ export const LessonPlanList = () => {
           ))}
         </div>
 
-        {response?.meta.totalPages > 0 && (
+        {response.meta.totalPages > 0 && (
           <div className="flex flex-col-reverse md:flex-row justify-between items-center mt-12 py-6 border-t border-gray-100 gap-6">
             <div className="flex items-center gap-2 text-sm text-gray-600 font-medium">
-              <span>הצג:</span>
+              <span>תצוגה:</span>
               <select
                 value={filters.limit}
                 onChange={handleLimitChange}
@@ -301,7 +348,7 @@ export const LessonPlanList = () => {
               <span>פריטים לעמוד</span>
             </div>
 
-            {response?.meta.totalPages > 1 && (
+            {response.meta.totalPages > 1 && (
               <div className="flex flex-col items-center">
                 <nav
                   className="isolate inline-flex -space-x-px rounded-md shadow-sm bg-white"
@@ -309,7 +356,7 @@ export const LessonPlanList = () => {
                   dir="rtl"
                 >
                   <button
-                    onClick={() => handlePageChange(filters.page! - 1)}
+                    onClick={() => handlePageChange(filters.page - 1)}
                     disabled={filters.page === 1}
                     className="relative inline-flex items-center rounded-r-md px-3 py-2 text-indigo-600 ring-1 ring-inset ring-gray-300 hover:bg-indigo-50 focus:z-20 focus:outline-offset-0 disabled:opacity-40 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
                   >
@@ -346,7 +393,7 @@ export const LessonPlanList = () => {
                   ))}
 
                   <button
-                    onClick={() => handlePageChange(filters.page! + 1)}
+                    onClick={() => handlePageChange(filters.page + 1)}
                     disabled={filters.page === response.meta.totalPages}
                     className="relative inline-flex items-center rounded-l-md px-3 py-2 text-indigo-600 ring-1 ring-inset ring-gray-300 hover:bg-indigo-50 focus:z-20 focus:outline-offset-0 disabled:opacity-40 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
                   >
@@ -366,7 +413,7 @@ export const LessonPlanList = () => {
                   </button>
                 </nav>
                 <div className="mt-2 text-xs text-gray-500">
-                  מציג עמוד {filters.page} מתוך {response.meta.totalPages}
+                  עמוד {filters.page} מתוך {response.meta.totalPages}
                 </div>
               </div>
             )}
@@ -387,33 +434,41 @@ export const LessonPlanList = () => {
           </h1>
           <p className="text-gray-500 mt-1">מאגר הידע המשותף של מערכי השיעור</p>
         </div>
-
-        {(user?.role === "OWNER" || user?.role === "ADMIN") && (
+        <Can perform="create">
           <Link
             to="/create"
-            className="inline-flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-indigo-700 transition-all shadow-sm hover:shadow-md active:scale-95"
+            className="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors"
           >
-            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path
-                fillRule="evenodd"
-                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                clipRule="evenodd"
-              />
+            <svg
+              className="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
             </svg>
-            צרי חדש
+            יצירת מערך שיעור
           </Link>
-        )}
+        </Can>
       </div>
 
       <FilterBar
         filters={filters}
         onFilterChange={handleFilterChange}
         onReset={resetFilters}
-        userRole={user?.role}
-        userId={user?.id}
       />
 
       {renderContent()}
+
+      <ConfirmModal
+        isOpen={planToDelete !== null}
+        onClose={() => setPlanToDelete(null)}
+        onConfirm={confirmDelete}
+        title="מחיקת מערך"
+        message="האם למחוק מערך זה? (פעולה זו לא ניתנת לביטול)"
+        confirmText="מחיקת מערך"
+        isDestructive={true}
+      />
     </div>
   );
 };

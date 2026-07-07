@@ -1,11 +1,12 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate } from "react-router-dom";
-import { GoogleLogin, type CredentialResponse } from "@react-oauth/google"; // <--- Add this
-import { api } from "../../../lib/axios";
+import { useNavigate, Link } from "react-router-dom";
+import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
+import { type User, type Login, LoginSchema } from "@repo/types";
+import { toast } from "react-hot-toast";
+import { api, extractApiError } from "../../../lib/axios";
 import { useAuth } from "../context/AuthContext";
 import { TextInput } from "../../../components/ui/TextInput";
-import { loginSchema, type LoginDto, type User } from "@repo/types";
 
 export const LoginPage = () => {
   const { login } = useAuth();
@@ -16,22 +17,23 @@ export const LoginPage = () => {
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<LoginDto>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<Login>({
+    resolver: zodResolver(LoginSchema),
   });
 
-  const onSubmit = async (data: LoginDto) => {
+  const onSubmit = async (data: Login) => {
     try {
       const res = await api.post<{ token: string; user: User }>(
         "/auth/login",
         data,
       );
       login(res.data.token, res.data.user);
-      navigate("/");
+      void navigate("/");
     } catch (error) {
-      console.error("Login failed", error);
+      const message = extractApiError(error);
+      toast.error(message);
       setError("root", {
-        message: "האימייל או הסיסמה שגויים. נסה שנית.",
+        message,
       });
     }
   };
@@ -41,7 +43,10 @@ export const LoginPage = () => {
   ) => {
     try {
       // credentialResponse.credential is the JWT string from Google
-      if (!credentialResponse.credential) {
+      if (
+        credentialResponse.credential == null ||
+        credentialResponse.credential === ""
+      ) {
         throw new Error("No credential received from Google");
       }
 
@@ -53,10 +58,11 @@ export const LoginPage = () => {
       );
 
       login(res.data.token, res.data.user);
-      navigate("/");
+      void navigate("/");
     } catch (error) {
-      console.error("Google login failed", error);
-      setError("root", { message: "ההתחברות עם גוגל נכשלה" });
+      const message = extractApiError(error);
+      toast.error("התחברות עם גוגל נכשלה");
+      setError("root", { message });
     }
   };
 
@@ -108,6 +114,15 @@ export const LoginPage = () => {
             {isSubmitting ? "מתחבר..." : "היכנס"}
           </button>
         </form>
+
+        <div className="mt-4 text-center">
+          <Link
+            to="/register"
+            className="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
+          >
+            אין לך חשבון עדיין? הרשם כאן
+          </Link>
+        </div>
 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">

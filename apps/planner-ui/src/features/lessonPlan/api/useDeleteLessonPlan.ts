@@ -8,9 +8,9 @@ export const useDeleteLessonPlan = () => {
     mutationFn: async (id: string) => {
       await api.delete(`/lessons/${id}`);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       // Refresh the list automatically after delete
-      queryClient.invalidateQueries({ queryKey: ["lessons"] });
+      await queryClient.invalidateQueries({ queryKey: ["lessons"] });
     },
   });
 };

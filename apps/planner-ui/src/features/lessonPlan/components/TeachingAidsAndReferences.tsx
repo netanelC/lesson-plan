@@ -1,15 +1,15 @@
-import { TextInput } from "../../../components/ui/TextInput";
 import type {
   UseFormSetValue,
   UseFormWatch,
   UseFormRegister,
 } from "react-hook-form";
-import type { CreateLessonPlanDto } from "@repo/types";
+import type { CreateLessonPlanInput } from "@repo/types";
+import { TextInput } from "../../../components/ui/TextInput";
 
 interface TeachingAidsAndReferencesProps {
-  register: UseFormRegister<CreateLessonPlanDto>;
-  watch: UseFormWatch<CreateLessonPlanDto>;
-  setValue: UseFormSetValue<CreateLessonPlanDto>;
+  register: UseFormRegister<CreateLessonPlanInput>;
+  watch: UseFormWatch<CreateLessonPlanInput>;
+  setValue: UseFormSetValue<CreateLessonPlanInput>;
 }
 
 export const TeachingAidsAndReferences = ({
@@ -17,96 +17,123 @@ export const TeachingAidsAndReferences = ({
   watch,
   setValue,
 }: TeachingAidsAndReferencesProps) => {
-  const teachingAids = watch("teachingAids") || [];
-  const references = watch("references") || [];
+  // We watch these so the UI re-renders when we add/remove items
+  const teachingAids = watch("teachingAids") ?? [];
+  const references = watch("references") ?? [];
 
-  const handleRemoveAid = (index: number) => {
+  const handleAddAid = () => setValue("teachingAids", [...teachingAids, ""]);
+  const handleRemoveAid = (index: number) =>
     setValue(
       "teachingAids",
       teachingAids.filter((_, i) => i !== index),
     );
-  };
 
-  const handleAddAid = () => {
-    setValue("teachingAids", [...teachingAids, ""]);
-  };
-
-  const handleRemoveReference = (index: number) => {
+  const handleAddReference = () => setValue("references", [...references, ""]);
+  const handleRemoveReference = (index: number) =>
     setValue(
       "references",
       references.filter((_, i) => i !== index),
     );
-  };
-
-  const handleAddReference = () => {
-    setValue("references", [...references, ""]);
-  };
 
   return (
     <div className="space-y-6">
-      {/* Teaching Aids */}
+      {/* --- Prior Knowledge Section --- */}
+      <div className="border-b border-gray-100 pb-4">
+        <TextInput
+          id="priorKnowledge"
+          label="ידע קודם נדרש (אופציונלי)"
+          placeholder="לדוגמה: היכרות עם מחזור החיים"
+          {...register("priorKnowledge")}
+        />
+      </div>
+
+      {/* --- Teaching Aids Section --- */}
       <div className="space-y-3 border-b border-gray-100 pb-4">
         <label className="block text-sm font-semibold text-gray-800">
           אמצעי הוראה
         </label>
         {teachingAids.map((_, i) => (
-          <div key={i} className="flex gap-2">
+          <div key={`aid-${i}`} className="flex gap-2">
             <div className="flex-1">
               <TextInput
                 label=""
-                placeholder="לדוגמה: מיקרוסקופ, תמונות, וידאו"
-                {...register(`teachingAids.${i}`)}
+                placeholder="לדוגמה: מיקרוסקופ, תמונות"
+                {...register(`teachingAids.${i}` as const)}
               />
             </div>
             <button
               type="button"
               onClick={() => handleRemoveAid(i)}
-              className="p-2 text-red-500 hover:bg-red-50 rounded transition-colors"
-              title="Remove teaching aid"
+              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+              aria-label="מחיקת אמצעי הוראה"
             >
-              ✕
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
             </button>
           </div>
         ))}
         <button
           type="button"
           onClick={handleAddAid}
-          className="text-indigo-600 text-sm font-bold flex items-center gap-1 hover:text-indigo-800 transition-colors"
+          className="text-indigo-600 text-sm font-bold flex items-center gap-1"
         >
-          + הוסיפי אמצעי הוראה
+          + הוספת אמצעי הוראה
         </button>
       </div>
 
-      {/* References */}
+      {/* --- References Section --- */}
       <div className="space-y-3">
         <label className="block text-sm font-semibold text-gray-800">
           מקורות מידע
         </label>
         {references.map((_, i) => (
-          <div key={i} className="flex gap-2">
+          <div key={`ref-${i}`} className="flex gap-2">
             <div className="flex-1">
               <TextInput
                 label=""
-                placeholder="לדוגמה: ספר - 'החי והצומח' בעמ׳ 45-50"
-                {...register(`references.${i}`)}
+                placeholder="לדוגמה: ספר 'החי והצומח' עמ' 45"
+                {...register(`references.${i}` as const)}
               />
             </div>
             <button
               type="button"
               onClick={() => handleRemoveReference(i)}
-              className="p-2 text-red-500 hover:bg-red-50 rounded transition-colors"
-              title="Remove reference"
+              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+              aria-label="מחיקת מקור מידע"
             >
-              ✕
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
             </button>
           </div>
         ))}
         <button
           type="button"
           onClick={handleAddReference}
-          className="text-indigo-600 text-sm font-bold flex items-center gap-1 hover:text-indigo-800 transition-colors"
+          className="text-indigo-600 text-sm font-bold flex items-center gap-1"
         >
-          + הוסיפי מקור מידע
+          + הוספת מקור מידע
         </button>
       </div>
     </div>

@@ -1,104 +1,119 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { z } from "zod";
-import { LoginSchema, RegisterSchema } from "@repo/types";
+import { status } from "http-status";
+import { Login, Register } from "@repo/types";
+import { UnauthorizedError } from "../utils/errors";
 import { authService } from "./service";
 
-export const authController = {
-  register: async (req: FastifyRequest, reply: FastifyReply) => {
-    try {
-      // 1. Validate Input
-      const body = RegisterSchema.parse(req.body);
+export async function registerController(
+  request: FastifyRequest<{
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    Body: Register;
+  }>,
+  reply: FastifyReply,
+): Promise<FastifyReply> {
+  // 1. Call Service (Validation happens in fastify routes)
+  const newUser = await authService.register(
+    request.body.email,
+    request.body.password,
+    request.body.fullName,
+  );
 
-      // 2. Call Service
-      const newUser = await authService.register(
-        body.email,
-        body.password,
-        body.fullName,
-      );
+  // 2. Sign Token
+  const token = await reply.jwtSign(
+    {
+      id: newUser.id as string,
+      email: newUser.email as string,
+      role: newUser.role as string,
+    },
+    {
+      expiresIn: "7d",
+    },
+  );
 
-      // 3. Send Success
-      return reply.code(201).send({
-        message: "User created successfully",
-        user: newUser,
-      });
-    } catch (error: any) {
-      req.log.error(error);
+  // 3. Send Success
+  return reply.status(status.CREATED).send({
+    message: "User created successfully",
+    token,
+    user: newUser,
+  });
+}
 
-      if (error.message === "User already exists") {
-        return reply.code(409).send({ message: "User already exists" }); // 409 Conflict
-      }
+export async function loginController(
+  request: FastifyRequest<{
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    Body: Login;
+  }>,
+  reply: FastifyReply,
+): Promise<FastifyReply> {
+  // 1. Verify Credentials (Validation happens in fastify routes)
+  const user = await authService.validateUser(
+    request.body.email,
+    request.body.password,
+  );
 
-      return reply.code(400).send({ message: "Registration failed", error });
-    }
-  },
+  if (!user) {
+    // Generic error message for security (don't say "User not found")
+    throw new UnauthorizedError("Invalid email or password");
+  }
 
-  login: async (req: FastifyRequest, reply: FastifyReply) => {
-    try {
-      // 1. Validate Input
-      const body = LoginSchema.parse(req.body);
+  if (!user.isActive) {
+    throw new UnauthorizedError("משתמש מושעה");
+  }
 
-      // 2. Verify Credentials
-      const user = await authService.validateUser(body.email, body.password);
+  // 2. Sign Token (The "Session Ticket")
+  const token = await reply.jwtSign(
+    {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    },
+    {
+      expiresIn: "7d", // Token valid for 1 week
+    },
+  );
 
-      if (!user) {
-        // Generic error message for security (don't say "User not found")
-        return reply.code(401).send({ message: "Invalid email or password" });
-      }
+  // 3. Send Response
+  return reply.status(status.OK).send({
+    message: "Login successful",
+    token,
+    user,
+  });
+}
 
-      // 3. Sign Token (The "Session Ticket")
-      const token = await reply.jwtSign(
-        {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-        },
-        {
-          expiresIn: "7d", // Token valid for 1 week
-        },
-      );
+export async function googleLoginController(
+  request: FastifyRequest<{
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    Body: { token: string };
+  }>,
+  reply: FastifyReply,
+): Promise<FastifyReply> {
+  const { token } = request.body;
 
-      // 4. Send Response
-      return reply.send({
-        message: "Login successful",
-        token,
-        user,
-      });
-    } catch (error) {
-      req.log.error(error);
-      return reply.code(400).send({ message: "Login failed", error });
-    }
-  },
+  // 1. Verify token and get/create user in DB
+  const user = await authService.verifyGoogleToken(token);
 
-  googleLogin: async (req: FastifyRequest, reply: FastifyReply) => {
-    try {
-      const { token } = req.body as { token: string };
+  if (!user.isActive) {
+    throw new UnauthorizedError("משתמש מושעה");
+  }
 
-      // 1. Verify token and get/create user in DB
-      const user = await authService.verifyGoogleToken(token);
+  // 2. Sign JWT for our app
+  const appToken = await reply.jwtSign(
+    {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    },
+    { expiresIn: "7d" },
+  );
 
-      // 2. Sign JWT for our app
-      const appToken = await reply.jwtSign(
-        {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-        },
-        { expiresIn: "7d" },
-      );
-
-      return reply.send({
-        token: appToken,
-        user: {
-          id: user.id,
-          email: user.email,
-          fullName: user.fullName,
-          role: user.role,
-          avatarUrl: user.avatarUrl,
-        },
-      });
-    } catch (error) {
-      req.log.error(error);
-      return reply.code(401).send({ message: "Google authentication failed" });
-    }
-  },
-};
+  return reply.status(status.OK).send({
+    token: appToken,
+    user: {
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+      avatarUrl: user.avatarUrl,
+    },
+  });
+}

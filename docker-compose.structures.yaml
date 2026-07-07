@@ -20,6 +20,27 @@ services:
       timeout: 2s
       retries: 20
 
+  postgresql-test:
+    image: postgres:15
+    hostname: postgres-test
+    container_name: postgres-test
+    restart: always
+    environment:
+      POSTGRES_DB: lesson_plan_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5434:5432'
+    networks:
+      - local-network
+    volumes:
+      - pg_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+
   minio:
     container_name: 'minio'
     image: minio/minio:latest
@@ -43,6 +64,29 @@ services:
       timeout: 20s
       retries: 3
 
+  minio-test:
+    container_name: 'minio-test'
+    image: minio/minio:latest
+    ports:
+      - "9002:9000" # API Port (Code talks to this)
+      - "9003:9003" # Web Console (You login here)
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    restart: always
+    # Start the server and enable the web UI
+    command: server /data --console-address ":9003"
+    volumes:
+      # Named volume to store test files isolated from dev
+      - minio_test_data:/data
+    networks:
+      - local-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
   createbucket:
     image: minio/mc:latest
     container_name: 'minio-client'
@@ -57,9 +101,25 @@ services:
       mc anonymous set public minio/lesson-attachments;
       "
 
+  createbucket-test:
+    image: minio/mc:latest
+    container_name: 'minio-client-test'
+    depends_on:
+      - minio-test
+    restart: on-failure
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      mc alias set minio-test http://minio-test:9000 minioadmin minioadmin;
+      mc mb --region us-east-1 minio-test/lesson-attachments;
+      mc anonymous set public minio-test/lesson-attachments;
+      "
+
 volumes:
   minio_data:
+  minio_test_data:
   pg_data:
+  pg_test_data:
 
 networks:
   local-network:
